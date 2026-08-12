@@ -25,11 +25,27 @@ function App() {
     setHabits([...habits, newHabit])
   }
 
+  function toggleDay(habitId, dayIndex) {
+    setHabits(
+      habits.map((habit) => {
+        if (habit.id !== habitId) return habit
+        const newDays = [...habit.days]
+        newDays[dayIndex] = !newDays[dayIndex]
+        return { ...habit, days: newDays }
+      }),
+    )
+  }
+
   return (
     <div>
       <h1>Habit Tracker</h1>
       {habits.map((habit) => (
-        <HabitRow key={habit.id} name={habit.name} days={habit.days} />
+        <HabitRow
+          key={habit.id}
+          name={habit.name}
+          days={habit.days}
+          onToggleDay={(dayIndex) => toggleDay(habit.id, dayIndex)}
+        />
       ))}
       <AddHabitForm onAdd={addHabit} />
     </div>
