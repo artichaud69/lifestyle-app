@@ -2,15 +2,35 @@ import { useState, useEffect } from 'react'
 import HabitRow from './components/HabitRow.jsx'
 import AddHabitForm from './components/AddHabitForm.jsx'
 import { loadHabits, saveHabits } from './storage.js'
+import { todayISO, lastNDates, formatShortLabel } from './dates.js'
+
+const WINDOW_SIZE = 5
+const demoDates = lastNDates(WINDOW_SIZE)
 
 const defaultHabits = [
-  { id: crypto.randomUUID(), name: 'Meditate', days: [true, false, true, true, false, true, true] },
-  { id: crypto.randomUUID(), name: 'Read', days: [true, true, false, false, true, false, true] },
-  { id: crypto.randomUUID(), name: 'No sugar', days: [false, true, true, false, false, true, false] },
+  {
+    id: crypto.randomUUID(),
+    name: 'Meditate',
+    createdAt: demoDates[0],
+    doneDates: [demoDates[0], demoDates[2], demoDates[3], demoDates[4]],
+  },
+  {
+    id: crypto.randomUUID(),
+    name: 'Read',
+    createdAt: demoDates[0],
+    doneDates: [demoDates[0], demoDates[1], demoDates[3]],
+  },
+  {
+    id: crypto.randomUUID(),
+    name: 'No sugar',
+    createdAt: demoDates[0],
+    doneDates: [demoDates[1], demoDates[2]],
+  },
 ]
 
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
+  const dates = lastNDates(WINDOW_SIZE)
 
   useEffect(() => {
     saveHabits(habits)
@@ -20,33 +40,64 @@ function App() {
     const newHabit = {
       id: crypto.randomUUID(),
       name,
-      days: [false, false, false, false, false, false, false],
+      createdAt: todayISO(),
+      doneDates: [],
     }
     setHabits([...habits, newHabit])
   }
 
-  function toggleDay(habitId, dayIndex) {
+  function toggleDate(habitId, dateISO) {
     setHabits(
       habits.map((habit) => {
         if (habit.id !== habitId) return habit
-        const newDays = [...habit.days]
-        newDays[dayIndex] = !newDays[dayIndex]
-        return { ...habit, days: newDays }
+        const isDone = habit.doneDates.includes(dateISO)
+        const newDoneDates = isDone
+          ? habit.doneDates.filter((date) => date !== dateISO)
+          : [...habit.doneDates, dateISO]
+        return { ...habit, doneDates: newDoneDates }
       }),
     )
   }
 
+  const today = todayISO()
+
   return (
-    <div>
+    <div style={{ padding: '12px', maxWidth: '100%', boxSizing: 'border-box' }}>
       <h1>Habit Tracker</h1>
-      {habits.map((habit) => (
-        <HabitRow
-          key={habit.id}
-          name={habit.name}
-          days={habit.days}
-          onToggleDay={(dayIndex) => toggleDay(habit.id, dayIndex)}
-        />
-      ))}
+      <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `88px repeat(${WINDOW_SIZE}, 48px)`,
+            rowGap: '8px',
+            alignItems: 'center',
+          }}
+        >
+          <div />
+          {dates.map((date) => (
+            <div
+              key={date}
+              style={{
+                textAlign: 'center',
+                fontSize: '11px',
+                fontWeight: date === today ? 'bold' : 'normal',
+                color: date === today ? '#0a58ca' : 'inherit',
+              }}
+            >
+              {formatShortLabel(date)}
+            </div>
+          ))}
+          {habits.map((habit) => (
+            <HabitRow
+              key={habit.id}
+              name={habit.name}
+              dates={dates}
+              doneDates={habit.doneDates}
+              onToggleDate={(date) => toggleDate(habit.id, date)}
+            />
+          ))}
+        </div>
+      </div>
       <AddHabitForm onAdd={addHabit} />
     </div>
   )

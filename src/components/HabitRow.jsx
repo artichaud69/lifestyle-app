@@ -1,16 +1,17 @@
-function HabitRow({ name, days, onToggleDay }) {
+function HabitRow({ name, dates, doneDates, onToggleDate }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0' }}>
-      <span style={{ width: '120px' }}>{name}</span>
-      {days.map((done, index) => (
+    <>
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+      {dates.map((date) => (
         <input
-          key={index}
+          key={date}
           type="checkbox"
-          checked={done}
-          onChange={() => onToggleDay(index)}
+          checked={doneDates.includes(date)}
+          onChange={() => onToggleDate(date)}
+          style={{ justifySelf: 'center' }}
         />
       ))}
-    </div>
+    </>
   )
 }
 
