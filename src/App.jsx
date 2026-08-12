@@ -1,15 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import HabitRow from './components/HabitRow.jsx'
 import AddHabitForm from './components/AddHabitForm.jsx'
+import { loadHabits, saveHabits } from './storage.js'
 
-const initialHabits = [
+const defaultHabits = [
   { id: crypto.randomUUID(), name: 'Meditate', days: [true, false, true, true, false, true, true] },
   { id: crypto.randomUUID(), name: 'Read', days: [true, true, false, false, true, false, true] },
   { id: crypto.randomUUID(), name: 'No sugar', days: [false, true, true, false, false, true, false] },
 ]
 
 function App() {
-  const [habits, setHabits] = useState(initialHabits)
+  const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
+
+  useEffect(() => {
+    saveHabits(habits)
+  }, [habits])
 
   function addHabit(name) {
     const newHabit = {
