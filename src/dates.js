@@ -25,3 +25,16 @@ export function formatShortLabel(iso) {
   const date = new Date(year, month - 1, day)
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
+
+export function datesBetween(startISO, endISO) {
+  const [sy, sm, sd] = startISO.split('-').map(Number)
+  const [ey, em, ed] = endISO.split('-').map(Number)
+  const cursor = new Date(sy, sm - 1, sd)
+  const end = new Date(ey, em - 1, ed)
+  const dates = []
+  while (cursor <= end) {
+    dates.push(toISODate(cursor))
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return dates
+}

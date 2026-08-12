@@ -1,4 +1,6 @@
-function HabitRow({ name, dates, doneDates, onToggleDate }) {
+import HabitHeatmap from './HabitHeatmap.jsx'
+
+function HabitRow({ name, dates, doneDates, createdAt, onToggleDate }) {
   return (
     <>
       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
@@ -11,6 +13,9 @@ function HabitRow({ name, dates, doneDates, onToggleDate }) {
           style={{ justifySelf: 'center' }}
         />
       ))}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <HabitHeatmap createdAt={createdAt} doneDates={doneDates} />
+      </div>
     </>
   )
 }

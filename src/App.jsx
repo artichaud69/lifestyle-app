@@ -6,13 +6,23 @@ import { todayISO, lastNDates, formatShortLabel } from './dates.js'
 
 const WINDOW_SIZE = 5
 const demoDates = lastNDates(WINDOW_SIZE)
+// a longer history for one demo habit, so the heatmap has more than 5 squares to show
+const meditateHistory = lastNDates(12)
 
 const defaultHabits = [
   {
     id: crypto.randomUUID(),
     name: 'Meditate',
-    createdAt: demoDates[0],
-    doneDates: [demoDates[0], demoDates[2], demoDates[3], demoDates[4]],
+    createdAt: meditateHistory[0],
+    doneDates: [
+      meditateHistory[0],
+      meditateHistory[3],
+      meditateHistory[5],
+      meditateHistory[7],
+      meditateHistory[9],
+      meditateHistory[10],
+      meditateHistory[11],
+    ],
   },
   {
     id: crypto.randomUUID(),
@@ -93,6 +103,7 @@ function App() {
               name={habit.name}
               dates={dates}
               doneDates={habit.doneDates}
+              createdAt={habit.createdAt}
               onToggleDate={(date) => toggleDate(habit.id, date)}
             />
           ))}
