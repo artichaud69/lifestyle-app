@@ -17,6 +17,17 @@ function readLocalUpdatedAt() {
   return localStorage.getItem(LOCAL_UPDATED_AT_KEY) ?? ''
 }
 
+// Postgres hands timestamps back as "...+00:00" while the app writes "...Z".
+// Those are the same instant but do not sort the same way as plain strings, so
+// always compare parsed values.
+function isNewer(candidate, reference) {
+  const candidateTime = Date.parse(candidate)
+  if (Number.isNaN(candidateTime)) return false
+  const referenceTime = Date.parse(reference)
+  if (Number.isNaN(referenceTime)) return true
+  return candidateTime > referenceTime
+}
+
 export function stampLocalChange() {
   localStorage.setItem(LOCAL_UPDATED_AT_KEY, new Date().toISOString())
 }
@@ -74,7 +85,7 @@ export async function reconcile(userId) {
   }
 
   const localAt = readLocalUpdatedAt()
-  if (remote.updated_at > localAt) {
+  if (isNewer(remote.updated_at, localAt)) {
     restore(remote.data)
     localStorage.setItem(LOCAL_UPDATED_AT_KEY, remote.updated_at)
     // React state was built from the old localStorage contents, so the cheapest
