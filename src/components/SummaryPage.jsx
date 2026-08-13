@@ -1,6 +1,7 @@
 import { todayISO, datesBetween } from '../dates.js'
 import { currentStreak, bestStreak } from '../streaks.js'
 import { weeklyCompletionPercent } from '../frequency.js'
+import PageHeader from './PageHeader.jsx'
 
 function SummaryPage({ habits }) {
   const today = todayISO()
@@ -10,7 +11,7 @@ function SummaryPage({ habits }) {
 
   return (
     <>
-      <h1>Summary</h1>
+      <PageHeader title="Summary" />
       <div className="summary-today-card">
         <div className="summary-today-value">
           {doneToday} / {habits.length}

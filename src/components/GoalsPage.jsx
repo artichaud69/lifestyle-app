@@ -5,6 +5,7 @@ import { generateHabitPlan } from '../ai.js'
 import { todayISO } from '../dates.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import FrequencyPicker from './FrequencyPicker.jsx'
+import PageHeader from './PageHeader.jsx'
 
 function GoalsPage({ habits, onAddHabits }) {
   const [apiKey, setApiKey] = useState(() => loadApiKey())
@@ -87,7 +88,7 @@ function GoalsPage({ habits, onAddHabits }) {
 
   return (
     <>
-      <h1>Goals</h1>
+      <PageHeader title="Goals" />
 
       {!apiKey || showApiKeyForm ? (
         <form className="edit-panel" onSubmit={handleSaveApiKey}>

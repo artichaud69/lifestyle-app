@@ -1,13 +1,13 @@
 import HabitList from './HabitList.jsx'
 import AddHabitForm from './AddHabitForm.jsx'
+import PageHeader from './PageHeader.jsx'
 
 function HabitsPage({ habits, onAddHabit, onToggleDate, onUpdateHabit, onDeleteHabit }) {
   return (
     <>
-      <header className="app-header">
-        <h1>Habit Tracker</h1>
+      <PageHeader title="Habit Tracker">
         <AddHabitForm onAdd={onAddHabit} />
-      </header>
+      </PageHeader>
       <HabitList
         habits={habits}
         onToggleDate={onToggleDate}
