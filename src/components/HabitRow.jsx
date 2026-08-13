@@ -35,15 +35,22 @@ function HabitRow({ name, dates, doneDates, startDate, timesPerWeek, onToggleDat
       <button type="button" className="habit-name-button" onClick={startEditing}>
         {name} <span className="edit-icon">✎</span>
       </button>
-      {dates.map((date) => (
-        <input
-          key={date}
-          type="checkbox"
-          className="day-checkbox"
-          checked={doneDates.includes(date)}
-          onChange={() => onToggleDate(date)}
-        />
-      ))}
+      {dates.map((date) => {
+        const checked = doneDates.includes(date)
+        return (
+          <button
+            key={date}
+            type="button"
+            role="checkbox"
+            aria-checked={checked}
+            aria-label={date}
+            className={`day-toggle${checked ? ' checked' : ''}`}
+            onClick={() => onToggleDate(date)}
+          >
+            {checked ? '✓' : ''}
+          </button>
+        )
+      })}
       {isEditing && (
         <form onSubmit={handleSave} className="edit-panel">
           <input
