@@ -15,11 +15,12 @@ function App() {
     saveHabits(habits)
   }, [habits])
 
-  function addHabit(name, startDate) {
+  function addHabit(name, startDate, schedule) {
     const newHabit = {
       id: crypto.randomUUID(),
       name,
       startDate,
+      schedule,
       doneDates: [],
     }
     setHabits([...habits, newHabit])

@@ -1,37 +1,45 @@
-import { toISODate } from './dates.js'
+import { datesBetween, todayISO } from './dates.js'
+import { isScheduled } from './schedule.js'
 
-export function currentStreak(doneDates) {
+function scheduledDatesUpToToday(doneDates, schedule) {
+  if (doneDates.length === 0) return []
+  const earliest = [...doneDates].sort()[0]
+  return datesBetween(earliest, todayISO()).filter((date) => isScheduled(date, schedule))
+}
+
+export function currentStreak(doneDates, schedule) {
   const doneSet = new Set(doneDates)
-  const cursor = new Date()
-  if (!doneSet.has(toISODate(cursor))) {
-    // today isn't checked off yet, but the streak isn't broken until the day
-    // fully passes - so give it a grace day and start counting from yesterday
-    cursor.setDate(cursor.getDate() - 1)
-  }
+  const scheduledDates = scheduledDatesUpToToday(doneDates, schedule)
+  const today = todayISO()
+
   let streak = 0
-  while (doneSet.has(toISODate(cursor))) {
-    streak++
-    cursor.setDate(cursor.getDate() - 1)
+  for (let i = scheduledDates.length - 1; i >= 0; i--) {
+    const date = scheduledDates[i]
+    if (doneSet.has(date)) {
+      streak++
+    } else if (date === today) {
+      // today isn't checked off yet, but the streak isn't broken until the day
+      // fully passes - so skip it (grace day) instead of breaking the streak
+      continue
+    } else {
+      break
+    }
   }
   return streak
 }
 
-export function bestStreak(doneDates) {
-  if (doneDates.length === 0) return 0
-  const sorted = [...doneDates].sort()
-  let best = 1
-  let current = 1
-  for (let i = 1; i < sorted.length; i++) {
-    const [py, pm, pd] = sorted[i - 1].split('-').map(Number)
-    const [cy, cm, cd] = sorted[i].split('-').map(Number)
-    const prevDate = new Date(py, pm - 1, pd)
-    const currDate = new Date(cy, cm - 1, cd)
-    const diffDays = Math.round((currDate - prevDate) / (1000 * 60 * 60 * 24))
-    if (diffDays === 1) {
+export function bestStreak(doneDates, schedule) {
+  const doneSet = new Set(doneDates)
+  const scheduledDates = scheduledDatesUpToToday(doneDates, schedule)
+
+  let best = 0
+  let current = 0
+  for (const date of scheduledDates) {
+    if (doneSet.has(date)) {
       current++
       best = Math.max(best, current)
-    } else if (diffDays > 1) {
-      current = 1
+    } else {
+      current = 0
     }
   }
   return best

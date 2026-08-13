@@ -18,6 +18,7 @@ function HabitList({ habits, dates, today, onToggleDate, onUpdateHabit, onDelete
             dates={dates}
             doneDates={habit.doneDates}
             startDate={habit.startDate}
+            schedule={habit.schedule}
             onToggleDate={(date) => onToggleDate(habit.id, date)}
             onUpdateHabit={(updates) => onUpdateHabit(habit.id, updates)}
             onDelete={() => onDeleteHabit(habit.id)}

@@ -1,23 +1,27 @@
 import { useState } from 'react'
 import HabitHeatmap from './HabitHeatmap.jsx'
+import SchedulePicker from './SchedulePicker.jsx'
 import { todayISO } from '../dates.js'
+import { isScheduled } from '../schedule.js'
 
-function HabitRow({ name, dates, doneDates, startDate, onToggleDate, onUpdateHabit, onDelete }) {
+function HabitRow({ name, dates, doneDates, startDate, schedule, onToggleDate, onUpdateHabit, onDelete }) {
   const [isEditing, setIsEditing] = useState(false)
   const [draftName, setDraftName] = useState(name)
   const [draftStartDate, setDraftStartDate] = useState(startDate)
+  const [draftSchedule, setDraftSchedule] = useState(schedule)
 
   function startEditing() {
     setDraftName(name)
     setDraftStartDate(startDate)
+    setDraftSchedule(schedule)
     setIsEditing(true)
   }
 
   function handleSave(event) {
     event.preventDefault()
     const trimmed = draftName.trim()
-    if (!trimmed) return
-    onUpdateHabit({ name: trimmed, startDate: draftStartDate })
+    if (!trimmed || draftSchedule.length === 0) return
+    onUpdateHabit({ name: trimmed, startDate: draftStartDate, schedule: draftSchedule })
     setIsEditing(false)
   }
 
@@ -32,15 +36,19 @@ function HabitRow({ name, dates, doneDates, startDate, onToggleDate, onUpdateHab
       <button type="button" className="habit-name-button" onClick={startEditing}>
         {name} <span className="edit-icon">✎</span>
       </button>
-      {dates.map((date) => (
-        <input
-          key={date}
-          type="checkbox"
-          className="day-checkbox"
-          checked={doneDates.includes(date)}
-          onChange={() => onToggleDate(date)}
-        />
-      ))}
+      {dates.map((date) =>
+        isScheduled(date, schedule) ? (
+          <input
+            key={date}
+            type="checkbox"
+            className="day-checkbox"
+            checked={doneDates.includes(date)}
+            onChange={() => onToggleDate(date)}
+          />
+        ) : (
+          <div key={date} className="day-checkbox day-checkbox-na" aria-hidden="true" />
+        ),
+      )}
       {isEditing && (
         <form onSubmit={handleSave} className="edit-panel">
           <input
@@ -60,6 +68,10 @@ function HabitRow({ name, dates, doneDates, startDate, onToggleDate, onUpdateHab
               onChange={(event) => setDraftStartDate(event.target.value)}
             />
           </label>
+          <div className="field-label">
+            Days
+            <SchedulePicker schedule={draftSchedule} onChange={setDraftSchedule} />
+          </div>
           <div className="button-row">
             <button type="submit" className="button button-primary">
               Save
@@ -73,7 +85,7 @@ function HabitRow({ name, dates, doneDates, startDate, onToggleDate, onUpdateHab
           </div>
         </form>
       )}
-      <HabitHeatmap startDate={startDate} doneDates={doneDates} />
+      <HabitHeatmap startDate={startDate} doneDates={doneDates} schedule={schedule} />
     </>
   )
 }

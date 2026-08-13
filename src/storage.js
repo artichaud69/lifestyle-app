@@ -1,11 +1,19 @@
 import { todayISO } from './dates.js'
+import { ALL_DAYS } from './schedule.js'
 
 const STORAGE_KEY = 'lifestyle-app.habits'
 
 function migrateHabit(habit) {
-  if (habit.startDate) return habit
-  // habits saved before startDate existed used createdAt for the same purpose
-  return { ...habit, startDate: habit.createdAt ?? todayISO() }
+  const migrated = { ...habit }
+  if (!migrated.startDate) {
+    // habits saved before startDate existed used createdAt for the same purpose
+    migrated.startDate = migrated.createdAt ?? todayISO()
+  }
+  if (!migrated.schedule) {
+    // habits saved before schedules existed were always daily
+    migrated.schedule = ALL_DAYS
+  }
+  return migrated
 }
 
 export function loadHabits() {

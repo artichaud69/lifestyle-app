@@ -1,14 +1,15 @@
 import { datesBetween, todayISO, formatShortLabel } from '../dates.js'
+import { isScheduled } from '../schedule.js'
 import { currentStreak, bestStreak } from '../streaks.js'
 
-function HabitHeatmap({ startDate, doneDates }) {
-  const allDates = datesBetween(startDate, todayISO())
+function HabitHeatmap({ startDate, doneDates, schedule }) {
+  const allDates = datesBetween(startDate, todayISO()).filter((date) => isScheduled(date, schedule))
   const doneSet = new Set(doneDates)
   const totalCount = allDates.length
   const doneCount = allDates.filter((date) => doneSet.has(date)).length
   const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
-  const streak = currentStreak(doneDates)
-  const best = bestStreak(doneDates)
+  const streak = currentStreak(doneDates, schedule)
+  const best = bestStreak(doneDates, schedule)
 
   return (
     <div className="habit-heatmap">

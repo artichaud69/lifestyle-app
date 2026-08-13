@@ -1,22 +1,26 @@
 import { useState } from 'react'
 import { todayISO } from '../dates.js'
+import { ALL_DAYS } from '../schedule.js'
+import SchedulePicker from './SchedulePicker.jsx'
 
 function AddHabitForm({ onAdd }) {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState('')
   const [startDate, setStartDate] = useState(todayISO())
+  const [schedule, setSchedule] = useState(ALL_DAYS)
 
   function openModal() {
     setName('')
     setStartDate(todayISO())
+    setSchedule(ALL_DAYS)
     setIsOpen(true)
   }
 
   function handleSubmit(event) {
     event.preventDefault()
     const trimmed = name.trim()
-    if (!trimmed) return
-    onAdd(trimmed, startDate)
+    if (!trimmed || schedule.length === 0) return
+    onAdd(trimmed, startDate, schedule)
     setIsOpen(false)
   }
 
@@ -46,6 +50,10 @@ function AddHabitForm({ onAdd }) {
                 onChange={(event) => setStartDate(event.target.value)}
               />
             </label>
+            <div className="field-label">
+              Days
+              <SchedulePicker schedule={schedule} onChange={setSchedule} />
+            </div>
             <div className="button-row">
               <button type="submit" className="button button-primary">
                 Add
