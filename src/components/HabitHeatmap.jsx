@@ -13,8 +13,17 @@ function HabitHeatmap({ startDate, doneDates, timesPerWeek }) {
   return (
     <div className="habit-heatmap">
       <div className="habit-streak">
-        {streak > 0 ? `🔥 ${streak}-week streak` : 'No active streak'}
-        {' · '}Best {best}
+        {streak > 0 ? (
+          <>
+            <img src={`${import.meta.env.BASE_URL}icons/streak-current.png`} alt="" className="stat-icon" />
+            {streak}-week streak
+          </>
+        ) : (
+          'No active streak'
+        )}
+        {' · '}
+        <img src={`${import.meta.env.BASE_URL}icons/nav-summary.png`} alt="" className="stat-icon" />
+        Best {best}
       </div>
       <div className="habit-heatmap-summary">
         {percent}% · Target {timesPerWeek}x/week · since {formatShortLabel(startDate)} ({weeks.length} week

@@ -1,8 +1,8 @@
 const TABS = [
-  { key: 'habits', label: 'Habits' },
-  { key: 'goals', label: 'Goals' },
-  { key: 'summary', label: 'Summary' },
-  { key: 'journal', label: 'Journal' },
+  { key: 'habits', label: 'Habits', icon: 'nav-habits.png' },
+  { key: 'goals', label: 'Goals', icon: 'nav-goals.png' },
+  { key: 'summary', label: 'Summary', icon: 'nav-summary.png' },
+  { key: 'journal', label: 'Journal', icon: 'nav-journal.png' },
 ]
 
 function NavBar({ view, onChangeView }) {
@@ -15,6 +15,7 @@ function NavBar({ view, onChangeView }) {
           className={`nav-tab${view === tab.key ? ' active' : ''}`}
           onClick={() => onChangeView(tab.key)}
         >
+          <img src={`${import.meta.env.BASE_URL}icons/${tab.icon}`} alt="" className="nav-icon" />
           {tab.label}
         </button>
       ))}

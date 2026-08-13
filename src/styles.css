@@ -50,7 +50,7 @@ body {
 
 .app {
   padding: var(--space-4);
-  padding-bottom: 88px;
+  padding-bottom: 108px;
   max-width: 480px;
   margin: 0 auto;
 }
@@ -70,18 +70,39 @@ body {
 
 .nav-tab {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
   background: none;
   border: none;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-text-muted);
-  padding: 8px 0;
+  padding: 6px 0 8px;
   cursor: pointer;
 }
 
 .nav-tab.active {
   color: var(--color-primary);
+}
+
+.nav-icon {
+  height: 22px;
+  width: auto;
+  opacity: 0.55;
+}
+
+.nav-tab.active .nav-icon {
+  opacity: 1;
+}
+
+.stat-icon {
+  height: 13px;
+  width: auto;
+  vertical-align: -2px;
+  margin-right: 2px;
 }
 
 h1 {
