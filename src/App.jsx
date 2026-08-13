@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import HabitsPage from './components/HabitsPage.jsx'
+import GoalsPage from './components/GoalsPage.jsx'
 import SummaryPage from './components/SummaryPage.jsx'
 import JournalPage from './components/JournalPage.jsx'
 import NavBar from './components/NavBar.jsx'
@@ -23,6 +24,10 @@ function App() {
       doneDates: [],
     }
     setHabits([...habits, newHabit])
+  }
+
+  function addHabits(newHabits) {
+    setHabits([...habits, ...newHabits])
   }
 
   function toggleDate(habitId, dateISO) {
@@ -57,6 +62,7 @@ function App() {
           onDeleteHabit={deleteHabit}
         />
       )}
+      {view === 'goals' && <GoalsPage habits={habits} onAddHabits={addHabits} />}
       {view === 'summary' && <SummaryPage habits={habits} />}
       {view === 'journal' && <JournalPage />}
       <NavBar view={view} onChangeView={setView} />

@@ -1,5 +1,6 @@
 const TABS = [
   { key: 'habits', label: 'Habits' },
+  { key: 'goals', label: 'Goals' },
   { key: 'summary', label: 'Summary' },
   { key: 'journal', label: 'Journal' },
 ]
