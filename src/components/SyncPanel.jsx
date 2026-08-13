@@ -26,74 +26,50 @@ function SyncPanel({
   status,
   message,
   syncedAt,
-  pendingEmail,
-  onRequestCode,
-  onVerifyCode,
-  onCancelSignIn,
+  onSignIn,
+  onSignUp,
+  onSetPassword,
   onSignOut,
 }) {
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [isBusy, setIsBusy] = useState(false)
 
-  async function handleRequest(event) {
+  async function handleSignIn(event) {
     event.preventDefault()
-    const trimmed = email.trim()
-    if (!trimmed) return
+    if (!email.trim() || !password) return
     setIsBusy(true)
-    await onRequestCode(trimmed)
+    const ok = await onSignIn(email.trim(), password)
+    setIsBusy(false)
+    if (ok) setPassword('')
+  }
+
+  async function handleSignUp() {
+    if (!email.trim() || !password) return
+    setIsBusy(true)
+    await onSignUp(email.trim(), password)
     setIsBusy(false)
   }
 
-  async function handleVerify(event) {
+  async function handleSetPassword(event) {
     event.preventDefault()
-    const trimmed = code.trim()
-    if (!trimmed) return
+    if (!newPassword) return
     setIsBusy(true)
-    const ok = await onVerifyCode(trimmed)
+    const ok = await onSetPassword(newPassword)
     setIsBusy(false)
     if (ok) {
-      setCode('')
-      setEmail('')
+      setNewPassword('')
+      setShowPasswordForm(false)
     }
   }
 
   if (!ready) return null
 
-  if (!session && pendingEmail) {
-    return (
-      <form className="edit-panel" onSubmit={handleVerify}>
-        <div className="sync-title">Enter your code</div>
-        <p className="sync-note">
-          Check {pendingEmail} for a 6-digit code and type it here. Entering it in the app keeps you
-          signed in here rather than in the browser.
-        </p>
-        <input
-          type="text"
-          className="text-input"
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-          placeholder="123456"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={10}
-        />
-        <div className="button-row">
-          <button type="submit" className="button button-primary" disabled={!code.trim() || isBusy}>
-            {isBusy ? 'Checking…' : 'Sign in'}
-          </button>
-          <button type="button" className="button button-secondary" onClick={onCancelSignIn}>
-            Use another email
-          </button>
-        </div>
-        {message && <p className="sync-note">{message}</p>}
-      </form>
-    )
-  }
-
   if (!session) {
     return (
-      <form className="edit-panel" onSubmit={handleRequest}>
+      <form className="edit-panel" onSubmit={handleSignIn}>
         <div className="sync-title">Back up your data</div>
         <p className="sync-note">
           Your habits and journal live only on this device. Sign in to keep a private copy in the
@@ -108,9 +84,29 @@ function SyncPanel({
           autoComplete="email"
           inputMode="email"
         />
+        <input
+          type="password"
+          className="text-input"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Password"
+          autoComplete="current-password"
+        />
         <div className="button-row">
-          <button type="submit" className="button button-primary" disabled={!email.trim() || isBusy}>
-            {isBusy ? 'Sending…' : 'Email me a code'}
+          <button
+            type="submit"
+            className="button button-primary"
+            disabled={!email.trim() || !password || isBusy}
+          >
+            {isBusy ? 'Working…' : 'Sign in'}
+          </button>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={handleSignUp}
+            disabled={!email.trim() || !password || isBusy}
+          >
+            Create account
           </button>
         </div>
         {message && <p className="sync-note">{message}</p>}
@@ -131,11 +127,45 @@ function SyncPanel({
         {formatted ? ` · last saved ${formatted}` : ''}
       </p>
       {status === 'error' && message && <p className="goal-error">{message}</p>}
-      <div className="button-row">
-        <button type="button" className="button button-secondary" onClick={onSignOut}>
-          Sign out
-        </button>
-      </div>
+
+      {showPasswordForm ? (
+        <form onSubmit={handleSetPassword}>
+          <input
+            type="password"
+            className="text-input"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            placeholder="New password"
+            autoComplete="new-password"
+          />
+          <div className="button-row">
+            <button type="submit" className="button button-primary" disabled={!newPassword || isBusy}>
+              {isBusy ? 'Saving…' : 'Save password'}
+            </button>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() => setShowPasswordForm(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="button-row">
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => setShowPasswordForm(true)}
+          >
+            Set a password
+          </button>
+          <button type="button" className="button button-secondary" onClick={onSignOut}>
+            Sign out
+          </button>
+        </div>
+      )}
+      {!showPasswordForm && status !== 'error' && message && <p className="sync-note">{message}</p>}
     </div>
   )
 }

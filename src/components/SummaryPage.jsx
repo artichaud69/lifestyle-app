@@ -79,10 +79,9 @@ function SummaryPage({ habits, onChangeView, sync }) {
         status={sync.status}
         message={sync.message}
         syncedAt={sync.syncedAt}
-        pendingEmail={sync.pendingEmail}
-        onRequestCode={sync.requestCode}
-        onVerifyCode={sync.verifyCode}
-        onCancelSignIn={sync.cancelSignIn}
+        onSignIn={sync.signIn}
+        onSignUp={sync.signUp}
+        onSetPassword={sync.setPassword}
         onSignOut={sync.signOut}
       />
     </div>
