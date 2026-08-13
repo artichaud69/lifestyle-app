@@ -2,14 +2,10 @@ import { useState, useEffect } from 'react'
 import HabitList from './components/HabitList.jsx'
 import AddHabitForm from './components/AddHabitForm.jsx'
 import { loadHabits, saveHabits } from './storage.js'
-import { todayISO, lastNDates } from './dates.js'
 import { defaultHabits } from './defaultHabits.js'
-
-const WINDOW_SIZE = 5
 
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
-  const dates = lastNDates(WINDOW_SIZE)
 
   useEffect(() => {
     saveHabits(habits)
@@ -55,8 +51,6 @@ function App() {
       </header>
       <HabitList
         habits={habits}
-        dates={dates}
-        today={todayISO()}
         onToggleDate={toggleDate}
         onUpdateHabit={updateHabit}
         onDeleteHabit={deleteHabit}

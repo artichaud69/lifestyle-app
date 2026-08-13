@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import HabitHeatmap from './HabitHeatmap.jsx'
 import FrequencyPicker from './FrequencyPicker.jsx'
-import { todayISO } from '../dates.js'
+import { todayISO, datesBetween, formatShortLabel } from '../dates.js'
 
-function HabitRow({ name, dates, doneDates, startDate, timesPerWeek, onToggleDate, onUpdateHabit, onDelete }) {
+function HabitRow({ name, doneDates, startDate, timesPerWeek, onToggleDate, onUpdateHabit, onDelete }) {
   const [isEditing, setIsEditing] = useState(false)
   const [draftName, setDraftName] = useState(name)
   const [draftStartDate, setDraftStartDate] = useState(startDate)
   const [draftTimesPerWeek, setDraftTimesPerWeek] = useState(timesPerWeek)
+  const scrollRef = useRef(null)
+
+  const today = todayISO()
+  const dates = datesBetween(startDate, today)
+
+  useEffect(() => {
+    // show today by default; the user can scroll left from here back to start date
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
+    }
+  }, [])
 
   function startEditing() {
     setDraftName(name)
@@ -31,26 +42,35 @@ function HabitRow({ name, dates, doneDates, startDate, timesPerWeek, onToggleDat
   }
 
   return (
-    <>
+    <div className="habit-card">
       <button type="button" className="habit-name-button" onClick={startEditing}>
         {name} <span className="edit-icon">✎</span>
       </button>
-      {dates.map((date) => {
-        const checked = doneDates.includes(date)
-        return (
-          <button
-            key={date}
-            type="button"
-            role="checkbox"
-            aria-checked={checked}
-            aria-label={date}
-            className={`day-toggle${checked ? ' checked' : ''}`}
-            onClick={() => onToggleDate(date)}
-          >
-            {checked ? '✓' : ''}
-          </button>
-        )
-      })}
+
+      <div className="habit-ticks-scroll" ref={scrollRef}>
+        <div className="habit-ticks-row">
+          {dates.map((date) => {
+            const checked = doneDates.includes(date)
+            const isToday = date === today
+            return (
+              <div key={date} className="tick-column">
+                <span className={`tick-date-label${isToday ? ' today' : ''}`}>{formatShortLabel(date)}</span>
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={checked}
+                  aria-label={date}
+                  className={`day-toggle${checked ? ' checked' : ''}`}
+                  onClick={() => onToggleDate(date)}
+                >
+                  {checked ? '✓' : ''}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       {isEditing && (
         <form onSubmit={handleSave} className="edit-panel">
           <input
@@ -87,8 +107,9 @@ function HabitRow({ name, dates, doneDates, startDate, timesPerWeek, onToggleDat
           </div>
         </form>
       )}
+
       <HabitHeatmap startDate={startDate} doneDates={doneDates} timesPerWeek={timesPerWeek} />
-    </>
+    </div>
   )
 }
 
