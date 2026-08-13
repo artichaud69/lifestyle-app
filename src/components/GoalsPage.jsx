@@ -5,7 +5,7 @@ import { generateHabitPlan } from '../ai.js'
 import { todayISO } from '../dates.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import FrequencyPicker from './FrequencyPicker.jsx'
-import PageHeader from './PageHeader.jsx'
+import PageHero from './PageHero.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
 function GoalsPage({ habits, onAddHabits }) {
@@ -89,7 +89,7 @@ function GoalsPage({ habits, onAddHabits }) {
 
   return (
     <>
-      <PageHeader title="Goals" icon={PAGE_ICONS.goals} />
+      <PageHero title="Goals" icon={PAGE_ICONS.goals} image="images/goals-hero.jpg" />
 
       {!apiKey || showApiKeyForm ? (
         <form className="edit-panel" onSubmit={handleSaveApiKey}>

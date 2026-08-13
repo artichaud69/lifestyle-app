@@ -139,6 +139,39 @@ h1 {
   flex-shrink: 0;
 }
 
+.page-hero {
+  position: relative;
+  border-radius: var(--radius-md);
+  background-size: cover;
+  background-position: center;
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  overflow: hidden;
+  min-height: 130px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.page-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(20, 15, 10, 0.85), rgba(20, 15, 10, 0.35));
+}
+
+.page-hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--space-3);
+}
+
+.page-hero h1 {
+  color: #fbf3e7;
+}
+
 .icon-button {
   width: 40px;
   height: 40px;
