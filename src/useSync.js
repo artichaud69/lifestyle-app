@@ -8,6 +8,7 @@ export function useSync() {
   const [status, setStatus] = useState('idle')
   const [message, setMessage] = useState(null)
   const [syncedAt, setSyncedAt] = useState(() => lastSyncedAt())
+  const [pendingEmail, setPendingEmail] = useState(null)
   const stopAutoPush = useRef(null)
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export function useSync() {
     }
   }, [userId])
 
-  const signIn = useCallback(async (email) => {
+  const requestCode = useCallback(async (email) => {
     setMessage(null)
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -72,14 +73,53 @@ export function useSync() {
       setMessage(error.message)
       return false
     }
-    setMessage(`Check ${email} for your sign-in link.`)
+    setPendingEmail(email)
+    setMessage(`We sent a 6-digit code to ${email}.`)
     return true
+  }, [])
+
+  // Verifying the code in-app avoids leaving for the browser, which is what
+  // breaks magic links inside an installed iOS home-screen app.
+  const verifyCode = useCallback(
+    async (code) => {
+      if (!pendingEmail) return false
+      setMessage(null)
+      const { error } = await supabase.auth.verifyOtp({
+        email: pendingEmail,
+        token: code.trim(),
+        type: 'email',
+      })
+      if (error) {
+        setMessage(error.message)
+        return false
+      }
+      setPendingEmail(null)
+      return true
+    },
+    [pendingEmail],
+  )
+
+  const cancelSignIn = useCallback(() => {
+    setPendingEmail(null)
+    setMessage(null)
   }, [])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
+    setPendingEmail(null)
     setMessage(null)
   }, [])
 
-  return { session, ready, status, message, syncedAt, signIn, signOut }
+  return {
+    session,
+    ready,
+    status,
+    message,
+    syncedAt,
+    pendingEmail,
+    requestCode,
+    verifyCode,
+    cancelSignIn,
+    signOut,
+  }
 }

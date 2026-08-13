@@ -20,25 +20,80 @@ function formatSyncedAt(iso) {
   })
 }
 
-function SyncPanel({ session, ready, status, message, syncedAt, onSignIn, onSignOut }) {
+function SyncPanel({
+  session,
+  ready,
+  status,
+  message,
+  syncedAt,
+  pendingEmail,
+  onRequestCode,
+  onVerifyCode,
+  onCancelSignIn,
+  onSignOut,
+}) {
   const [email, setEmail] = useState('')
-  const [isSending, setIsSending] = useState(false)
+  const [code, setCode] = useState('')
+  const [isBusy, setIsBusy] = useState(false)
 
-  async function handleSubmit(event) {
+  async function handleRequest(event) {
     event.preventDefault()
     const trimmed = email.trim()
     if (!trimmed) return
-    setIsSending(true)
-    const sent = await onSignIn(trimmed)
-    setIsSending(false)
-    if (sent) setEmail('')
+    setIsBusy(true)
+    await onRequestCode(trimmed)
+    setIsBusy(false)
+  }
+
+  async function handleVerify(event) {
+    event.preventDefault()
+    const trimmed = code.trim()
+    if (!trimmed) return
+    setIsBusy(true)
+    const ok = await onVerifyCode(trimmed)
+    setIsBusy(false)
+    if (ok) {
+      setCode('')
+      setEmail('')
+    }
   }
 
   if (!ready) return null
 
+  if (!session && pendingEmail) {
+    return (
+      <form className="edit-panel" onSubmit={handleVerify}>
+        <div className="sync-title">Enter your code</div>
+        <p className="sync-note">
+          Check {pendingEmail} for a 6-digit code and type it here. Entering it in the app keeps you
+          signed in here rather than in the browser.
+        </p>
+        <input
+          type="text"
+          className="text-input"
+          value={code}
+          onChange={(event) => setCode(event.target.value)}
+          placeholder="123456"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={10}
+        />
+        <div className="button-row">
+          <button type="submit" className="button button-primary" disabled={!code.trim() || isBusy}>
+            {isBusy ? 'Checking…' : 'Sign in'}
+          </button>
+          <button type="button" className="button button-secondary" onClick={onCancelSignIn}>
+            Use another email
+          </button>
+        </div>
+        {message && <p className="sync-note">{message}</p>}
+      </form>
+    )
+  }
+
   if (!session) {
     return (
-      <form className="edit-panel" onSubmit={handleSubmit}>
+      <form className="edit-panel" onSubmit={handleRequest}>
         <div className="sync-title">Back up your data</div>
         <p className="sync-note">
           Your habits and journal live only on this device. Sign in to keep a private copy in the
@@ -51,10 +106,11 @@ function SyncPanel({ session, ready, status, message, syncedAt, onSignIn, onSign
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           autoComplete="email"
+          inputMode="email"
         />
         <div className="button-row">
-          <button type="submit" className="button button-primary" disabled={!email.trim() || isSending}>
-            {isSending ? 'Sending…' : 'Email me a link'}
+          <button type="submit" className="button button-primary" disabled={!email.trim() || isBusy}>
+            {isBusy ? 'Sending…' : 'Email me a code'}
           </button>
         </div>
         {message && <p className="sync-note">{message}</p>}
