@@ -5,6 +5,7 @@ import FlameIcon from './FlameIcon.jsx'
 import JournalCalendar from './JournalCalendar.jsx'
 import JournalDayModal from './JournalDayModal.jsx'
 import PageHeader from './PageHeader.jsx'
+import { PAGE_ICONS } from '../navIcons.js'
 
 function JournalPage() {
   const [entries, setEntries] = useState(() => loadJournal())
@@ -26,7 +27,7 @@ function JournalPage() {
 
   return (
     <>
-      <PageHeader title="Journal" />
+      <PageHeader title="Journal" icon={PAGE_ICONS.journal} />
 
       {todayEntry ? (
         <button type="button" className="today-done-card" onClick={() => setSelectedDate(today)}>

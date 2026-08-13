@@ -6,6 +6,7 @@ import { todayISO } from '../dates.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import FrequencyPicker from './FrequencyPicker.jsx'
 import PageHeader from './PageHeader.jsx'
+import { PAGE_ICONS } from '../navIcons.js'
 
 function GoalsPage({ habits, onAddHabits }) {
   const [apiKey, setApiKey] = useState(() => loadApiKey())
@@ -88,7 +89,7 @@ function GoalsPage({ habits, onAddHabits }) {
 
   return (
     <>
-      <PageHeader title="Goals" />
+      <PageHeader title="Goals" icon={PAGE_ICONS.goals} />
 
       {!apiKey || showApiKeyForm ? (
         <form className="edit-panel" onSubmit={handleSaveApiKey}>

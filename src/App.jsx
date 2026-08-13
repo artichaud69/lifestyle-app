@@ -9,7 +9,7 @@ import { defaultHabits } from './defaultHabits.js'
 
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
-  const [view, setView] = useState('habits')
+  const [view, setView] = useState('summary')
 
   useEffect(() => {
     saveHabits(habits)
@@ -63,7 +63,7 @@ function App() {
         />
       )}
       {view === 'goals' && <GoalsPage habits={habits} onAddHabits={addHabits} />}
-      {view === 'summary' && <SummaryPage habits={habits} />}
+      {view === 'summary' && <SummaryPage habits={habits} onChangeView={setView} />}
       {view === 'journal' && <JournalPage />}
       <NavBar view={view} onChangeView={setView} />
     </div>

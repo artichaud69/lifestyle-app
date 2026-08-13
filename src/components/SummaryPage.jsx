@@ -2,16 +2,40 @@ import { todayISO, datesBetween } from '../dates.js'
 import { currentStreak, bestStreak } from '../streaks.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import PageHeader from './PageHeader.jsx'
+import { PAGE_ICONS } from '../navIcons.js'
 
-function SummaryPage({ habits }) {
+const QUICK_LINKS = [
+  { key: 'habits', label: 'Habits', icon: PAGE_ICONS.habits },
+  { key: 'goals', label: 'Goals', icon: PAGE_ICONS.goals },
+  { key: 'journal', label: 'Journal', icon: PAGE_ICONS.journal },
+]
+
+function SummaryPage({ habits, onChangeView }) {
   const today = todayISO()
   const doneToday = habits.filter((habit) => habit.doneDates.includes(today)).length
   const year = Number(today.slice(0, 4))
   const daysLeftInYear = datesBetween(today, `${year}-12-31`).length - 1
+  const totalDaysInYear = datesBetween(`${year}-01-01`, `${year}-12-31`).length
+  const yearPercent = Math.round(((totalDaysInYear - daysLeftInYear) / totalDaysInYear) * 100)
 
   return (
     <>
-      <PageHeader title="Summary" />
+      <PageHeader title="Summary" icon={PAGE_ICONS.summary} />
+
+      <div className="summary-links">
+        {QUICK_LINKS.map((link) => (
+          <button
+            key={link.key}
+            type="button"
+            className="summary-link"
+            onClick={() => onChangeView(link.key)}
+          >
+            <img src={`${import.meta.env.BASE_URL}${link.icon}`} alt="" className="summary-link-icon" />
+            {link.label}
+          </button>
+        ))}
+      </div>
+
       <div className="summary-today-card">
         <div className="summary-today-value">
           {doneToday} / {habits.length}
@@ -21,6 +45,10 @@ function SummaryPage({ habits }) {
       <div className="summary-today-card">
         <div className="summary-today-value">{daysLeftInYear}</div>
         <div className="summary-today-label">days left in {year}</div>
+        <div className="year-progress-track">
+          <div className="year-progress-fill" style={{ width: `${yearPercent}%` }} />
+        </div>
+        <div className="year-progress-label">{yearPercent}% of the year gone</div>
       </div>
 
       {habits.length === 0 ? (

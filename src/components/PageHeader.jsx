@@ -1,8 +1,8 @@
-function PageHeader({ title, children }) {
+function PageHeader({ title, icon, children }) {
   return (
     <header className="app-header">
       <div className="page-title">
-        <img src={`${import.meta.env.BASE_URL}logo-mark.png`} alt="" className="page-logo" />
+        <img src={`${import.meta.env.BASE_URL}${icon}`} alt="" className="page-logo" />
         <h1>{title}</h1>
       </div>
       {children}

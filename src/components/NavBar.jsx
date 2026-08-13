@@ -1,8 +1,10 @@
+import { PAGE_ICONS } from '../navIcons.js'
+
 const TABS = [
-  { key: 'habits', label: 'Habits', icon: 'nav-habits.png' },
-  { key: 'goals', label: 'Goals', icon: 'nav-goals.png' },
-  { key: 'summary', label: 'Summary', icon: 'nav-summary.png' },
-  { key: 'journal', label: 'Journal', icon: 'nav-journal.png' },
+  { key: 'habits', label: 'Habits', icon: PAGE_ICONS.habits },
+  { key: 'goals', label: 'Goals', icon: PAGE_ICONS.goals },
+  { key: 'summary', label: 'Summary', icon: PAGE_ICONS.summary },
+  { key: 'journal', label: 'Journal', icon: PAGE_ICONS.journal },
 ]
 
 function NavBar({ view, onChangeView }) {
@@ -15,7 +17,7 @@ function NavBar({ view, onChangeView }) {
           className={`nav-tab${view === tab.key ? ' active' : ''}`}
           onClick={() => onChangeView(tab.key)}
         >
-          <img src={`${import.meta.env.BASE_URL}icons/${tab.icon}`} alt="" className="nav-icon" />
+          <img src={`${import.meta.env.BASE_URL}${tab.icon}`} alt="" className="nav-icon" />
           {tab.label}
         </button>
       ))}
