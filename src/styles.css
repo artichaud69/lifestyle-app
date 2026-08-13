@@ -50,6 +50,57 @@ h1 {
   margin: 0 0 var(--space-4);
 }
 
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.app-header h1 {
+  margin: 0;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 100;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
 .habit-grid-wrapper {
   overflow-x: auto;
   max-width: 100%;
@@ -190,16 +241,6 @@ h1 {
   background: transparent;
   color: var(--color-danger);
   margin-left: auto;
-}
-
-.add-form {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
-}
-
-.add-form .text-input {
-  flex: 1;
 }
 
 .error-boundary {

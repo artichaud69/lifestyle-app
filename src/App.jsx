@@ -15,11 +15,11 @@ function App() {
     saveHabits(habits)
   }, [habits])
 
-  function addHabit(name) {
+  function addHabit(name, startDate) {
     const newHabit = {
       id: crypto.randomUUID(),
       name,
-      startDate: todayISO(),
+      startDate,
       doneDates: [],
     }
     setHabits([...habits, newHabit])
@@ -48,7 +48,10 @@ function App() {
 
   return (
     <div className="app">
-      <h1>Habit Tracker</h1>
+      <header className="app-header">
+        <h1>Habit Tracker</h1>
+        <AddHabitForm onAdd={addHabit} />
+      </header>
       <HabitList
         habits={habits}
         dates={dates}
@@ -57,7 +60,6 @@ function App() {
         onUpdateHabit={updateHabit}
         onDeleteHabit={deleteHabit}
       />
-      <AddHabitForm onAdd={addHabit} />
     </div>
   )
 }
