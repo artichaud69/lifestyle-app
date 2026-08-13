@@ -1,3 +1,5 @@
+import { notifyDataChanged } from './dataChange.js'
+
 const JOURNAL_KEY = 'lifestyle-app.journal'
 
 export const MOODS = [
@@ -31,4 +33,5 @@ export function loadJournal() {
 
 export function saveJournal(entries) {
   localStorage.setItem(JOURNAL_KEY, JSON.stringify(entries))
+  notifyDataChanged()
 }

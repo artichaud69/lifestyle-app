@@ -2,6 +2,7 @@ import { todayISO, datesBetween } from '../dates.js'
 import { currentStreak, bestStreak } from '../streaks.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import PageHeader from './PageHeader.jsx'
+import SyncPanel from './SyncPanel.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
 const QUICK_LINKS = [
@@ -10,7 +11,7 @@ const QUICK_LINKS = [
   { key: 'journal', label: 'Journal', icon: PAGE_ICONS.journal },
 ]
 
-function SummaryPage({ habits, onChangeView }) {
+function SummaryPage({ habits, onChangeView, sync }) {
   const today = todayISO()
   const doneToday = habits.filter((habit) => habit.doneDates.includes(today)).length
   const year = Number(today.slice(0, 4))
@@ -70,6 +71,17 @@ function SummaryPage({ habits, onChangeView }) {
           })}
         </div>
       )}
+
+      <h2 className="section-heading">Backup</h2>
+      <SyncPanel
+        session={sync.session}
+        ready={sync.ready}
+        status={sync.status}
+        message={sync.message}
+        syncedAt={sync.syncedAt}
+        onSignIn={sync.signIn}
+        onSignOut={sync.signOut}
+      />
     </div>
   )
 }

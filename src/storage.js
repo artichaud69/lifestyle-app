@@ -1,5 +1,6 @@
 import { todayISO } from './dates.js'
 import { DAILY } from './frequency.js'
+import { notifyDataChanged } from './dataChange.js'
 
 const STORAGE_KEY = 'lifestyle-app.habits'
 
@@ -35,4 +36,5 @@ export function loadHabits() {
 
 export function saveHabits(habits) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(habits))
+  notifyDataChanged()
 }

@@ -7,6 +7,7 @@ import NavBar from './components/NavBar.jsx'
 import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
+import { useSync } from './useSync.js'
 
 const WALLPAPERS = {
   habits: 'images/habits-wallpaper.jpg',
@@ -18,6 +19,7 @@ const WALLPAPERS = {
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
   const [view, setView] = useState('summary')
+  const sync = useSync()
 
   useEffect(() => {
     saveHabits(habits)
@@ -73,7 +75,7 @@ function App() {
           />
         )}
         {view === 'goals' && <GoalsPage habits={habits} onAddHabits={addHabits} />}
-        {view === 'summary' && <SummaryPage habits={habits} onChangeView={setView} />}
+        {view === 'summary' && <SummaryPage habits={habits} onChangeView={setView} sync={sync} />}
         {view === 'journal' && <JournalPage />}
       </div>
       <NavBar view={view} onChangeView={setView} />
