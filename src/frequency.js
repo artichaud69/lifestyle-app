@@ -37,3 +37,15 @@ export function isCompleteWeek(week, startDate) {
   if (week === firstWeek && startDate !== firstWeek) return false
   return true
 }
+
+export function weeklyCompletionPercent(startDate, doneDates, timesPerWeek) {
+  const weeks = weeksList(startDate)
+  if (weeks.length === 0) return 0
+  const counts = countsByWeek(doneDates)
+
+  const completeWeeks = weeks.filter((week) => isCompleteWeek(week, startDate))
+  const weeksToAverage = completeWeeks.length > 0 ? completeWeeks : weeks
+
+  const totalRatio = weeksToAverage.reduce((sum, week) => sum + Math.min((counts[week] ?? 0) / timesPerWeek, 1), 0)
+  return Math.round((totalRatio / weeksToAverage.length) * 100)
+}

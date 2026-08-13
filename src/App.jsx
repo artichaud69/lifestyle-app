@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
-import HabitList from './components/HabitList.jsx'
-import AddHabitForm from './components/AddHabitForm.jsx'
+import HabitsPage from './components/HabitsPage.jsx'
+import SummaryPage from './components/SummaryPage.jsx'
+import JournalPage from './components/JournalPage.jsx'
+import NavBar from './components/NavBar.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
+  const [view, setView] = useState('habits')
 
   useEffect(() => {
     saveHabits(habits)
@@ -45,16 +48,18 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Habit Tracker</h1>
-        <AddHabitForm onAdd={addHabit} />
-      </header>
-      <HabitList
-        habits={habits}
-        onToggleDate={toggleDate}
-        onUpdateHabit={updateHabit}
-        onDeleteHabit={deleteHabit}
-      />
+      {view === 'habits' && (
+        <HabitsPage
+          habits={habits}
+          onAddHabit={addHabit}
+          onToggleDate={toggleDate}
+          onUpdateHabit={updateHabit}
+          onDeleteHabit={deleteHabit}
+        />
+      )}
+      {view === 'summary' && <SummaryPage habits={habits} />}
+      {view === 'journal' && <JournalPage />}
+      <NavBar view={view} onChangeView={setView} />
     </div>
   )
 }
