@@ -1,58 +1,66 @@
-import { buildMonthGrid, weekdayLabels } from '../calendarGrid.js'
-import { WEEK_STARTS_ON } from '../frequency.js'
+import { useState } from 'react'
+import { addMonths, entryYears } from '../calendarGrid.js'
 import { todayISO } from '../dates.js'
-
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
+import JournalMonthView from './JournalMonthView.jsx'
+import JournalYearView from './JournalYearView.jsx'
 
 function JournalCalendar({ entries, onSelectDay }) {
   const today = todayISO()
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
-  const weeks = buildMonthGrid(year, month, WEEK_STARTS_ON)
-  const labels = weekdayLabels(WEEK_STARTS_ON)
+  const todayYear = Number(today.slice(0, 4))
+  const todayMonth = Number(today.slice(5, 7)) - 1
+
+  const [mode, setMode] = useState('month')
+  const [monthCursorYear, setMonthCursorYear] = useState(todayYear)
+  const [monthCursorMonth, setMonthCursorMonth] = useState(todayMonth)
+  const [yearCursor, setYearCursor] = useState(todayYear)
+
+  const years = entryYears(entries)
+  const canGoPrevYear = years.has(yearCursor - 1)
+  const canGoNextYear = years.has(yearCursor + 1)
+
+  function handleMonthNavigate(delta) {
+    const next = addMonths(monthCursorYear, monthCursorMonth, delta)
+    setMonthCursorYear(next.year)
+    setMonthCursorMonth(next.month)
+  }
 
   return (
     <div className="calendar">
-      <div className="calendar-month-label">
-        {MONTH_NAMES[month]} {year}
+      <div className="view-toggle">
+        <button
+          type="button"
+          className={`view-toggle-option${mode === 'month' ? ' active' : ''}`}
+          onClick={() => setMode('month')}
+        >
+          Month
+        </button>
+        <button
+          type="button"
+          className={`view-toggle-option${mode === 'year' ? ' active' : ''}`}
+          onClick={() => setMode('year')}
+        >
+          Year
+        </button>
       </div>
-      <div className="calendar-weekdays">
-        {labels.map((label, index) => (
-          <div key={index} className="calendar-weekday">
-            {label}
-          </div>
-        ))}
-      </div>
-      <div className="calendar-grid">
-        {weeks.flatMap((week, weekIndex) =>
-          week.map((cell, dayIndex) => {
-            if (!cell) {
-              return <div key={`${weekIndex}-${dayIndex}`} className="calendar-day empty" />
-            }
-            const entry = entries[cell.date]
-            const moodClass = entry ? ` mood-${entry.mood}` : ''
-            const isToday = cell.date === today
-            const isFuture = cell.date > today
-            return (
-              <button
-                key={cell.date}
-                type="button"
-                className={`calendar-day${moodClass}${isToday ? ' today' : ''}${isFuture ? ' future' : ''}`}
-                onClick={() => onSelectDay(cell.date)}
-                disabled={isFuture}
-                aria-label={cell.date}
-                title={cell.date}
-              >
-                {cell.day}
-              </button>
-            )
-          })
-        )}
-      </div>
+
+      {mode === 'month' ? (
+        <JournalMonthView
+          year={monthCursorYear}
+          month={monthCursorMonth}
+          entries={entries}
+          onSelectDay={onSelectDay}
+          onNavigate={handleMonthNavigate}
+        />
+      ) : (
+        <JournalYearView
+          year={yearCursor}
+          entries={entries}
+          onSelectDay={onSelectDay}
+          canGoPrev={canGoPrevYear}
+          canGoNext={canGoNextYear}
+          onNavigate={(delta) => setYearCursor(yearCursor + delta)}
+        />
+      )}
     </div>
   )
 }

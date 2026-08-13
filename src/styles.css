@@ -469,6 +469,59 @@ textarea.text-input {
   margin-bottom: var(--space-4);
 }
 
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--space-3);
+}
+
+.view-toggle-option {
+  flex: 1;
+  padding: 6px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-toggle-option.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.calendar-nav-button {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
+  color: var(--color-text);
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.calendar-nav-button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 .calendar-month-label {
   font-family: var(--font-display);
   font-size: 0.95rem;
@@ -476,7 +529,6 @@ textarea.text-input {
   letter-spacing: 0.03em;
   text-transform: uppercase;
   text-align: center;
-  margin-bottom: var(--space-2);
 }
 
 .calendar-weekdays {
@@ -560,4 +612,69 @@ textarea.text-input {
   background: var(--mood-5);
   border-color: var(--mood-5);
   color: #201b12;
+}
+
+.year-view {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.year-month-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 3px;
+}
+
+.year-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.year-month-day {
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: 1px;
+  background: var(--color-border);
+  cursor: pointer;
+}
+
+.year-month-day.empty {
+  visibility: hidden;
+  cursor: default;
+}
+
+.year-month-day.future {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.year-month-day.today {
+  outline: 1.5px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.year-month-day.mood-1 {
+  background: var(--mood-1);
+}
+
+.year-month-day.mood-2 {
+  background: var(--mood-2);
+}
+
+.year-month-day.mood-3 {
+  background: var(--mood-3);
+}
+
+.year-month-day.mood-4 {
+  background: var(--mood-4);
+}
+
+.year-month-day.mood-5 {
+  background: var(--mood-5);
 }

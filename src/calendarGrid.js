@@ -1,5 +1,28 @@
 import { toISODate } from './dates.js'
 
+export const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+export const MONTH_NAMES_SHORT = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+]
+
+export function addMonths(year, month, delta) {
+  const total = year * 12 + month + delta
+  return { year: Math.floor(total / 12), month: ((total % 12) + 12) % 12 }
+}
+
+export function entryYears(entries) {
+  const years = new Set()
+  for (const date of Object.keys(entries)) {
+    years.add(Number(date.slice(0, 4)))
+  }
+  return years
+}
+
 export function buildMonthGrid(year, month, weekStartsOn) {
   const firstOfMonth = new Date(year, month, 1)
   const daysInMonth = new Date(year, month + 1, 0).getDate()
