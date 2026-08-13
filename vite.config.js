@@ -8,6 +8,10 @@ const base = '/lifestyle-app/'
 
 export default defineConfig({
   base,
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.js'],
+  },
   plugins: [
     react(),
     VitePWA({

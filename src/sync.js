@@ -20,7 +20,7 @@ function readLocalUpdatedAt() {
 // Postgres hands timestamps back as "...+00:00" while the app writes "...Z".
 // Those are the same instant but do not sort the same way as plain strings, so
 // always compare parsed values.
-function isNewer(candidate, reference) {
+export function isNewer(candidate, reference) {
   const candidateTime = Date.parse(candidate)
   if (Number.isNaN(candidateTime)) return false
   const referenceTime = Date.parse(reference)
