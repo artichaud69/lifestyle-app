@@ -1,4 +1,5 @@
 import { datesBetween, todayISO, formatShortLabel } from '../dates.js'
+import { currentStreak, bestStreak } from '../streaks.js'
 
 function HabitHeatmap({ startDate, doneDates }) {
   const allDates = datesBetween(startDate, todayISO())
@@ -6,9 +7,15 @@ function HabitHeatmap({ startDate, doneDates }) {
   const totalCount = allDates.length
   const doneCount = allDates.filter((date) => doneSet.has(date)).length
   const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
+  const streak = currentStreak(doneDates)
+  const best = bestStreak(doneDates)
 
   return (
     <div className="habit-heatmap">
+      <div className="habit-streak">
+        {streak > 0 ? `🔥 ${streak}-day streak` : 'No active streak'}
+        {' · '}Best {best}
+      </div>
       <div className="habit-heatmap-summary">
         {percent}% since {formatShortLabel(startDate)} ({totalCount} day{totalCount === 1 ? '' : 's'})
       </div>

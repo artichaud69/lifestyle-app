@@ -157,6 +157,13 @@ h1 {
   border-bottom: 1px solid var(--color-border);
 }
 
+.habit-streak {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
 .habit-heatmap-summary {
   font-size: 11px;
   color: var(--color-text-muted);
