@@ -1,24 +1,36 @@
 import { datesBetween, todayISO, formatShortLabel } from '../dates.js'
-import { isScheduled } from '../schedule.js'
+import { weeksList, countsByWeek, isCompleteWeek } from '../frequency.js'
 import { currentStreak, bestStreak } from '../streaks.js'
 
-function HabitHeatmap({ startDate, doneDates, schedule }) {
-  const allDates = datesBetween(startDate, todayISO()).filter((date) => isScheduled(date, schedule))
+function weeklyCompletionPercent(startDate, doneDates, timesPerWeek) {
+  const weeks = weeksList(startDate)
+  if (weeks.length === 0) return 0
+  const counts = countsByWeek(doneDates)
+
+  const completeWeeks = weeks.filter((week) => isCompleteWeek(week, startDate))
+  const weeksToAverage = completeWeeks.length > 0 ? completeWeeks : weeks
+
+  const totalRatio = weeksToAverage.reduce((sum, week) => sum + Math.min((counts[week] ?? 0) / timesPerWeek, 1), 0)
+  return Math.round((totalRatio / weeksToAverage.length) * 100)
+}
+
+function HabitHeatmap({ startDate, doneDates, timesPerWeek }) {
+  const allDates = datesBetween(startDate, todayISO())
   const doneSet = new Set(doneDates)
-  const totalCount = allDates.length
-  const doneCount = allDates.filter((date) => doneSet.has(date)).length
-  const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
-  const streak = currentStreak(doneDates, schedule)
-  const best = bestStreak(doneDates, schedule)
+  const weeks = weeksList(startDate)
+  const percent = weeklyCompletionPercent(startDate, doneDates, timesPerWeek)
+  const streak = currentStreak(startDate, doneDates, timesPerWeek)
+  const best = bestStreak(startDate, doneDates, timesPerWeek)
 
   return (
     <div className="habit-heatmap">
       <div className="habit-streak">
-        {streak > 0 ? `🔥 ${streak}-day streak` : 'No active streak'}
+        {streak > 0 ? `🔥 ${streak}-week streak` : 'No active streak'}
         {' · '}Best {best}
       </div>
       <div className="habit-heatmap-summary">
-        {percent}% since {formatShortLabel(startDate)} ({totalCount} day{totalCount === 1 ? '' : 's'})
+        {percent}% · Target {timesPerWeek}x/week · since {formatShortLabel(startDate)} ({weeks.length} week
+        {weeks.length === 1 ? '' : 's'})
       </div>
       <div className="heatmap-squares">
         {allDates.map((date) => (

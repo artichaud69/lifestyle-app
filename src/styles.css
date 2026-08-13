@@ -151,19 +151,12 @@ h1 {
   accent-color: var(--color-primary);
 }
 
-.day-checkbox-na {
-  border-radius: 4px;
-  background: var(--color-border);
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.schedule-picker {
+.frequency-picker {
   display: flex;
   gap: 4px;
 }
 
-.day-toggle {
+.frequency-option {
   flex: 1;
   aspect-ratio: 1;
   border: 1px solid var(--color-border);
@@ -179,7 +172,7 @@ h1 {
   justify-content: center;
 }
 
-.day-toggle.active {
+.frequency-option.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-primary-text);

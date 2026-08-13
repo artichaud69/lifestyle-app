@@ -1,25 +1,18 @@
-import { datesBetween, todayISO } from './dates.js'
-import { isScheduled } from './schedule.js'
+import { weeksList, countsByWeek, isCompleteWeek } from './frequency.js'
 
-function scheduledDatesUpToToday(doneDates, schedule) {
-  if (doneDates.length === 0) return []
-  const earliest = [...doneDates].sort()[0]
-  return datesBetween(earliest, todayISO()).filter((date) => isScheduled(date, schedule))
-}
-
-export function currentStreak(doneDates, schedule) {
-  const doneSet = new Set(doneDates)
-  const scheduledDates = scheduledDatesUpToToday(doneDates, schedule)
-  const today = todayISO()
+export function currentStreak(startDate, doneDates, timesPerWeek) {
+  const weeks = weeksList(startDate)
+  if (weeks.length === 0) return 0
+  const counts = countsByWeek(doneDates)
 
   let streak = 0
-  for (let i = scheduledDates.length - 1; i >= 0; i--) {
-    const date = scheduledDates[i]
-    if (doneSet.has(date)) {
+  for (let i = weeks.length - 1; i >= 0; i--) {
+    const week = weeks[i]
+    const met = (counts[week] ?? 0) >= timesPerWeek
+    if (met) {
       streak++
-    } else if (date === today) {
-      // today isn't checked off yet, but the streak isn't broken until the day
-      // fully passes - so skip it (grace day) instead of breaking the streak
+    } else if (!isCompleteWeek(week, startDate)) {
+      // partial week (first or current) - doesn't break the streak
       continue
     } else {
       break
@@ -28,16 +21,19 @@ export function currentStreak(doneDates, schedule) {
   return streak
 }
 
-export function bestStreak(doneDates, schedule) {
-  const doneSet = new Set(doneDates)
-  const scheduledDates = scheduledDatesUpToToday(doneDates, schedule)
+export function bestStreak(startDate, doneDates, timesPerWeek) {
+  const weeks = weeksList(startDate)
+  const counts = countsByWeek(doneDates)
 
   let best = 0
   let current = 0
-  for (const date of scheduledDates) {
-    if (doneSet.has(date)) {
+  for (const week of weeks) {
+    const met = (counts[week] ?? 0) >= timesPerWeek
+    if (met) {
       current++
       best = Math.max(best, current)
+    } else if (!isCompleteWeek(week, startDate)) {
+      continue
     } else {
       current = 0
     }

@@ -26,6 +26,14 @@ export function formatShortLabel(iso) {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+export function startOfWeek(dateISO, weekStartsOn) {
+  const [year, month, day] = dateISO.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  const diff = (date.getDay() - weekStartsOn + 7) % 7
+  date.setDate(date.getDate() - diff)
+  return toISODate(date)
+}
+
 export function datesBetween(startISO, endISO) {
   const [sy, sm, sd] = startISO.split('-').map(Number)
   const [ey, em, ed] = endISO.split('-').map(Number)

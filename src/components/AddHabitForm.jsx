@@ -1,26 +1,26 @@
 import { useState } from 'react'
 import { todayISO } from '../dates.js'
-import { ALL_DAYS } from '../schedule.js'
-import SchedulePicker from './SchedulePicker.jsx'
+import { DAILY } from '../frequency.js'
+import FrequencyPicker from './FrequencyPicker.jsx'
 
 function AddHabitForm({ onAdd }) {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState('')
   const [startDate, setStartDate] = useState(todayISO())
-  const [schedule, setSchedule] = useState(ALL_DAYS)
+  const [timesPerWeek, setTimesPerWeek] = useState(DAILY)
 
   function openModal() {
     setName('')
     setStartDate(todayISO())
-    setSchedule(ALL_DAYS)
+    setTimesPerWeek(DAILY)
     setIsOpen(true)
   }
 
   function handleSubmit(event) {
     event.preventDefault()
     const trimmed = name.trim()
-    if (!trimmed || schedule.length === 0) return
-    onAdd(trimmed, startDate, schedule)
+    if (!trimmed) return
+    onAdd(trimmed, startDate, timesPerWeek)
     setIsOpen(false)
   }
 
@@ -51,8 +51,8 @@ function AddHabitForm({ onAdd }) {
               />
             </label>
             <div className="field-label">
-              Days
-              <SchedulePicker schedule={schedule} onChange={setSchedule} />
+              Times per week
+              <FrequencyPicker timesPerWeek={timesPerWeek} onChange={setTimesPerWeek} />
             </div>
             <div className="button-row">
               <button type="submit" className="button button-primary">
