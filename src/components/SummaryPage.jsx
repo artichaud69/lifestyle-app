@@ -1,10 +1,12 @@
-import { todayISO } from '../dates.js'
+import { todayISO, datesBetween } from '../dates.js'
 import { currentStreak, bestStreak } from '../streaks.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 
 function SummaryPage({ habits }) {
   const today = todayISO()
   const doneToday = habits.filter((habit) => habit.doneDates.includes(today)).length
+  const year = Number(today.slice(0, 4))
+  const daysLeftInYear = datesBetween(today, `${year}-12-31`).length - 1
 
   return (
     <>
@@ -14,6 +16,10 @@ function SummaryPage({ habits }) {
           {doneToday} / {habits.length}
         </div>
         <div className="summary-today-label">habits done today</div>
+      </div>
+      <div className="summary-today-card">
+        <div className="summary-today-value">{daysLeftInYear}</div>
+        <div className="summary-today-label">days left in {year}</div>
       </div>
 
       {habits.length === 0 ? (
