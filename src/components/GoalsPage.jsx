@@ -103,7 +103,6 @@ function GoalsPage({ habits, onAddHabits }) {
             value={apiKeyDraft}
             onChange={(event) => setApiKeyDraft(event.target.value)}
             placeholder="sk-ant-..."
-            autoFocus
           />
           <div className="button-row">
             <button type="submit" className="button button-primary" disabled={!apiKeyDraft.trim()}>
