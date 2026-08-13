@@ -4,6 +4,7 @@ import GoalsPage from './components/GoalsPage.jsx'
 import SummaryPage from './components/SummaryPage.jsx'
 import JournalPage from './components/JournalPage.jsx'
 import NavBar from './components/NavBar.jsx'
+import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 
@@ -51,20 +52,25 @@ function App() {
     setHabits(habits.filter((habit) => habit.id !== habitId))
   }
 
+  const showWallpaper = view === 'goals' || view === 'summary'
+
   return (
     <div className="app">
-      {view === 'habits' && (
-        <HabitsPage
-          habits={habits}
-          onAddHabit={addHabit}
-          onToggleDate={toggleDate}
-          onUpdateHabit={updateHabit}
-          onDeleteHabit={deleteHabit}
-        />
-      )}
-      {view === 'goals' && <GoalsPage habits={habits} onAddHabits={addHabits} />}
-      {view === 'summary' && <SummaryPage habits={habits} onChangeView={setView} />}
-      {view === 'journal' && <JournalPage />}
+      {showWallpaper && <PageWallpaper />}
+      <div className="app-content">
+        {view === 'habits' && (
+          <HabitsPage
+            habits={habits}
+            onAddHabit={addHabit}
+            onToggleDate={toggleDate}
+            onUpdateHabit={updateHabit}
+            onDeleteHabit={deleteHabit}
+          />
+        )}
+        {view === 'goals' && <GoalsPage habits={habits} onAddHabits={addHabits} />}
+        {view === 'summary' && <SummaryPage habits={habits} onChangeView={setView} />}
+        {view === 'journal' && <JournalPage />}
+      </div>
       <NavBar view={view} onChangeView={setView} />
     </div>
   )

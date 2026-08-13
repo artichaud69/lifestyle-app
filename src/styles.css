@@ -139,37 +139,36 @@ h1 {
   flex-shrink: 0;
 }
 
-.page-hero {
-  position: relative;
-  border-radius: var(--radius-md);
-  background-size: cover;
-  background-position: center;
-  padding: var(--space-4);
-  margin-bottom: var(--space-4);
-  overflow: hidden;
-  min-height: 130px;
-  display: flex;
-  align-items: flex-end;
-}
-
-.page-hero-scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(20, 15, 10, 0.85), rgba(20, 15, 10, 0.35));
-}
-
-.page-hero-content {
+.app-content {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: var(--space-3);
 }
 
-.page-hero h1 {
+.page-wallpaper {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+.page-wallpaper-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 15, 10, 0.62);
+  background: linear-gradient(to bottom, rgba(20, 15, 10, 0.55), rgba(20, 15, 10, 0.72));
+}
+
+.wallpaper-page h1,
+.wallpaper-page .section-heading {
   color: #fbf3e7;
+}
+
+.wallpaper-page .summary-empty {
+  color: #fbf3e7;
+  background: rgba(20, 15, 10, 0.4);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
 }
 
 .icon-button {
@@ -496,8 +495,11 @@ h1 {
 }
 
 .summary-row {
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .summary-row-name {

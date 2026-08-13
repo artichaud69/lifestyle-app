@@ -19,7 +19,7 @@ function SummaryPage({ habits, onChangeView }) {
   const yearPercent = Math.round(((totalDaysInYear - daysLeftInYear) / totalDaysInYear) * 100)
 
   return (
-    <>
+    <div className="wallpaper-page">
       <PageHeader title="Summary" icon={PAGE_ICONS.summary} />
 
       <div className="summary-links">
@@ -70,7 +70,7 @@ function SummaryPage({ habits, onChangeView }) {
           })}
         </div>
       )}
-    </>
+    </div>
   )
 }
 
