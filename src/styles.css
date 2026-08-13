@@ -421,24 +421,80 @@ h1 {
 }
 
 .mood-option.active {
+  border-width: 2px;
   border-color: var(--color-primary);
-  background: var(--color-primary);
 }
 
-.journal-history-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: var(--space-2);
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
-.journal-entry {
+textarea.text-input {
+  resize: vertical;
+}
+
+.year-map-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: var(--space-2);
+}
+
+.year-map {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 14px;
+  gap: 3px;
+  width: max-content;
+}
+
+.year-map-week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.year-map-day {
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: var(--color-border);
+  cursor: pointer;
+}
+
+.year-map-day.empty {
+  visibility: hidden;
+  cursor: default;
+}
+
+.year-map-day.today {
+  outline: 1.5px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.year-map-day.mood-1 {
+  background: var(--color-danger);
+  opacity: 0.55;
+}
+
+.year-map-day.mood-2 {
+  background: var(--color-danger);
+  opacity: 0.3;
+}
+
+.year-map-day.mood-3 {
+  background: var(--color-text-muted);
+  opacity: 0.4;
+}
+
+.year-map-day.mood-4 {
+  background: var(--color-primary);
+  opacity: 0.55;
+}
+
+.year-map-day.mood-5 {
+  background: var(--color-primary);
+  opacity: 1;
 }
