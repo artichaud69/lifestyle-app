@@ -1,7 +1,7 @@
 import HabitRow from './HabitRow.jsx'
 import { formatShortLabel } from '../dates.js'
 
-function HabitList({ habits, dates, today, onToggleDate }) {
+function HabitList({ habits, dates, today, onToggleDate, onUpdateHabit, onDeleteHabit }) {
   return (
     <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
       <div
@@ -32,8 +32,10 @@ function HabitList({ habits, dates, today, onToggleDate }) {
             name={habit.name}
             dates={dates}
             doneDates={habit.doneDates}
-            createdAt={habit.createdAt}
+            startDate={habit.startDate}
             onToggleDate={(date) => onToggleDate(habit.id, date)}
+            onUpdateHabit={(updates) => onUpdateHabit(habit.id, updates)}
+            onDelete={() => onDeleteHabit(habit.id)}
           />
         ))}
       </div>

@@ -1,16 +1,16 @@
 import { datesBetween, todayISO, formatShortLabel } from '../dates.js'
 
-function HabitHeatmap({ createdAt, doneDates }) {
-  const allDates = datesBetween(createdAt, todayISO())
+function HabitHeatmap({ startDate, doneDates }) {
+  const allDates = datesBetween(startDate, todayISO())
   const doneSet = new Set(doneDates)
   const totalCount = allDates.length
-  const doneCount = doneDates.length
+  const doneCount = allDates.filter((date) => doneSet.has(date)).length
   const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
 
   return (
     <div style={{ paddingBottom: '12px', borderBottom: '1px solid #eee' }}>
       <div style={{ fontSize: '11px', color: '#555', marginBottom: '4px' }}>
-        {percent}% since {formatShortLabel(createdAt)} ({totalCount} day{totalCount === 1 ? '' : 's'})
+        {percent}% since {formatShortLabel(startDate)} ({totalCount} day{totalCount === 1 ? '' : 's'})
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', maxWidth: '100%' }}>
         {allDates.map((date) => (

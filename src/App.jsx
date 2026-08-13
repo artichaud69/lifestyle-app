@@ -19,7 +19,7 @@ function App() {
     const newHabit = {
       id: crypto.randomUUID(),
       name,
-      createdAt: todayISO(),
+      startDate: todayISO(),
       doneDates: [],
     }
     setHabits([...habits, newHabit])
@@ -38,10 +38,25 @@ function App() {
     )
   }
 
+  function updateHabit(habitId, updates) {
+    setHabits(habits.map((habit) => (habit.id === habitId ? { ...habit, ...updates } : habit)))
+  }
+
+  function deleteHabit(habitId) {
+    setHabits(habits.filter((habit) => habit.id !== habitId))
+  }
+
   return (
     <div style={{ padding: '12px', maxWidth: '100%', boxSizing: 'border-box' }}>
       <h1>Habit Tracker</h1>
-      <HabitList habits={habits} dates={dates} today={todayISO()} onToggleDate={toggleDate} />
+      <HabitList
+        habits={habits}
+        dates={dates}
+        today={todayISO()}
+        onToggleDate={toggleDate}
+        onUpdateHabit={updateHabit}
+        onDeleteHabit={deleteHabit}
+      />
       <AddHabitForm onAdd={addHabit} />
     </div>
   )

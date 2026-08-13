@@ -8,7 +8,7 @@ export const defaultHabits = [
   {
     id: crypto.randomUUID(),
     name: 'Meditate',
-    createdAt: meditateHistory[0],
+    startDate: meditateHistory[0],
     doneDates: [
       meditateHistory[0],
       meditateHistory[3],
@@ -22,13 +22,13 @@ export const defaultHabits = [
   {
     id: crypto.randomUUID(),
     name: 'Read',
-    createdAt: demoDates[0],
+    startDate: demoDates[0],
     doneDates: [demoDates[0], demoDates[1], demoDates[3]],
   },
   {
     id: crypto.randomUUID(),
     name: 'No sugar',
-    createdAt: demoDates[0],
+    startDate: demoDates[0],
     doneDates: [demoDates[1], demoDates[2]],
   },
 ]
