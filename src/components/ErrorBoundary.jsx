@@ -17,10 +17,10 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '16px' }}>
+        <div className="error-boundary">
           <h1>Something went wrong</h1>
           <p>Sorry, the app hit an error. Try reloading.</p>
-          <button type="button" onClick={() => window.location.reload()}>
+          <button type="button" className="button button-primary" onClick={() => window.location.reload()}>
             Reload
           </button>
         </div>

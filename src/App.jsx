@@ -47,7 +47,7 @@ function App() {
   }
 
   return (
-    <div style={{ padding: '12px', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <div className="app">
       <h1>Habit Tracker</h1>
       <HabitList
         habits={habits}

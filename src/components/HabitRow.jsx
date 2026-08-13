@@ -29,77 +29,51 @@ function HabitRow({ name, dates, doneDates, startDate, onToggleDate, onUpdateHab
 
   return (
     <>
-      <button
-        type="button"
-        onClick={startEditing}
-        style={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          textAlign: 'left',
-          background: 'none',
-          border: 'none',
-          padding: 0,
-          font: 'inherit',
-          color: 'inherit',
-          cursor: 'pointer',
-        }}
-      >
-        {name} <span style={{ fontSize: '10px' }}>✎</span>
+      <button type="button" className="habit-name-button" onClick={startEditing}>
+        {name} <span className="edit-icon">✎</span>
       </button>
       {dates.map((date) => (
         <input
           key={date}
           type="checkbox"
+          className="day-checkbox"
           checked={doneDates.includes(date)}
           onChange={() => onToggleDate(date)}
-          style={{ justifySelf: 'center' }}
         />
       ))}
       {isEditing && (
-        <form
-          onSubmit={handleSave}
-          style={{
-            gridColumn: '1 / -1',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
-            padding: '8px',
-            marginBottom: '4px',
-            border: '1px solid #ddd',
-            borderRadius: '6px',
-          }}
-        >
+        <form onSubmit={handleSave} className="edit-panel">
           <input
             type="text"
+            className="text-input"
             value={draftName}
             onChange={(event) => setDraftName(event.target.value)}
             placeholder="Habit name"
           />
-          <label style={{ fontSize: '12px', color: '#555' }}>
+          <label className="field-label">
             Start date
             <input
               type="date"
+              className="text-input"
               value={draftStartDate}
               max={todayISO()}
               onChange={(event) => setDraftStartDate(event.target.value)}
-              style={{ display: 'block', marginTop: '2px' }}
             />
           </label>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <button type="submit">Save</button>
-            <button type="button" onClick={() => setIsEditing(false)}>
+          <div className="button-row">
+            <button type="submit" className="button button-primary">
+              Save
+            </button>
+            <button type="button" className="button button-secondary" onClick={() => setIsEditing(false)}>
               Cancel
             </button>
-            <button type="button" onClick={handleDelete} style={{ color: '#b3261e', marginLeft: 'auto' }}>
+            <button type="button" className="button button-danger" onClick={handleDelete}>
               Delete
             </button>
           </div>
         </form>
       )}
-      <div style={{ gridColumn: '1 / -1' }}>
-        <HabitHeatmap startDate={startDate} doneDates={doneDates} />
-      </div>
+      <HabitHeatmap startDate={startDate} doneDates={doneDates} />
     </>
   )
 }

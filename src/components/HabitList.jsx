@@ -3,26 +3,11 @@ import { formatShortLabel } from '../dates.js'
 
 function HabitList({ habits, dates, today, onToggleDate, onUpdateHabit, onDeleteHabit }) {
   return (
-    <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `88px repeat(${dates.length}, 48px)`,
-          rowGap: '8px',
-          alignItems: 'center',
-        }}
-      >
+    <div className="habit-grid-wrapper">
+      <div className="habit-grid" style={{ gridTemplateColumns: `88px repeat(${dates.length}, 48px)` }}>
         <div />
         {dates.map((date) => (
-          <div
-            key={date}
-            style={{
-              textAlign: 'center',
-              fontSize: '11px',
-              fontWeight: date === today ? 'bold' : 'normal',
-              color: date === today ? '#0a58ca' : 'inherit',
-            }}
-          >
+          <div key={date} className={`date-header${date === today ? ' today' : ''}`}>
             {formatShortLabel(date)}
           </div>
         ))}

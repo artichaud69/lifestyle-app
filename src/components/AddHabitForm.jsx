@@ -12,14 +12,17 @@ function AddHabitForm({ onAdd }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px', margin: '16px 0' }}>
+    <form onSubmit={handleSubmit} className="add-form">
       <input
         type="text"
+        className="text-input"
         value={name}
         onChange={(event) => setName(event.target.value)}
         placeholder="New habit name"
       />
-      <button type="submit">Add</button>
+      <button type="submit" className="button button-primary">
+        Add
+      </button>
     </form>
   )
 }
