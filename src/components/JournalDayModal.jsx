@@ -28,6 +28,7 @@ function JournalDayModal({ date, entry, onSave, onClose }) {
               aria-label={moodOption.label}
             >
               <FlameIcon level={moodOption.value} />
+              <span className="mood-label">{moodOption.label}</span>
             </button>
           ))}
         </div>

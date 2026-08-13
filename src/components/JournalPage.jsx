@@ -50,6 +50,7 @@ function JournalPage() {
                 aria-label={moodOption.label}
               >
                 <FlameIcon level={moodOption.value} />
+                <span className="mood-label">{moodOption.label}</span>
               </button>
             ))}
           </div>
