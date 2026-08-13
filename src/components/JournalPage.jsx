@@ -26,7 +26,7 @@ function JournalPage() {
   }
 
   return (
-    <>
+    <div className="wallpaper-page">
       <PageHeader title="Journal" icon={PAGE_ICONS.journal} />
 
       {todayEntry ? (
@@ -66,7 +66,7 @@ function JournalPage() {
           onClose={() => setSelectedDate(null)}
         />
       )}
-    </>
+    </div>
   )
 }
 

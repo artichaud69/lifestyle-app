@@ -171,6 +171,10 @@ h1 {
   border-radius: var(--radius-md);
 }
 
+.wallpaper-page > .journal-prompt {
+  color: #fbf3e7;
+}
+
 .icon-button {
   width: 40px;
   height: 40px;
@@ -216,9 +220,11 @@ h1 {
 }
 
 .habit-card {
-  padding-bottom: var(--space-3);
+  padding: var(--space-3);
   margin-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .habit-name-button {
@@ -631,6 +637,10 @@ textarea.text-input {
 
 .calendar {
   margin-bottom: var(--space-4);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
 }
 
 .view-toggle {

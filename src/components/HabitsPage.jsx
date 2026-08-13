@@ -5,7 +5,7 @@ import { PAGE_ICONS } from '../navIcons.js'
 
 function HabitsPage({ habits, onAddHabit, onToggleDate, onUpdateHabit, onDeleteHabit }) {
   return (
-    <>
+    <div className="wallpaper-page">
       <PageHeader title="Habit Tracker" icon={PAGE_ICONS.habits}>
         <AddHabitForm onAdd={onAddHabit} />
       </PageHeader>
@@ -15,7 +15,7 @@ function HabitsPage({ habits, onAddHabit, onToggleDate, onUpdateHabit, onDeleteH
         onUpdateHabit={onUpdateHabit}
         onDeleteHabit={onDeleteHabit}
       />
-    </>
+    </div>
   )
 }
 

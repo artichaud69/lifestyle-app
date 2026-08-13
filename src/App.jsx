@@ -8,6 +8,13 @@ import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 
+const WALLPAPERS = {
+  habits: 'images/habits-wallpaper.jpg',
+  goals: 'images/theme-wallpaper.jpg',
+  summary: 'images/theme-wallpaper.jpg',
+  journal: 'images/journal-wallpaper.jpg',
+}
+
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
   const [view, setView] = useState('summary')
@@ -52,11 +59,9 @@ function App() {
     setHabits(habits.filter((habit) => habit.id !== habitId))
   }
 
-  const showWallpaper = view === 'goals' || view === 'summary'
-
   return (
     <div className="app">
-      {showWallpaper && <PageWallpaper />}
+      <PageWallpaper image={WALLPAPERS[view]} />
       <div className="app-content">
         {view === 'habits' && (
           <HabitsPage

@@ -1,8 +1,8 @@
-function PageWallpaper() {
+function PageWallpaper({ image }) {
   return (
     <div
       className="page-wallpaper"
-      style={{ backgroundImage: `url(${import.meta.env.BASE_URL}images/theme-wallpaper.jpg)` }}
+      style={{ backgroundImage: `url(${import.meta.env.BASE_URL}${image})` }}
     >
       <div className="page-wallpaper-scrim" />
     </div>
