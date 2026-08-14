@@ -18,6 +18,13 @@ const WALLPAPERS = {
   journal: 'images/journal-wallpaper.jpg',
 }
 
+// Where the preview page sits before the drag has positioned it for real.
+// Without this it would render at rest - fully on screen - for one frame,
+// since usePageDrag can't apply a transform until after this first commit.
+function previewStartTransform(direction) {
+  return direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)'
+}
+
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
   const [view, setView] = useState('summary')
@@ -106,12 +113,17 @@ function App() {
       {preview && (
         <>
           <PageWallpaper
-            image={WALLPAPERS[preview]}
+            image={WALLPAPERS[preview.view]}
             domRef={previewWallpaperRef}
             className="page-wallpaper preview-layer"
+            style={{ transform: previewStartTransform(preview.direction) }}
           />
-          <div className="app-content swipe-preview-content" ref={previewContentRef}>
-            {renderPage(preview)}
+          <div
+            className="app-content swipe-preview-content"
+            ref={previewContentRef}
+            style={{ transform: previewStartTransform(preview.direction) }}
+          >
+            {renderPage(preview.view)}
           </div>
         </>
       )}

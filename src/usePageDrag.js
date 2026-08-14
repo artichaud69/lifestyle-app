@@ -23,7 +23,13 @@ export function usePageDrag({ views, view, onCommit }) {
   const currentWallpaperRef = useRef(null)
   const previewContentRef = useRef(null)
   const previewWallpaperRef = useRef(null)
-  const [preview, setPreview] = useState(null) // the neighbouring view being revealed, or null
+  // The neighbouring view being revealed, or null. Carries its direction too,
+  // so its very first render can already place it off-screen on the right
+  // side - otherwise it would mount at rest (fully on screen, since that is
+  // this element's un-transformed position) and only jump out of the way once
+  // the *next* touchmove got a chance to position it imperatively, which
+  // showed up as a one-frame flash of the incoming page.
+  const [preview, setPreview] = useState(null)
 
   const gestureRef = useRef(null)
   const latest = useRef({ views, view, onCommit })
@@ -105,7 +111,7 @@ export function usePageDrag({ views, view, onCommit }) {
           return
         }
         gesture.direction = locked
-        setPreview(target)
+        setPreview({ view: target, direction: locked })
       }
 
       // Only claim the gesture once it is a confirmed horizontal swipe, so
