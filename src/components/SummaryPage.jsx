@@ -3,6 +3,7 @@ import { currentStreak, bestStreak } from '../streaks.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import PageHeader from './PageHeader.jsx'
 import SyncPanel from './SyncPanel.jsx'
+import DailyQuote from './DailyQuote.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
 const QUICK_LINKS = [
@@ -36,6 +37,8 @@ function SummaryPage({ habits, onChangeView, sync }) {
           </button>
         ))}
       </div>
+
+      <DailyQuote />
 
       <div className="summary-today-card">
         <div className="summary-today-value">
