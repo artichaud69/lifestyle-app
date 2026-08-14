@@ -1,63 +1,124 @@
 import { describe, it, expect } from 'vitest'
 import {
-  swipeDecision,
+  lockDirection,
+  clampDragOffset,
+  shouldCommitDrag,
   nextView,
   startsInHorizontalScroller,
-  SWIPE_MIN_DISTANCE,
-  SWIPE_EDGE_GUARD,
+  DIRECTION_LOCK_DISTANCE,
+  COMMIT_DISTANCE_RATIO,
+  COMMIT_VELOCITY_PX_MS,
 } from './swipe.js'
 import { VIEW_ORDER } from './navIcons.js'
 
 const WIDTH = 375
-const MID = Math.round(WIDTH / 2)
 
-function decide(dx, dy, startX = MID) {
-  return swipeDecision({ dx, dy, startX, viewportWidth: WIDTH })
-}
-
-describe('swipeDecision', () => {
-  it('moves forward on a leftward swipe', () => {
-    expect(decide(-120, 5)).toBe('next')
+describe('lockDirection', () => {
+  it('has no opinion until movement is big enough to mean something', () => {
+    expect(lockDirection(DIRECTION_LOCK_DISTANCE - 1, 0)).toBeNull()
   })
 
-  it('moves back on a rightward swipe', () => {
-    expect(decide(120, 5)).toBe('previous')
+  it('locks forward on a leftward drag', () => {
+    expect(lockDirection(-40, 2)).toBe('next')
   })
 
-  it('ignores a drag too short to be deliberate', () => {
-    expect(decide(-(SWIPE_MIN_DISTANCE - 1), 0)).toBeNull()
+  it('locks backward on a rightward drag', () => {
+    expect(lockDirection(40, 2)).toBe('previous')
   })
 
-  it('accepts a drag right at the threshold', () => {
-    expect(decide(-SWIPE_MIN_DISTANCE, 0)).toBe('next')
+  it('hands a mostly-vertical drag to scrolling', () => {
+    expect(lockDirection(-15, 60)).toBe('vertical')
   })
 
-  it('ignores a mostly vertical drag, so scrolling never flips a tab', () => {
-    expect(decide(-80, 200)).toBeNull()
+  it('still locks horizontal on a drag that drifts a little vertically', () => {
+    expect(lockDirection(-60, 12)).toBe('next')
   })
 
-  it('still fires on a long horizontal drag that drifts a little vertically', () => {
-    expect(decide(-200, 40)).toBe('next')
+  it('locks as soon as the vertical component alone crosses the threshold', () => {
+    expect(lockDirection(2, DIRECTION_LOCK_DISTANCE)).toBe('vertical')
+  })
+})
+
+describe('clampDragOffset', () => {
+  it('lets a forward drag travel up to one full screen', () => {
+    expect(clampDragOffset(-200, 'next', WIDTH)).toBe(-200)
+    expect(clampDragOffset(-9999, 'next', WIDTH)).toBe(-WIDTH)
   })
 
-  it('ignores a diagonal drag that is only marginally horizontal', () => {
-    expect(decide(-100, 80)).toBeNull()
+  it('does not let a forward drag reverse past the resting position', () => {
+    expect(clampDragOffset(50, 'next', WIDTH)).toBe(0)
   })
 
-  it('ignores swipes starting at the left edge, which iOS claims for going back', () => {
-    expect(decide(120, 0, SWIPE_EDGE_GUARD - 1)).toBeNull()
+  it('lets a backward drag travel up to one full screen', () => {
+    expect(clampDragOffset(200, 'previous', WIDTH)).toBe(200)
+    expect(clampDragOffset(9999, 'previous', WIDTH)).toBe(WIDTH)
   })
 
-  it('ignores swipes starting at the right edge', () => {
-    expect(decide(-120, 0, WIDTH - SWIPE_EDGE_GUARD + 1)).toBeNull()
+  it('does not let a backward drag reverse past the resting position', () => {
+    expect(clampDragOffset(-50, 'previous', WIDTH)).toBe(0)
+  })
+})
+
+describe('shouldCommitDrag', () => {
+  it('commits once dragged past the distance threshold', () => {
+    expect(
+      shouldCommitDrag({
+        offset: -WIDTH * (COMMIT_DISTANCE_RATIO + 0.01),
+        direction: 'next',
+        viewportWidth: WIDTH,
+        velocity: 0,
+      }),
+    ).toBe(true)
   })
 
-  it('allows a swipe starting just inside the guarded edges', () => {
-    expect(decide(-120, 0, SWIPE_EDGE_GUARD + 1)).toBe('next')
+  it('springs back from a short, slow drag', () => {
+    expect(
+      shouldCommitDrag({ offset: -20, direction: 'next', viewportWidth: WIDTH, velocity: 0 }),
+    ).toBe(false)
   })
 
-  it('ignores a tap that never moved', () => {
-    expect(decide(0, 0)).toBeNull()
+  it('commits on a fast flick even if released early', () => {
+    expect(
+      shouldCommitDrag({
+        offset: -60,
+        direction: 'next',
+        viewportWidth: WIDTH,
+        velocity: -(COMMIT_VELOCITY_PX_MS + 0.2),
+      }),
+    ).toBe(true)
+  })
+
+  it('ignores flick velocity in the wrong direction', () => {
+    expect(
+      shouldCommitDrag({
+        offset: -60,
+        direction: 'next',
+        viewportWidth: WIDTH,
+        velocity: COMMIT_VELOCITY_PX_MS + 0.2, // finger moving the opposite way at release
+      }),
+    ).toBe(false)
+  })
+
+  it('does not let a fast flick with almost no travel commit', () => {
+    expect(
+      shouldCommitDrag({
+        offset: -2,
+        direction: 'next',
+        viewportWidth: WIDTH,
+        velocity: -5,
+      }),
+    ).toBe(false)
+  })
+
+  it('applies the same rule for a backward drag', () => {
+    expect(
+      shouldCommitDrag({
+        offset: WIDTH * (COMMIT_DISTANCE_RATIO + 0.01),
+        direction: 'previous',
+        viewportWidth: WIDTH,
+        velocity: 0,
+      }),
+    ).toBe(true)
   })
 })
 
@@ -82,7 +143,7 @@ describe('nextView', () => {
     expect(nextView(VIEW_ORDER, 'nonsense', 'next')).toBe('nonsense')
   })
 
-  it('can reach every tab by swiping from either end', () => {
+  it('can reach every tab by walking forward from the first', () => {
     let current = VIEW_ORDER[0]
     const forwards = [current]
     for (let step = 0; step < VIEW_ORDER.length - 1; step++) {

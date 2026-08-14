@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import HabitsPage from './components/HabitsPage.jsx'
 import GoalsPage from './components/GoalsPage.jsx'
 import SummaryPage from './components/SummaryPage.jsx'
@@ -8,9 +8,8 @@ import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 import { useSync } from './useSync.js'
-import { useSwipeNavigation } from './useSwipeNavigation.js'
+import { usePageDrag } from './usePageDrag.js'
 import { VIEW_ORDER } from './navIcons.js'
-import { runViewTransition } from './viewTransition.js'
 
 const WALLPAPERS = {
   habits: 'images/habits-wallpaper.jpg',
@@ -23,20 +22,21 @@ function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
   const [view, setView] = useState('summary')
   const sync = useSync()
-  const appRef = useRef(null)
 
-  // Direction comes from the tab order, so tapping a tab animates the same way
-  // as swiping to it.
   function changeView(next) {
     if (next === view) return
-    const direction = VIEW_ORDER.indexOf(next) > VIEW_ORDER.indexOf(view) ? 'next' : 'previous'
-    runViewTransition(direction, () => {
-      setView(next)
-      window.scrollTo(0, 0)
-    })
+    setView(next)
+    window.scrollTo(0, 0)
   }
 
-  useSwipeNavigation(appRef, { views: VIEW_ORDER, view, onChangeView: changeView })
+  const {
+    rootRef,
+    currentContentRef,
+    currentWallpaperRef,
+    previewContentRef,
+    previewWallpaperRef,
+    preview,
+  } = usePageDrag({ views: VIEW_ORDER, view, onCommit: changeView })
 
   useEffect(() => {
     saveHabits(habits)
@@ -78,23 +78,44 @@ function App() {
     setHabits(habits.filter((habit) => habit.id !== habitId))
   }
 
+  function renderPage(pageView) {
+    if (pageView === 'habits') {
+      return (
+        <HabitsPage
+          habits={habits}
+          onAddHabit={addHabit}
+          onToggleDate={toggleDate}
+          onUpdateHabit={updateHabit}
+          onDeleteHabit={deleteHabit}
+        />
+      )
+    }
+    if (pageView === 'goals') return <GoalsPage habits={habits} onAddHabits={addHabits} />
+    if (pageView === 'summary') return <SummaryPage habits={habits} onChangeView={changeView} sync={sync} />
+    if (pageView === 'journal') return <JournalPage />
+    return null
+  }
+
   return (
-    <div className="app" ref={appRef}>
-      <PageWallpaper image={WALLPAPERS[view]} />
-      <div className="app-content">
-        {view === 'habits' && (
-          <HabitsPage
-            habits={habits}
-            onAddHabit={addHabit}
-            onToggleDate={toggleDate}
-            onUpdateHabit={updateHabit}
-            onDeleteHabit={deleteHabit}
-          />
-        )}
-        {view === 'goals' && <GoalsPage habits={habits} onAddHabits={addHabits} />}
-        {view === 'summary' && <SummaryPage habits={habits} onChangeView={changeView} sync={sync} />}
-        {view === 'journal' && <JournalPage />}
+    <div className="app" ref={rootRef}>
+      <PageWallpaper image={WALLPAPERS[view]} domRef={currentWallpaperRef} />
+      <div className="app-content" ref={currentContentRef}>
+        {renderPage(view)}
       </div>
+
+      {preview && (
+        <>
+          <PageWallpaper
+            image={WALLPAPERS[preview]}
+            domRef={previewWallpaperRef}
+            className="page-wallpaper preview-layer"
+          />
+          <div className="app-content swipe-preview-content" ref={previewContentRef}>
+            {renderPage(preview)}
+          </div>
+        </>
+      )}
+
       <NavBar view={view} onChangeView={changeView} />
     </div>
   )
