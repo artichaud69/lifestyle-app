@@ -10,7 +10,9 @@ export default defineConfig({
   base,
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.js'],
+    // The Edge Functions' pure logic is tested too, so the parts that decide
+    // when a reminder fires are not shipped untried.
+    include: ['src/**/*.test.js', 'supabase/**/*.test.ts'],
   },
   plugins: [
     react(),
@@ -18,6 +20,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,jpg,jpeg}'],
+        // Push handling lives in its own file so Workbox can keep generating
+        // the caching half of the worker (see public/push-sw.js).
+        importScripts: ['push-sw.js'],
       },
       manifest: {
         name: 'Habit Tracker',

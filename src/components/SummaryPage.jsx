@@ -3,6 +3,7 @@ import { currentStreak, bestStreak } from '../streaks.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import PageHeader from './PageHeader.jsx'
 import SyncPanel from './SyncPanel.jsx'
+import NotificationsPanel from './NotificationsPanel.jsx'
 import DailyQuote from './DailyQuote.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
@@ -87,6 +88,9 @@ function SummaryPage({ habits, onChangeView, sync }) {
         onSetPassword={sync.setPassword}
         onSignOut={sync.signOut}
       />
+
+      <h2 className="section-heading">Reminders</h2>
+      <NotificationsPanel session={sync.session} />
     </div>
   )
 }
