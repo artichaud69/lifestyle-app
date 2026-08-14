@@ -3,12 +3,14 @@ import HabitsPage from './components/HabitsPage.jsx'
 import GoalsPage from './components/GoalsPage.jsx'
 import SummaryPage from './components/SummaryPage.jsx'
 import JournalPage from './components/JournalPage.jsx'
+import HealthPage from './components/HealthPage.jsx'
 import NavBar from './components/NavBar.jsx'
 import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 import { useSync } from './useSync.js'
 import { usePageDrag } from './usePageDrag.js'
+import { consumeOuraCallback } from './oura.js'
 import { VIEW_ORDER } from './navIcons.js'
 
 const WALLPAPERS = {
@@ -16,6 +18,7 @@ const WALLPAPERS = {
   goals: 'images/theme-wallpaper.jpg',
   summary: 'images/theme-wallpaper.jpg',
   journal: 'images/journal-wallpaper.jpg',
+  health: 'images/theme-wallpaper.jpg',
 }
 
 // Where the preview page sits before the drag has positioned it for real.
@@ -28,6 +31,7 @@ function previewStartTransform(direction) {
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
   const [view, setView] = useState('summary')
+  const [ouraMessage, setOuraMessage] = useState(null)
   const sync = useSync()
 
   function changeView(next) {
@@ -35,6 +39,16 @@ function App() {
     setView(next)
     window.scrollTo(0, 0)
   }
+
+  // Oura sends the browser straight back to the app's own URL with a ?code=
+  // in it, so any page load might be that redirect landing.
+  useEffect(() => {
+    consumeOuraCallback().then((result) => {
+      if (!result) return
+      setOuraMessage(result.ok ? null : result.message)
+      setView('health')
+    })
+  }, [])
 
   const {
     rootRef,
@@ -100,6 +114,7 @@ function App() {
     if (pageView === 'goals') return <GoalsPage habits={habits} onAddHabits={addHabits} />
     if (pageView === 'summary') return <SummaryPage habits={habits} onChangeView={changeView} sync={sync} />
     if (pageView === 'journal') return <JournalPage />
+    if (pageView === 'health') return <HealthPage session={sync.session} initialMessage={ouraMessage} />
     return null
   }
 

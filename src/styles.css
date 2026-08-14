@@ -502,6 +502,17 @@ h1 {
   margin-top: 4px;
 }
 
+.health-scores {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.health-scores .summary-today-card {
+  flex: 1;
+  margin-bottom: 0;
+}
+
 .year-progress-track {
   margin-top: var(--space-3);
   height: 8px;

@@ -127,6 +127,7 @@ describe('nextView', () => {
     expect(nextView(VIEW_ORDER, 'habits', 'next')).toBe('goals')
     expect(nextView(VIEW_ORDER, 'goals', 'next')).toBe('summary')
     expect(nextView(VIEW_ORDER, 'summary', 'next')).toBe('journal')
+    expect(nextView(VIEW_ORDER, 'journal', 'next')).toBe('health')
   })
 
   it('walks the tab order backwards', () => {
@@ -136,7 +137,7 @@ describe('nextView', () => {
 
   it('stops at the ends instead of wrapping around', () => {
     expect(nextView(VIEW_ORDER, 'habits', 'previous')).toBe('habits')
-    expect(nextView(VIEW_ORDER, 'journal', 'next')).toBe('journal')
+    expect(nextView(VIEW_ORDER, 'health', 'next')).toBe('health')
   })
 
   it('leaves an unknown view alone', () => {

@@ -3,6 +3,7 @@ export const PAGE_ICONS = {
   goals: 'icons/nav-goals.png',
   summary: 'icons/nav-summary.png',
   journal: 'icons/nav-journal.png',
+  health: 'icons/nav-health.png',
 }
 
 // Left-to-right order of the tab bar. Swipe navigation walks the same list,
@@ -12,6 +13,7 @@ export const VIEWS = [
   { key: 'goals', label: 'Goals' },
   { key: 'summary', label: 'Summary' },
   { key: 'journal', label: 'Journal' },
+  { key: 'health', label: 'Health' },
 ]
 
 export const VIEW_ORDER = VIEWS.map((entry) => entry.key)
