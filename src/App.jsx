@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import HabitsPage from './components/HabitsPage.jsx'
 import GoalsPage from './components/GoalsPage.jsx'
 import SummaryPage from './components/SummaryPage.jsx'
@@ -8,6 +8,8 @@ import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 import { useSync } from './useSync.js'
+import { useSwipeNavigation } from './useSwipeNavigation.js'
+import { VIEW_ORDER } from './navIcons.js'
 
 const WALLPAPERS = {
   habits: 'images/habits-wallpaper.jpg',
@@ -20,6 +22,9 @@ function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
   const [view, setView] = useState('summary')
   const sync = useSync()
+  const appRef = useRef(null)
+
+  useSwipeNavigation(appRef, { views: VIEW_ORDER, view, onChangeView: setView })
 
   useEffect(() => {
     saveHabits(habits)
@@ -62,7 +67,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app" ref={appRef}>
       <PageWallpaper image={WALLPAPERS[view]} />
       <div className="app-content">
         {view === 'habits' && (
