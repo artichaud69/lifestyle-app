@@ -115,6 +115,22 @@ describe('consumeOuraCallback', () => {
 
     expect(result).toEqual({ ok: false, message: 'Failed to fetch' })
   })
+
+  it('digs the real message out of a non-2xx response instead of the generic one', async () => {
+    sessionStorage.setItem('lifestyle-app.ouraState', 'good-state')
+    setUrl('/lifestyle-app/?code=abc123&state=good-state')
+    invokeResult.current = {
+      data: null,
+      error: {
+        message: 'Edge Function returned a non-2xx status code',
+        context: { json: async () => ({ error: 'Oura token exchange failed: 400 invalid_grant' }) },
+      },
+    }
+
+    const result = await consumeOuraCallback()
+
+    expect(result).toEqual({ ok: false, message: 'Oura token exchange failed: 400 invalid_grant' })
+  })
 })
 
 describe('fetchOuraData', () => {
