@@ -1,6 +1,6 @@
 :root {
   --color-bg: #eae3d3;
-  --color-bg-card: #f5f0e4;
+  --color-bg-card: rgba(245, 240, 228, 0.78);
   --color-text: #262119;
   --color-text-muted: #6e6252;
   --color-border: #d3c7ae;
@@ -26,7 +26,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --color-bg: #17140f;
-    --color-bg-card: #241f17;
+    --color-bg-card: rgba(36, 31, 23, 0.72);
     --color-text: #ece2ce;
     --color-text-muted: #a89a80;
     --color-border: #3c3325;
@@ -62,6 +62,8 @@ body {
   bottom: 14px;
   display: flex;
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--color-border);
   padding: var(--space-2) 0;
   padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
@@ -232,6 +234,8 @@ h1 {
   gap: var(--space-2);
   padding: var(--space-4);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
@@ -245,6 +249,8 @@ h1 {
   padding: var(--space-3);
   margin-bottom: var(--space-3);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
@@ -392,6 +398,8 @@ h1 {
   padding: var(--space-3);
   margin-top: var(--space-3);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
@@ -402,6 +410,8 @@ h1 {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-text);
 }
 
@@ -480,6 +490,8 @@ h1 {
 
 .summary-today-card {
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-4);
@@ -547,6 +559,8 @@ h1 {
   gap: 4px;
   padding: var(--space-2) 0;
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
@@ -565,6 +579,8 @@ h1 {
   padding: var(--space-3);
   margin-bottom: var(--space-2);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
@@ -680,6 +696,8 @@ h1 {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -720,6 +738,8 @@ textarea.text-input {
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   text-align: left;
@@ -739,6 +759,8 @@ textarea.text-input {
 .calendar {
   margin-bottom: var(--space-4);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-3);
@@ -783,6 +805,8 @@ textarea.text-input {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-text);
   font-size: 16px;
   line-height: 1;
@@ -833,6 +857,8 @@ textarea.text-input {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-text);
   font: inherit;
   font-size: 13px;

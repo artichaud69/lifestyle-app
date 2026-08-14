@@ -15,10 +15,10 @@ import { VIEW_ORDER } from './navIcons.js'
 
 const WALLPAPERS = {
   habits: 'images/habits-wallpaper.jpg',
-  goals: 'images/theme-wallpaper.jpg',
+  goals: 'images/goals-wallpaper.jpg',
   summary: 'images/theme-wallpaper.jpg',
   journal: 'images/journal-wallpaper.jpg',
-  health: 'images/theme-wallpaper.jpg',
+  health: 'images/health-wallpaper.jpg',
 }
 
 // Where the preview page sits before the drag has positioned it for real.
