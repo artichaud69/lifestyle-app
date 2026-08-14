@@ -10,6 +10,7 @@ import { defaultHabits } from './defaultHabits.js'
 import { useSync } from './useSync.js'
 import { useSwipeNavigation } from './useSwipeNavigation.js'
 import { VIEW_ORDER } from './navIcons.js'
+import { runViewTransition } from './viewTransition.js'
 
 const WALLPAPERS = {
   habits: 'images/habits-wallpaper.jpg',
@@ -24,7 +25,18 @@ function App() {
   const sync = useSync()
   const appRef = useRef(null)
 
-  useSwipeNavigation(appRef, { views: VIEW_ORDER, view, onChangeView: setView })
+  // Direction comes from the tab order, so tapping a tab animates the same way
+  // as swiping to it.
+  function changeView(next) {
+    if (next === view) return
+    const direction = VIEW_ORDER.indexOf(next) > VIEW_ORDER.indexOf(view) ? 'next' : 'previous'
+    runViewTransition(direction, () => {
+      setView(next)
+      window.scrollTo(0, 0)
+    })
+  }
+
+  useSwipeNavigation(appRef, { views: VIEW_ORDER, view, onChangeView: changeView })
 
   useEffect(() => {
     saveHabits(habits)
@@ -80,10 +92,10 @@ function App() {
           />
         )}
         {view === 'goals' && <GoalsPage habits={habits} onAddHabits={addHabits} />}
-        {view === 'summary' && <SummaryPage habits={habits} onChangeView={setView} sync={sync} />}
+        {view === 'summary' && <SummaryPage habits={habits} onChangeView={changeView} sync={sync} />}
         {view === 'journal' && <JournalPage />}
       </div>
-      <NavBar view={view} onChangeView={setView} />
+      <NavBar view={view} onChangeView={changeView} />
     </div>
   )
 }
