@@ -28,12 +28,25 @@ export function pushSupported() {
   )
 }
 
-// iOS only allows a PWA to subscribe once it has been added to the home screen
-// and opened from there - in Safari itself the call fails with a bare error,
-// so it is worth telling the user which case they are in.
 export function isStandalone() {
   if (typeof window === 'undefined') return false
   return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+}
+
+// iPadOS 13+ reports itself as a Mac, so a touch-capable "Mac" is really an
+// iPad. Both need the same home-screen treatment as an iPhone.
+export function isIOS() {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent ?? ''
+  if (/iPhone|iPad|iPod/.test(ua)) return true
+  return /Mac/.test(ua) && (navigator.maxTouchPoints ?? 0) > 1
+}
+
+// Only iOS refuses to subscribe from a browser tab, failing with a bare error
+// if you try. Desktop browsers push happily from an ordinary tab, so the
+// home-screen instruction would be wrong - and blocking - there.
+export function canSubscribeHere() {
+  return !isIOS() || isStandalone()
 }
 
 export function currentTimezone() {

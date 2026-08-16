@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   pushSupported,
-  isStandalone,
+  canSubscribeHere,
   existingSubscription,
   enablePush,
   disablePush,
@@ -96,7 +96,8 @@ function NotificationsPanel({ session }) {
 
   // iOS only lets an app subscribe once it has been opened from the home
   // screen, and fails with an opaque error otherwise - worth saying up front.
-  if (!isStandalone()) {
+  // Everywhere else this does not apply, so the panel is shown as normal.
+  if (!canSubscribeHere()) {
     return (
       <div className="edit-panel">
         <div className="sync-title">Reminders</div>

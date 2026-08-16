@@ -18,6 +18,8 @@ const {
   urlBase64ToUint8Array,
   pushSupported,
   isStandalone,
+  isIOS,
+  canSubscribeHere,
   currentTimezone,
   enablePush,
   disablePush,
@@ -107,6 +109,57 @@ describe('isStandalone', () => {
     window.matchMedia = vi.fn(() => ({ matches: false }))
     window.navigator.standalone = true
     expect(isStandalone()).toBe(true)
+  })
+})
+
+describe('isIOS', () => {
+  function withUserAgent(userAgent, maxTouchPoints = 0) {
+    Object.defineProperty(navigator, 'userAgent', { value: userAgent, configurable: true })
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: maxTouchPoints, configurable: true })
+  }
+
+  it('spots an iPhone', () => {
+    withUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15')
+    expect(isIOS()).toBe(true)
+  })
+
+  it('spots an iPad pretending to be a Mac', () => {
+    withUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15', 5)
+    expect(isIOS()).toBe(true)
+  })
+
+  it('does not mistake a real Mac for one', () => {
+    withUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120', 0)
+    expect(isIOS()).toBe(false)
+  })
+
+  it('does not mistake a Windows desktop for one', () => {
+    withUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120')
+    expect(isIOS()).toBe(false)
+  })
+})
+
+describe('canSubscribeHere', () => {
+  function setPlatform(userAgent, { standalone = false, maxTouchPoints = 0 } = {}) {
+    Object.defineProperty(navigator, 'userAgent', { value: userAgent, configurable: true })
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: maxTouchPoints, configurable: true })
+    window.matchMedia = vi.fn(() => ({ matches: standalone }))
+    window.navigator.standalone = standalone
+  }
+
+  it('lets a desktop browser subscribe straight from a tab', () => {
+    setPlatform('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120', { standalone: false })
+    expect(canSubscribeHere()).toBe(true)
+  })
+
+  it('holds an iPhone back until it is opened from the home screen', () => {
+    setPlatform('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', { standalone: false })
+    expect(canSubscribeHere()).toBe(false)
+  })
+
+  it('lets an installed iPhone app through', () => {
+    setPlatform('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', { standalone: true })
+    expect(canSubscribeHere()).toBe(true)
   })
 })
 
