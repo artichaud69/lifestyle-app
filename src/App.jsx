@@ -20,7 +20,7 @@ const WALLPAPERS = {
   summary: 'images/theme-wallpaper.jpg',
   journal: 'images/journal-wallpaper.jpg',
   health: 'images/health-wallpaper.jpg',
-  oraison: 'images/theme-wallpaper.jpg',
+  oraison: 'images/oraison-wallpaper.jpg',
 }
 
 // Where the preview page sits before the drag has positioned it for real.
