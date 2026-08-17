@@ -4,6 +4,7 @@ import GoalsPage from './components/GoalsPage.jsx'
 import SummaryPage from './components/SummaryPage.jsx'
 import JournalPage from './components/JournalPage.jsx'
 import HealthPage from './components/HealthPage.jsx'
+import OraisonPage from './components/OraisonPage.jsx'
 import NavBar from './components/NavBar.jsx'
 import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
@@ -19,6 +20,7 @@ const WALLPAPERS = {
   summary: 'images/theme-wallpaper.jpg',
   journal: 'images/journal-wallpaper.jpg',
   health: 'images/health-wallpaper.jpg',
+  oraison: 'images/theme-wallpaper.jpg',
 }
 
 // Where the preview page sits before the drag has positioned it for real.
@@ -115,6 +117,7 @@ function App() {
     if (pageView === 'summary') return <SummaryPage habits={habits} onChangeView={changeView} sync={sync} />
     if (pageView === 'journal') return <JournalPage />
     if (pageView === 'health') return <HealthPage session={sync.session} initialMessage={ouraMessage} />
+    if (pageView === 'oraison') return <OraisonPage />
     return null
   }
 

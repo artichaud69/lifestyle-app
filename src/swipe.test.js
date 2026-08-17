@@ -136,8 +136,10 @@ describe('nextView', () => {
   })
 
   it('stops at the ends instead of wrapping around', () => {
-    expect(nextView(VIEW_ORDER, 'habits', 'previous')).toBe('habits')
-    expect(nextView(VIEW_ORDER, 'health', 'next')).toBe('health')
+    const first = VIEW_ORDER[0]
+    const last = VIEW_ORDER[VIEW_ORDER.length - 1]
+    expect(nextView(VIEW_ORDER, first, 'previous')).toBe(first)
+    expect(nextView(VIEW_ORDER, last, 'next')).toBe(last)
   })
 
   it('leaves an unknown view alone', () => {
