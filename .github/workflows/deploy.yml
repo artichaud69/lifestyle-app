@@ -23,10 +23,26 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            gym-tracker/package-lock.json
       - run: npm ci
       # A failing test stops the deploy, so a broken build never reaches the phone.
       - run: npm test
       - run: npm run build
+
+      # gym-tracker is a separate app (own package.json); it publishes as a
+      # subpath of this same Pages site rather than its own deployment.
+      - run: npm ci
+        working-directory: gym-tracker
+      - run: npm test
+        working-directory: gym-tracker
+      - run: npm run build
+        working-directory: gym-tracker
+        env:
+          GYM_TRACKER_BASE: /lifestyle-app/gym/
+      - run: mkdir -p dist/gym && cp -r gym-tracker/dist/. dist/gym/
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

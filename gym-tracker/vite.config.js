@@ -2,9 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Standalone today; if this ever moves under the lifestyle-app umbrella,
-// this is the one line that needs to change to match its deploy path.
-const base = '/'
+// Local dev serves from the root; the deploy workflow builds this as a
+// subpath of the habit tracker's GitHub Pages site (see deploy.yml), so it
+// passes GYM_TRACKER_BASE in to override this.
+const base = process.env.GYM_TRACKER_BASE || '/'
 
 export default defineConfig({
   base,
