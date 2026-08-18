@@ -83,6 +83,7 @@ export const BUILT_IN_EXERCISES = [
   E('Single-Arm Lat Pulldown', 'back', 'cable', true, 2),
   E('Straight-Arm Pulldown', 'back', 'cable', false, 1),
   E('Pull-Up', 'back', 'bodyweight', true, 0),
+  E('Weighted Pull-Up', 'back', 'bodyweight', true, 1.25),
   E('Chin-Up', 'back', 'bodyweight', true, 0),
   E('Neutral-Grip Pull-Up', 'back', 'bodyweight', true, 0),
   E('Assisted Pull-Up', 'back', 'machine', true, 2.5),
@@ -122,6 +123,7 @@ export const BUILT_IN_EXERCISES = [
   // Legs
   E('Back Squat', 'legs', 'barbell', true, 5),
   E('Front Squat', 'legs', 'barbell', true, 2.5),
+  E('Safety-Bar Squat', 'legs', 'barbell', true, 5),
   E('Box Squat', 'legs', 'barbell', true, 5),
   E('Zercher Squat', 'legs', 'barbell', true, 2.5),
   E('Hack Squat', 'legs', 'machine', true, 5),
@@ -173,6 +175,7 @@ export const BUILT_IN_EXERCISES = [
   E('Zottman Curl', 'arms', 'dumbbell', false, 1),
   E('Cable Curl', 'arms', 'cable', false, 1),
   E('Cable Hammer Curl', 'arms', 'cable', false, 1),
+  E('Kettlebell Curl', 'arms', 'kettlebell', false, 2),
   E('Bayesian Curl', 'arms', 'cable', false, 1),
   E('Band Curl', 'arms', 'band', false, 1),
   E('Close-Grip Bench Press', 'arms', 'barbell', true, 2.5),

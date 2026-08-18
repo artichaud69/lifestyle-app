@@ -654,6 +654,13 @@ p {
   margin-top: var(--space-1);
 }
 
+.exercise-note {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+  padding: 0 0 6px;
+}
+
 .history-log-item {
   display: flex;
   justify-content: space-between;
