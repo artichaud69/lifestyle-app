@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import PageHeader from './PageHeader.jsx'
 import ProgramWizard from './ProgramWizard.jsx'
 import SessionEditSheet from './SessionEditSheet.jsx'
@@ -6,7 +6,17 @@ import SettingsSheet from './SettingsSheet.jsx'
 import { CalendarIcon, SettingsIcon, EditIcon } from '../lib/icons.jsx'
 import { findExercise } from '../lib/exercises.js'
 
-function PlanPage({ program, settings, customExercises, goalSettings, onGenerateProgram, onUpdateSession, onSaveSettings, onAddCustomExercise }) {
+function PlanPage({
+  program,
+  settings,
+  customExercises,
+  goalSettings,
+  onGenerateProgram,
+  onUpdateSession,
+  onSaveSettings,
+  onAddCustomExercise,
+  onImportProgram,
+}) {
   const [showWizard, setShowWizard] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [editingSessionId, setEditingSessionId] = useState(null)
@@ -48,10 +58,13 @@ function PlanPage({ program, settings, customExercises, goalSettings, onGenerate
                 const info = findExercise(ex.exerciseId, customExercises)
                 const reps = ex.repsMin === ex.repsMax ? `${ex.repsMin}` : `${ex.repsMin}-${ex.repsMax}`
                 return (
-                  <div key={ex.id} className="ex-name">
-                    <span>{info?.name ?? ex.exerciseId}</span>
-                    <span className="muted">{ex.targetSets} × {reps}</span>
-                  </div>
+                  <Fragment key={ex.id}>
+                    <div className="ex-name">
+                      <span>{info?.name ?? ex.exerciseId}</span>
+                      <span className="muted">{ex.targetSets} × {reps}</span>
+                    </div>
+                    {ex.notes && <div className="exercise-note">{ex.notes}</div>}
+                  </Fragment>
                 )
               })}
               {session.finisherNote && <div className="finisher-note">{session.finisherNote}</div>}
@@ -97,8 +110,13 @@ function PlanPage({ program, settings, customExercises, goalSettings, onGenerate
       {showSettings && (
         <SettingsSheet
           settings={settings}
+          program={program}
           onSave={(newSettings) => {
             onSaveSettings(newSettings)
+            setShowSettings(false)
+          }}
+          onImportProgram={(imported) => {
+            onImportProgram(imported)
             setShowSettings(false)
           }}
           onClose={() => setShowSettings(false)}

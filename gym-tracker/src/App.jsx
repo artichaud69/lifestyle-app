@@ -191,6 +191,7 @@ function App() {
           onUpdateSession={handleUpdateSession}
           onSaveSettings={setSettings}
           onAddCustomExercise={handleAddCustomExercise}
+          onImportProgram={setProgram}
         />
       )
     }

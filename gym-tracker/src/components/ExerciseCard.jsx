@@ -22,6 +22,7 @@ function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddS
       </div>
 
       {entry.planExercise && <div className="muted" style={{ marginBottom: 6 }}>{targetLabel(entry.planExercise)}</div>}
+      {entry.planExercise?.notes && <div className="exercise-note">{entry.planExercise.notes}</div>}
       {lastSummary && <div className="last-time">Last time: {lastSummary}</div>}
       {entry.planExercise?.rationale && <div className="rationale">{entry.planExercise.rationale}</div>}
 
