@@ -6,7 +6,7 @@
 // 'lat-pulldown') are hardcoded into the program templates in coach.js —
 // don't rename an existing entry's `name` without checking there first,
 // since that changes its slug ID. New entries are always safe to add.
-export const CATEGORIES = ['chest', 'back', 'shoulders', 'legs', 'arms', 'core', 'cardio']
+export const CATEGORIES = ['chest', 'back', 'shoulders', 'legs', 'arms', 'core', 'neck', 'cardio']
 
 export const CATEGORY_LABELS = {
   chest: 'Chest',
@@ -15,10 +15,11 @@ export const CATEGORY_LABELS = {
   legs: 'Legs',
   arms: 'Arms',
   core: 'Core',
+  neck: 'Neck',
   cardio: 'Cardio',
 }
 
-export const EQUIPMENT = ['barbell', 'dumbbell', 'machine', 'cable', 'bodyweight', 'kettlebell', 'other']
+export const EQUIPMENT = ['barbell', 'dumbbell', 'machine', 'cable', 'band', 'bodyweight', 'kettlebell', 'other']
 
 const E = (name, category, equipment, compound, increment) => ({
   id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
@@ -48,6 +49,8 @@ export const BUILT_IN_EXERCISES = [
   E('Cable Crossover', 'chest', 'cable', false, 1),
   E('Machine Chest Press', 'chest', 'machine', true, 2.5),
   E('Incline Machine Press', 'chest', 'machine', true, 2.5),
+  E('Incline Smith Machine Bench Press', 'chest', 'machine', true, 2.5),
+  E('Band Chest Fly', 'chest', 'band', false, 1),
   E('Pec Deck', 'chest', 'machine', false, 2.5),
   E('Push-Up', 'chest', 'bodyweight', true, 0),
   E('Incline Push-Up', 'chest', 'bodyweight', true, 0),
@@ -84,6 +87,8 @@ export const BUILT_IN_EXERCISES = [
   E('Neutral-Grip Pull-Up', 'back', 'bodyweight', true, 0),
   E('Assisted Pull-Up', 'back', 'machine', true, 2.5),
   E('Face Pull', 'back', 'cable', false, 1),
+  E('Band Face Pull', 'back', 'band', false, 1),
+  E('Band Pulldown', 'back', 'band', true, 1),
   E('Back Extension', 'back', 'bodyweight', false, 0),
   E('Weighted Back Extension', 'back', 'other', false, 2.5),
 
@@ -101,10 +106,12 @@ export const BUILT_IN_EXERCISES = [
   E('Cable Lateral Raise', 'shoulders', 'cable', false, 1),
   E('Leaning Cable Lateral Raise', 'shoulders', 'cable', false, 1),
   E('Machine Lateral Raise', 'shoulders', 'machine', false, 2.5),
+  E('Band Lateral Raise', 'shoulders', 'band', false, 1),
   E('Front Raise', 'shoulders', 'dumbbell', false, 1),
   E('Cable Front Raise', 'shoulders', 'cable', false, 1),
   E('Rear Delt Fly', 'shoulders', 'dumbbell', false, 1),
   E('Cable Rear Delt Fly', 'shoulders', 'cable', false, 1),
+  E('Band Rear Delt Fly', 'shoulders', 'band', false, 1),
   E('Reverse Pec Deck', 'shoulders', 'machine', false, 2.5),
   E('Upright Row', 'shoulders', 'barbell', false, 2.5),
   E('Cable Upright Row', 'shoulders', 'cable', false, 1),
@@ -166,6 +173,8 @@ export const BUILT_IN_EXERCISES = [
   E('Zottman Curl', 'arms', 'dumbbell', false, 1),
   E('Cable Curl', 'arms', 'cable', false, 1),
   E('Cable Hammer Curl', 'arms', 'cable', false, 1),
+  E('Bayesian Curl', 'arms', 'cable', false, 1),
+  E('Band Curl', 'arms', 'band', false, 1),
   E('Close-Grip Bench Press', 'arms', 'barbell', true, 2.5),
   E('Skull Crusher', 'arms', 'barbell', false, 2.5),
   E('Dumbbell Skull Crusher', 'arms', 'dumbbell', false, 1),
@@ -175,6 +184,7 @@ export const BUILT_IN_EXERCISES = [
   E('Rope Triceps Pushdown', 'arms', 'cable', false, 1),
   E('Single-Arm Triceps Pushdown', 'arms', 'cable', false, 1),
   E('Triceps Kickback', 'arms', 'dumbbell', false, 1),
+  E('Band Triceps Extension', 'arms', 'band', false, 1),
   E('Dip', 'arms', 'bodyweight', true, 0),
   E('Bench Dip', 'arms', 'bodyweight', true, 0),
   E('Wrist Curl', 'arms', 'dumbbell', false, 1),
@@ -202,7 +212,16 @@ export const BUILT_IN_EXERCISES = [
   E('Mountain Climber', 'core', 'bodyweight', false, 0),
   E('Cable Woodchopper', 'core', 'cable', false, 1),
   E('Pallof Press', 'core', 'cable', false, 1),
+  E('Band Pallof Press', 'core', 'band', false, 1),
   E('Kettlebell Turkish Get-Up', 'core', 'kettlebell', false, 2),
+
+  // Neck — go conservative here: light load, slow reps (2s contraction,
+  // 2-3s eccentric), and progress in much smaller jumps than everything
+  // else in this file. Not part of any auto-generated program template;
+  // available for anyone who wants to add it deliberately.
+  E('Neck Flexion', 'neck', 'other', false, 1),
+  E('Neck Extension', 'neck', 'other', false, 1),
+  E('Neck Lateral Flexion', 'neck', 'other', false, 1),
 
   // Cardio
   E('Treadmill Run', 'cardio', 'other', false, 0),
@@ -235,7 +254,7 @@ export function makeCustomExercise(name, category, equipment) {
     category,
     equipment,
     compound: false,
-    increment: equipment === 'dumbbell' ? 1 : 2.5,
+    increment: equipment === 'dumbbell' || equipment === 'band' ? 1 : 2.5,
     isCustom: true,
   }
 }
