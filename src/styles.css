@@ -166,6 +166,11 @@ h1 {
   --color-text: #fbf3e7;
   --color-text-muted: rgba(251, 243, 231, 0.68);
   --color-border: rgba(251, 243, 231, 0.22);
+  /* Redefining the variables alone is not enough: body sets `color` from the
+     root value, and anything here that doesn't name a colour of its own -
+     row titles, panel headings - would inherit that dark text straight onto
+     these dark panels. Setting colour here is what actually re-points them. */
+  color: var(--color-text);
 }
 
 .wallpaper-page h1,
