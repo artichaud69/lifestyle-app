@@ -2,13 +2,13 @@ import PageHeader from './PageHeader.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 import { ORAISON_TITLE, ORAISON_VERSES } from '../oraison.js'
 
-function OraisonPage() {
+function OraisonPage({ onBack }) {
   const [opening, ...rest] = ORAISON_VERSES
   const closing = rest.pop()
 
   return (
     <div className="wallpaper-page">
-      <PageHeader title="Oraison" icon={PAGE_ICONS.oraison} />
+      <PageHeader title="Oraison" icon={PAGE_ICONS.oraison} onBack={onBack} />
 
       <article className="oraison">
         <h2 className="oraison-title">{ORAISON_TITLE}</h2>

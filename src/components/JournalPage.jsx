@@ -7,7 +7,7 @@ import JournalDayModal from './JournalDayModal.jsx'
 import PageHeader from './PageHeader.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
-function JournalPage() {
+function JournalPage({ onBack }) {
   const [entries, setEntries] = useState(() => loadJournal())
   const [selectedDate, setSelectedDate] = useState(null)
   const today = todayISO()
@@ -27,7 +27,7 @@ function JournalPage() {
 
   return (
     <div className="wallpaper-page">
-      <PageHeader title="Journal" icon={PAGE_ICONS.journal} />
+      <PageHeader title="Journal" icon={PAGE_ICONS.journal} onBack={onBack} />
 
       {todayEntry ? (
         <button type="button" className="today-done-card" onClick={() => setSelectedDate(today)}>

@@ -1,3 +1,5 @@
+import { HUB_VIEW } from './navIcons.js'
+
 // Minimum drag before a gesture means anything at all - below this it could
 // just be a stationary tap.
 export const DIRECTION_LOCK_DISTANCE = 10
@@ -43,13 +45,14 @@ export function shouldCommitDrag({ offset, direction, viewportWidth, velocity })
   )
 }
 
-export function nextView(views, current, direction) {
-  const index = views.indexOf(current)
-  if (index === -1) return current
-  const target = direction === 'next' ? index + 1 : index - 1
-  // Stop at the ends rather than wrapping, matching the visible tab bar.
-  if (target < 0 || target >= views.length) return current
-  return views[target]
+// Hub and spoke: a backward swipe from any spoke returns to the hub, the way
+// a back gesture does, and there is nothing to swipe forward to. Returning
+// `current` means "nothing to reveal", which the drag hook reads as a signal
+// to hand the gesture back rather than start a page drag.
+export function nextView(views, current, direction, hub = HUB_VIEW) {
+  if (!views.includes(current)) return current
+  if (direction !== 'previous') return current
+  return current === hub ? current : hub
 }
 
 // A drag that starts on something the user can scroll sideways - the habit

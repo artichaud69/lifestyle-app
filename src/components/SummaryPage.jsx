@@ -5,13 +5,7 @@ import PageHeader from './PageHeader.jsx'
 import SyncPanel from './SyncPanel.jsx'
 import NotificationsPanel from './NotificationsPanel.jsx'
 import DailyQuote from './DailyQuote.jsx'
-import { PAGE_ICONS } from '../navIcons.js'
-
-const QUICK_LINKS = [
-  { key: 'habits', label: 'Habits', icon: PAGE_ICONS.habits },
-  { key: 'goals', label: 'Goals', icon: PAGE_ICONS.goals },
-  { key: 'journal', label: 'Journal', icon: PAGE_ICONS.journal },
-]
+import { PAGE_ICONS, SPOKES } from '../navIcons.js'
 
 function SummaryPage({ habits, onChangeView, sync }) {
   const today = todayISO()
@@ -26,15 +20,19 @@ function SummaryPage({ habits, onChangeView, sync }) {
       <PageHeader title="Summary" icon={PAGE_ICONS.summary} />
 
       <div className="summary-links">
-        {QUICK_LINKS.map((link) => (
+        {SPOKES.map((spoke) => (
           <button
-            key={link.key}
+            key={spoke.key}
             type="button"
             className="summary-link"
-            onClick={() => onChangeView(link.key)}
+            onClick={() => onChangeView(spoke.key)}
           >
-            <img src={`${import.meta.env.BASE_URL}${link.icon}`} alt="" className="summary-link-icon" />
-            {link.label}
+            <img
+              src={`${import.meta.env.BASE_URL}${PAGE_ICONS[spoke.key]}`}
+              alt=""
+              className="summary-link-icon"
+            />
+            {spoke.label}
           </button>
         ))}
       </div>

@@ -8,7 +8,7 @@ import FrequencyPicker from './FrequencyPicker.jsx'
 import PageHeader from './PageHeader.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
-function GoalsPage({ habits, onAddHabits }) {
+function GoalsPage({ habits, onAddHabits, onBack }) {
   const [apiKey, setApiKey] = useState(() => loadApiKey())
   const [apiKeyDraft, setApiKeyDraft] = useState('')
   const [showApiKeyForm, setShowApiKeyForm] = useState(false)
@@ -89,7 +89,7 @@ function GoalsPage({ habits, onAddHabits }) {
 
   return (
     <div className="wallpaper-page">
-      <PageHeader title="Goals" icon={PAGE_ICONS.goals} />
+      <PageHeader title="Goals" icon={PAGE_ICONS.goals} onBack={onBack} />
 
       {!apiKey || showApiKeyForm ? (
         <form className="edit-panel" onSubmit={handleSaveApiKey}>

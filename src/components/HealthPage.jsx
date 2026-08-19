@@ -13,7 +13,7 @@ function ScoreCard({ label, score }) {
   )
 }
 
-function HealthPage({ session, initialMessage }) {
+function HealthPage({ session, initialMessage, onBack }) {
   const [status, setStatus] = useState('loading') // loading | disconnected | connected | error | signed-out
   const [data, setData] = useState(null)
   const [message, setMessage] = useState(initialMessage ?? null)
@@ -47,7 +47,7 @@ function HealthPage({ session, initialMessage }) {
 
   return (
     <div className="wallpaper-page">
-      <PageHeader title="Health" icon={PAGE_ICONS.health} />
+      <PageHeader title="Health" icon={PAGE_ICONS.health} onBack={onBack} />
 
       {status === 'signed-out' && (
         <p className="summary-empty">

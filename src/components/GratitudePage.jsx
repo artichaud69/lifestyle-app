@@ -20,7 +20,7 @@ function emptyItems() {
   return Array(ENTRY_SIZE).fill('')
 }
 
-function GratitudePage() {
+function GratitudePage({ onBack }) {
   const [entries, setEntries] = useState(() => loadGratitude())
   const today = todayISO()
   const [items, setItems] = useState(() => {
@@ -53,7 +53,7 @@ function GratitudePage() {
 
   return (
     <div className="wallpaper-page">
-      <PageHeader title="Gratitude" icon={PAGE_ICONS.gratitude} />
+      <PageHeader title="Gratitude" icon={PAGE_ICONS.gratitude} onBack={onBack} />
 
       {streak > 0 && (
         <p className="journal-prompt">

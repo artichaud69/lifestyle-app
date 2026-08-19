@@ -9,7 +9,7 @@ import {
   COMMIT_DISTANCE_RATIO,
   COMMIT_VELOCITY_PX_MS,
 } from './swipe.js'
-import { VIEW_ORDER } from './navIcons.js'
+import { ALL_VIEWS, HUB_VIEW, SPOKES } from './navIcons.js'
 
 const WIDTH = 375
 
@@ -123,37 +123,33 @@ describe('shouldCommitDrag', () => {
 })
 
 describe('nextView', () => {
-  it('walks the tab order forwards', () => {
-    expect(nextView(VIEW_ORDER, 'habits', 'next')).toBe('goals')
-    expect(nextView(VIEW_ORDER, 'goals', 'next')).toBe('summary')
-    expect(nextView(VIEW_ORDER, 'summary', 'next')).toBe('journal')
-    expect(nextView(VIEW_ORDER, 'journal', 'next')).toBe('health')
+  it('sends a backward swipe from any spoke home to the hub', () => {
+    for (const spoke of SPOKES.map((entry) => entry.key)) {
+      expect(nextView(ALL_VIEWS, spoke, 'previous')).toBe(HUB_VIEW)
+    }
   })
 
-  it('walks the tab order backwards', () => {
-    expect(nextView(VIEW_ORDER, 'journal', 'previous')).toBe('summary')
-    expect(nextView(VIEW_ORDER, 'goals', 'previous')).toBe('habits')
+  it('has nowhere to go backwards from the hub itself', () => {
+    expect(nextView(ALL_VIEWS, HUB_VIEW, 'previous')).toBe(HUB_VIEW)
   })
 
-  it('stops at the ends instead of wrapping around', () => {
-    const first = VIEW_ORDER[0]
-    const last = VIEW_ORDER[VIEW_ORDER.length - 1]
-    expect(nextView(VIEW_ORDER, first, 'previous')).toBe(first)
-    expect(nextView(VIEW_ORDER, last, 'next')).toBe(last)
+  it('has nothing to reveal on a forward swipe, from anywhere', () => {
+    expect(nextView(ALL_VIEWS, HUB_VIEW, 'next')).toBe(HUB_VIEW)
+    expect(nextView(ALL_VIEWS, 'habits', 'next')).toBe('habits')
+    expect(nextView(ALL_VIEWS, 'gratitude', 'next')).toBe('gratitude')
   })
 
   it('leaves an unknown view alone', () => {
-    expect(nextView(VIEW_ORDER, 'nonsense', 'next')).toBe('nonsense')
+    expect(nextView(ALL_VIEWS, 'nonsense', 'previous')).toBe('nonsense')
+    expect(nextView(ALL_VIEWS, 'nonsense', 'next')).toBe('nonsense')
   })
 
-  it('can reach every tab by walking forward from the first', () => {
-    let current = VIEW_ORDER[0]
-    const forwards = [current]
-    for (let step = 0; step < VIEW_ORDER.length - 1; step++) {
-      current = nextView(VIEW_ORDER, current, 'next')
-      forwards.push(current)
+  it('reaches the hub in one swipe from every page, however many exist', () => {
+    // The point of hub and spoke: no page is ever more than one gesture from
+    // home, so adding pages never lengthens the journey back.
+    for (const view of ALL_VIEWS) {
+      expect(nextView(ALL_VIEWS, view, 'previous')).toBe(HUB_VIEW)
     }
-    expect(forwards).toEqual(VIEW_ORDER)
   })
 })
 

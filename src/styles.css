@@ -53,54 +53,25 @@ body {
 
 .app {
   padding: var(--space-4);
-  padding-bottom: 130px;
+  /* Clears the home indicator now that there is no tab bar to sit above. */
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
   max-width: 480px;
   margin: 0 auto;
 }
 
-.nav-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 14px;
-  display: flex;
+.back-button {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0 0 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   background: var(--color-bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--color-border);
-  padding: var(--space-2) 0;
-  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
-  z-index: 50;
-}
-
-.nav-tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  background: none;
-  border: none;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  padding: 6px 0 8px;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1;
   cursor: pointer;
-}
-
-.nav-tab.active {
-  color: var(--color-primary);
-}
-
-.nav-icon {
-  height: 28px;
-  width: auto;
-  opacity: 0.55;
-}
-
-.nav-tab.active .nav-icon {
-  opacity: 1;
 }
 
 .stat-icon {
@@ -175,7 +146,7 @@ h1 {
   max-width: 480px;
   margin: 0 auto;
   padding: var(--space-4);
-  padding-bottom: 130px;
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
   pointer-events: none;
 }
 
@@ -551,19 +522,23 @@ h1 {
   margin-top: 4px;
 }
 
+/* The launcher for every other page. A fixed three-column grid rather than a
+   row, so the tiles stay a comfortable tap size however many pages exist. */
 .summary-links {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
   margin-bottom: var(--space-4);
 }
 
 .summary-link {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: var(--space-2) 0;
+  justify-content: center;
+  gap: 6px;
+  min-height: 76px;
+  padding: var(--space-2) 4px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -575,7 +550,7 @@ h1 {
 }
 
 .summary-link-icon {
-  height: 26px;
+  height: 30px;
   width: auto;
 }
 

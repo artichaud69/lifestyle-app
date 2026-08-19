@@ -6,14 +6,13 @@ import JournalPage from './components/JournalPage.jsx'
 import HealthPage from './components/HealthPage.jsx'
 import OraisonPage from './components/OraisonPage.jsx'
 import GratitudePage from './components/GratitudePage.jsx'
-import NavBar from './components/NavBar.jsx'
 import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 import { useSync } from './useSync.js'
 import { usePageDrag } from './usePageDrag.js'
 import { consumeOuraCallback } from './oura.js'
-import { VIEW_ORDER } from './navIcons.js'
+import { ALL_VIEWS, HUB_VIEW } from './navIcons.js'
 
 const WALLPAPERS = {
   habits: 'images/habits-wallpaper.jpg',
@@ -36,7 +35,7 @@ function previewStartTransform(direction) {
 
 function App() {
   const [habits, setHabits] = useState(() => loadHabits() ?? defaultHabits)
-  const [view, setView] = useState('summary')
+  const [view, setView] = useState(HUB_VIEW)
   const [ouraMessage, setOuraMessage] = useState(null)
   const sync = useSync()
 
@@ -63,7 +62,11 @@ function App() {
     previewContentRef,
     previewWallpaperRef,
     preview,
-  } = usePageDrag({ views: VIEW_ORDER, view, onCommit: changeView })
+  } = usePageDrag({ views: ALL_VIEWS, view, onCommit: changeView })
+
+  function goToHub() {
+    changeView(HUB_VIEW)
+  }
 
   useEffect(() => {
     saveHabits(habits)
@@ -114,15 +117,18 @@ function App() {
           onToggleDate={toggleDate}
           onUpdateHabit={updateHabit}
           onDeleteHabit={deleteHabit}
+          onBack={goToHub}
         />
       )
     }
-    if (pageView === 'goals') return <GoalsPage habits={habits} onAddHabits={addHabits} />
+    if (pageView === 'goals') return <GoalsPage habits={habits} onAddHabits={addHabits} onBack={goToHub} />
     if (pageView === 'summary') return <SummaryPage habits={habits} onChangeView={changeView} sync={sync} />
-    if (pageView === 'journal') return <JournalPage />
-    if (pageView === 'health') return <HealthPage session={sync.session} initialMessage={ouraMessage} />
-    if (pageView === 'oraison') return <OraisonPage />
-    if (pageView === 'gratitude') return <GratitudePage />
+    if (pageView === 'journal') return <JournalPage onBack={goToHub} />
+    if (pageView === 'health') {
+      return <HealthPage session={sync.session} initialMessage={ouraMessage} onBack={goToHub} />
+    }
+    if (pageView === 'oraison') return <OraisonPage onBack={goToHub} />
+    if (pageView === 'gratitude') return <GratitudePage onBack={goToHub} />
     return null
   }
 
@@ -150,8 +156,6 @@ function App() {
           </div>
         </>
       )}
-
-      <NavBar view={view} onChangeView={changeView} />
     </div>
   )
 }
