@@ -6,25 +6,12 @@ import JournalPage from './components/JournalPage.jsx'
 import HealthPage from './components/HealthPage.jsx'
 import OraisonPage from './components/OraisonPage.jsx'
 import GratitudePage from './components/GratitudePage.jsx'
-import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 import { useSync } from './useSync.js'
 import { usePageDrag } from './usePageDrag.js'
 import { consumeOuraCallback } from './oura.js'
 import { ALL_VIEWS, HUB_VIEW } from './navIcons.js'
-
-const WALLPAPERS = {
-  habits: 'images/habits-wallpaper.jpg',
-  goals: 'images/goals-wallpaper.jpg',
-  summary: 'images/theme-wallpaper.jpg',
-  journal: 'images/journal-wallpaper.jpg',
-  health: 'images/health-wallpaper.jpg',
-  oraison: 'images/oraison-wallpaper.jpg',
-  // No dedicated art yet - reuses the statues wallpaper, same stand-in used
-  // for Health and Oraison before their own images arrived.
-  gratitude: 'images/theme-wallpaper.jpg',
-}
 
 // Where the preview page sits before the drag has positioned it for real.
 // Without this it would render at rest - fully on screen - for one frame,
@@ -55,14 +42,11 @@ function App() {
     })
   }, [])
 
-  const {
-    rootRef,
-    currentContentRef,
-    currentWallpaperRef,
-    previewContentRef,
-    previewWallpaperRef,
-    preview,
-  } = usePageDrag({ views: ALL_VIEWS, view, onCommit: changeView })
+  const { rootRef, currentContentRef, previewContentRef, preview } = usePageDrag({
+    views: ALL_VIEWS,
+    view,
+    onCommit: changeView,
+  })
 
   function goToHub() {
     changeView(HUB_VIEW)
@@ -134,27 +118,18 @@ function App() {
 
   return (
     <div className="app" ref={rootRef}>
-      <PageWallpaper image={WALLPAPERS[view]} domRef={currentWallpaperRef} />
       <div className="app-content" ref={currentContentRef}>
         {renderPage(view)}
       </div>
 
       {preview && (
-        <>
-          <PageWallpaper
-            image={WALLPAPERS[preview.view]}
-            domRef={previewWallpaperRef}
-            className="page-wallpaper preview-layer"
-            style={{ transform: previewStartTransform(preview.direction) }}
-          />
-          <div
-            className="app-content swipe-preview-content"
-            ref={previewContentRef}
-            style={{ transform: previewStartTransform(preview.direction) }}
-          >
-            {renderPage(preview.view)}
-          </div>
-        </>
+        <div
+          className="app-content swipe-preview-content"
+          ref={previewContentRef}
+          style={{ transform: previewStartTransform(preview.direction) }}
+        >
+          {renderPage(preview.view)}
+        </div>
       )}
     </div>
   )

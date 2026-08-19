@@ -1,20 +1,23 @@
 import HabitList from './HabitList.jsx'
 import AddHabitForm from './AddHabitForm.jsx'
-import PageHeader from './PageHeader.jsx'
+import PageHero from './PageHero.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
 function HabitsPage({ habits, onAddHabit, onToggleDate, onUpdateHabit, onDeleteHabit, onBack }) {
   return (
-    <div className="wallpaper-page">
-      <PageHeader title="Habit Tracker" icon={PAGE_ICONS.habits} onBack={onBack}>
+    <div className="page">
+      <PageHero view="habits" title="Habit Tracker" onBack={onBack}>
         <AddHabitForm onAdd={onAddHabit} />
-      </PageHeader>
+      </PageHero>
+
+      <div className="page-body">
       <HabitList
         habits={habits}
         onToggleDate={onToggleDate}
         onUpdateHabit={onUpdateHabit}
         onDeleteHabit={onDeleteHabit}
       />
+      </div>
     </div>
   )
 }

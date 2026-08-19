@@ -4,7 +4,7 @@ import { todayISO } from '../dates.js'
 import FlameIcon from './FlameIcon.jsx'
 import JournalCalendar from './JournalCalendar.jsx'
 import JournalDayModal from './JournalDayModal.jsx'
-import PageHeader from './PageHeader.jsx'
+import PageHero from './PageHero.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
 function JournalPage({ onBack }) {
@@ -26,8 +26,10 @@ function JournalPage({ onBack }) {
   }
 
   return (
-    <div className="wallpaper-page">
-      <PageHeader title="Journal" icon={PAGE_ICONS.journal} onBack={onBack} />
+    <div className="page">
+      <PageHero view="journal" title="Journal" onBack={onBack} />
+
+      <div className="page-body">
 
       {todayEntry ? (
         <button type="button" className="today-done-card" onClick={() => setSelectedDate(today)}>
@@ -67,6 +69,7 @@ function JournalPage({ onBack }) {
           onClose={() => setSelectedDate(null)}
         />
       )}
+      </div>
     </div>
   )
 }

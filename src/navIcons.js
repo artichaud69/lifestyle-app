@@ -8,6 +8,18 @@ export const PAGE_ICONS = {
   gratitude: 'icons/nav-gratitude.png',
 }
 
+// Each page opens on a band of its own artwork. Kept beside the icons so a
+// page's identity - its mark and its image - lives in one place.
+export const PAGE_HEROES = {
+  habits: 'images/habits-wallpaper.jpg',
+  goals: 'images/goals-wallpaper.jpg',
+  summary: 'images/theme-wallpaper.jpg',
+  journal: 'images/journal-wallpaper.jpg',
+  health: 'images/health-wallpaper.jpg',
+  oraison: 'images/oraison-wallpaper.jpg',
+  gratitude: 'images/theme-wallpaper.jpg',
+}
+
 // Navigation is hub and spoke: Summary is the one page you launch from, and
 // every other page hangs off it. A tab bar listing all of them had grown too
 // crowded to read, and this shape stays the same however many pages arrive.

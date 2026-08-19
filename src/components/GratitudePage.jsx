@@ -11,7 +11,7 @@ import {
   ENTRY_SIZE,
 } from '../gratitude.js'
 import { todayISO, formatShortLabel, addDays } from '../dates.js'
-import PageHeader from './PageHeader.jsx'
+import PageHero from './PageHero.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
 const HISTORY_DAYS = 14
@@ -52,8 +52,10 @@ function GratitudePage({ onBack }) {
   }
 
   return (
-    <div className="wallpaper-page">
-      <PageHeader title="Gratitude" icon={PAGE_ICONS.gratitude} onBack={onBack} />
+    <div className="page">
+      <PageHero view="gratitude" title="Gratitude" onBack={onBack} />
+
+      <div className="page-body">
 
       {streak > 0 && (
         <p className="journal-prompt">
@@ -113,6 +115,7 @@ function GratitudePage({ onBack }) {
           </div>
         </>
       )}
+      </div>
     </div>
   )
 }

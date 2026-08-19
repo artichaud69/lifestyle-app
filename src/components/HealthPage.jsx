@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import PageHeader from './PageHeader.jsx'
+import PageHero from './PageHero.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 import { startOuraConnect, fetchOuraData, disconnectOura } from '../oura.js'
 import { formatShortLabel } from '../dates.js'
@@ -46,8 +46,10 @@ function HealthPage({ session, initialMessage, onBack }) {
   }
 
   return (
-    <div className="wallpaper-page">
-      <PageHeader title="Health" icon={PAGE_ICONS.health} onBack={onBack} />
+    <div className="page">
+      <PageHero view="health" title="Health" onBack={onBack} />
+
+      <div className="page-body">
 
       {status === 'signed-out' && (
         <p className="summary-empty">
@@ -115,6 +117,7 @@ function HealthPage({ session, initialMessage, onBack }) {
           </div>
         </>
       )}
+      </div>
     </div>
   )
 }

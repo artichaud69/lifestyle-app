@@ -20,9 +20,7 @@ const EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
 export function usePageDrag({ views, view, onCommit }) {
   const rootRef = useRef(null)
   const currentContentRef = useRef(null)
-  const currentWallpaperRef = useRef(null)
   const previewContentRef = useRef(null)
-  const previewWallpaperRef = useRef(null)
   // The neighbouring view being revealed, or null. Carries its direction too,
   // so its very first render can already place it off-screen on the right
   // side - otherwise it would mount at rest (fully on screen, since that is
@@ -40,27 +38,23 @@ export function usePageDrag({ views, view, onCommit }) {
     if (!root) return
 
     function position(offset, direction) {
-      const currentTransform = `translateX(${offset}px)`
-      if (currentContentRef.current) currentContentRef.current.style.transform = currentTransform
-      if (currentWallpaperRef.current) currentWallpaperRef.current.style.transform = currentTransform
+      if (currentContentRef.current) currentContentRef.current.style.transform = `translateX(${offset}px)`
       if (previewContentRef.current) {
         const base = direction === 'next' ? window.innerWidth : -window.innerWidth
-        const previewTransform = `translateX(${base + offset}px)`
-        previewContentRef.current.style.transform = previewTransform
-        if (previewWallpaperRef.current) previewWallpaperRef.current.style.transform = previewTransform
+        previewContentRef.current.style.transform = `translateX(${base + offset}px)`
       }
     }
 
     function setTransition(on) {
       const value = on ? `transform ${SETTLE_MS}ms ${EASING}` : ''
-      for (const ref of [currentContentRef, currentWallpaperRef, previewContentRef, previewWallpaperRef]) {
+      for (const ref of [currentContentRef, previewContentRef]) {
         if (ref.current) ref.current.style.transition = value
       }
     }
 
     function clear() {
       setTransition(false)
-      for (const ref of [currentContentRef, currentWallpaperRef, previewContentRef, previewWallpaperRef]) {
+      for (const ref of [currentContentRef, previewContentRef]) {
         if (ref.current) ref.current.style.transform = ''
       }
       gestureRef.current = null
@@ -189,5 +183,5 @@ export function usePageDrag({ views, view, onCommit }) {
     }
   }, [])
 
-  return { rootRef, currentContentRef, currentWallpaperRef, previewContentRef, previewWallpaperRef, preview }
+  return { rootRef, currentContentRef, previewContentRef, preview }
 }

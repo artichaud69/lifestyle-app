@@ -1,7 +1,7 @@
 import { todayISO, datesBetween } from '../dates.js'
 import { currentStreak, bestStreak } from '../streaks.js'
 import { weeklyCompletionPercent } from '../frequency.js'
-import PageHeader from './PageHeader.jsx'
+import PageHero from './PageHero.jsx'
 import SyncPanel from './SyncPanel.jsx'
 import NotificationsPanel from './NotificationsPanel.jsx'
 import DailyQuote from './DailyQuote.jsx'
@@ -16,8 +16,10 @@ function SummaryPage({ habits, onChangeView, sync }) {
   const yearPercent = Math.round(((totalDaysInYear - daysLeftInYear) / totalDaysInYear) * 100)
 
   return (
-    <div className="wallpaper-page">
-      <PageHeader title="Summary" icon={PAGE_ICONS.summary} />
+    <div className="page">
+      <PageHero view="summary" title="Summary" />
+
+      <div className="page-body">
 
       <div className="summary-links">
         {SPOKES.map((spoke) => (
@@ -89,6 +91,7 @@ function SummaryPage({ habits, onChangeView, sync }) {
 
       <h2 className="section-heading">Reminders</h2>
       <NotificationsPanel session={sync.session} />
+      </div>
     </div>
   )
 }

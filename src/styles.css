@@ -1,42 +1,65 @@
+/* One committed palette rather than a light and a dark one. Every page was
+   already forcing dark colours over the artwork, so this makes the app's real
+   identity explicit - torchlight on stone - and removes a whole class of bug
+   where a value resolved against the wrong theme. */
 :root {
-  --color-bg: #eae3d3;
-  --color-bg-card: rgba(245, 240, 228, 0.78);
-  --color-text: #262119;
-  --color-text-muted: #6e6252;
-  --color-border: #d3c7ae;
-  --color-primary: #b5451a;
-  --color-primary-text: #fbf3e7;
-  --color-success: #55692f;
-  --color-danger: #8f2c26;
-  --radius-sm: 3px;
-  --radius-md: 5px;
+  color-scheme: dark;
+
+  /* Surfaces, darkest to lightest: the page, a card on it, something raised
+     or interactive on that. Three steps is enough to build hierarchy with. */
+  --surface-0: #14110d;
+  --surface-1: #1e1a14;
+  --surface-2: #272119;
+  --surface-3: #322a20;
+
+  --color-text: #f2e9d8;
+  --color-text-muted: #a2957e;
+  --color-text-faint: #6f6555;
+  --color-border: #322b21;
+  --color-border-strong: #443a2c;
+
+  --color-primary: #d1541f;
+  --color-primary-soft: rgba(209, 84, 31, 0.16);
+  --color-primary-text: #fdf6ea;
+  --color-success: #7f9a4f;
+  --color-danger: #c1453d;
+
+  /* A deliberate scale rather than ad-hoc sizes. Roughly a 1.25 ratio. */
+  --text-caption: 11px;
+  --text-small: 13px;
+  --text-body: 15px;
+  --text-title: 18px;
+  --text-display: 24px;
+  --text-hero: 30px;
+  --text-stat: 40px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-raised: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-display: 'Cinzel', Georgia, serif;
   /* A reading face for long passages meant to be dwelt on rather than
      scanned - the UI's system sans would make a prayer look like a form. */
   --font-reading: 'EB Garamond', Georgia, serif;
-  --mood-1: #1d3557;
+
+  --mood-1: #2d4a6b;
   --mood-2: #4a7a9d;
   --mood-3: #a8a074;
   --mood-4: #d9b94a;
   --mood-5: #f5e169;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #17140f;
-    --color-bg-card: rgba(36, 31, 23, 0.72);
-    --color-text: #ece2ce;
-    --color-text-muted: #a89a80;
-    --color-border: #3c3325;
-    --color-primary: #e07a35;
-    --color-success: #7f9a4f;
-    --color-danger: #c1453d;
-  }
 }
 
 * {
@@ -46,32 +69,24 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: var(--color-bg);
+  font-size: var(--text-body);
+  background: var(--surface-0);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
 }
 
 .app {
-  padding: var(--space-4);
-  /* Clears the home indicator now that there is no tab bar to sit above. */
-  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  /* No horizontal padding: the hero bleeds edge to edge, and the content
+     below carries its own inset via .page-body. */
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
   max-width: 480px;
   margin: 0 auto;
+  min-height: 100vh;
+  background: var(--surface-0);
 }
 
-.back-button {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  padding: 0 0 4px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-card);
-  color: var(--color-text);
-  font-family: var(--font-display);
-  font-size: 26px;
-  line-height: 1;
-  cursor: pointer;
+.page-body {
+  padding: 0 var(--space-4);
 }
 
 .stat-icon {
@@ -81,38 +96,97 @@ body {
   margin-right: 2px;
 }
 
-h1 {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin: 0 0 var(--space-4);
+/* --- The band of artwork each page opens on --- */
+
+.page-hero {
+  position: relative;
+  height: 210px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--space-4);
+  padding-top: calc(var(--space-4) + env(safe-area-inset-top));
+  margin-bottom: var(--space-5);
 }
 
-.app-header {
+/* Darkens only the lower part of the image, so the artwork stays vivid at the
+   top and the title below it still has something solid to sit on. */
+.page-hero-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 17, 13, 0.1) 0%,
+    rgba(20, 17, 13, 0.45) 55%,
+    var(--surface-0) 100%
+  );
+}
+
+.page-hero-bar {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
 }
 
-.app-header h1 {
-  margin: 0;
-}
-
-.page-title {
+.page-hero-title {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
 }
 
-.page-logo {
-  height: 44px;
+.page-hero-icon {
+  height: 34px;
   width: auto;
   flex-shrink: 0;
+}
+
+.page-hero h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-hero);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  color: #fdf6ea;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  text-wrap: balance;
+}
+
+.hero-back {
+  position: absolute;
+  top: calc(var(--space-3) + env(safe-area-inset-top));
+  left: var(--space-3);
+  z-index: 1;
+  width: 38px;
+  height: 38px;
+  padding: 0 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: rgba(20, 17, 13, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fdf6ea;
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 150ms var(--ease), background 150ms var(--ease);
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--space-4);
 }
 
 /* The finger-tracked swipe (src/usePageDrag.js) moves these by writing
@@ -123,20 +197,8 @@ h1 {
   z-index: 1;
 }
 
-.page-wallpaper {
-  position: fixed;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  z-index: 0;
-}
-
-/* The page being revealed sits above the outgoing one and does not receive
-   taps - it is a preview, not yet the real page. */
-.page-wallpaper.preview-layer {
-  z-index: 2;
-}
-
+/* The page being revealed during a drag sits above the outgoing one and does
+   not receive taps - it is a preview, not yet the real page. */
 .swipe-preview-content {
   position: fixed;
   inset: 0;
@@ -145,48 +207,9 @@ h1 {
   box-sizing: border-box;
   max-width: 480px;
   margin: 0 auto;
-  padding: var(--space-4);
-  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  background: var(--surface-0);
   pointer-events: none;
-}
-
-.page-wallpaper-scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(20, 15, 10, 0.62);
-  background: linear-gradient(to bottom, rgba(20, 15, 10, 0.55), rgba(20, 15, 10, 0.72));
-}
-
-/* Every panel on a wallpaper page uses the same light, low-opacity scrim as
-   .summary-empty below, rather than the app's normal light/dark card colors -
-   the photo behind is always dark, regardless of the system color scheme, so
-   the panels floating over it stay one fixed look instead of switching. */
-.wallpaper-page {
-  --color-bg-card: rgba(20, 15, 10, 0.4);
-  --color-text: #fbf3e7;
-  --color-text-muted: rgba(251, 243, 231, 0.68);
-  --color-border: rgba(251, 243, 231, 0.22);
-  /* Redefining the variables alone is not enough: body sets `color` from the
-     root value, and anything here that doesn't name a colour of its own -
-     row titles, panel headings - would inherit that dark text straight onto
-     these dark panels. Setting colour here is what actually re-points them. */
-  color: var(--color-text);
-}
-
-.wallpaper-page h1,
-.wallpaper-page .section-heading {
-  color: #fbf3e7;
-}
-
-.wallpaper-page .summary-empty {
-  color: #fbf3e7;
-  background: rgba(20, 15, 10, 0.4);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-}
-
-.wallpaper-page > .journal-prompt {
-  color: #fbf3e7;
 }
 
 .icon-button {
@@ -223,7 +246,7 @@ h1 {
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
@@ -234,11 +257,12 @@ h1 {
 }
 
 .habit-card {
-  padding: var(--space-3);
+  padding: var(--space-4);
   margin-bottom: var(--space-3);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .habit-name-button {
@@ -252,13 +276,14 @@ h1 {
   border: none;
   padding: 0;
   font: inherit;
+  font-size: var(--text-title);
   font-weight: 600;
   color: var(--color-text);
   cursor: pointer;
 }
 
 .habit-name-button .edit-icon {
-  font-size: 10px;
+  font-size: var(--text-caption);
   color: var(--color-text-muted);
   margin-left: 2px;
 }
@@ -283,7 +308,7 @@ h1 {
 }
 
 .tick-date-label {
-  font-size: 9px;
+  font-size: var(--text-caption);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
@@ -301,7 +326,7 @@ h1 {
   border: 1.5px solid var(--color-border);
   background: transparent;
   color: transparent;
-  font-size: 12px;
+  font-size: var(--text-small);
   line-height: 1;
   display: flex;
   align-items: center;
@@ -328,7 +353,7 @@ h1 {
   background: transparent;
   color: var(--color-text-muted);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--text-small);
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -347,14 +372,14 @@ h1 {
 }
 
 .habit-streak {
-  font-size: 12px;
+  font-size: var(--text-small);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: 2px;
 }
 
 .habit-heatmap-summary {
-  font-size: 11px;
+  font-size: var(--text-caption);
   color: var(--color-text-muted);
   margin-bottom: var(--space-1);
 }
@@ -367,10 +392,10 @@ h1 {
 }
 
 .heatmap-square {
-  width: 10px;
-  height: 10px;
-  border-radius: 1px;
-  background-color: var(--color-border);
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background-color: var(--surface-3);
 }
 
 .heatmap-square.done {
@@ -383,24 +408,34 @@ h1 {
   gap: var(--space-2);
   padding: var(--space-3);
   margin-top: var(--space-3);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
 
 .text-input {
   font: inherit;
-  padding: 8px 10px;
+  /* A step above the panel it sits on, so a field reads as something you
+     can type into rather than as more panel. */
+  padding: 10px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  /* A bit more opaque than the panel behind it, so a field still reads as
-     a distinct, tappable control rather than blending into the panel. */
-  background: rgba(20, 15, 10, 0.55);
+  background: var(--surface-2);
   color: var(--color-text);
+  transition: border-color 150ms var(--ease);
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.text-input::placeholder {
+  color: var(--color-text-faint);
 }
 
 .field-label {
-  font-size: 12px;
+  font-size: var(--text-small);
   color: var(--color-text-muted);
   display: flex;
   flex-direction: column;
@@ -417,10 +452,28 @@ h1 {
 .button {
   font: inherit;
   font-weight: 600;
-  padding: 8px 14px;
+  padding: 11px 18px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
+  transition: transform 150ms var(--ease), filter 150ms var(--ease);
+}
+
+/* Nothing in the app responded to being pressed, which is most of what makes
+   a page feel like a web page rather than an app on a phone. */
+.button:active,
+.icon-button:active,
+.summary-link:active,
+.hero-back:active,
+.mood-option:active,
+.day-toggle:active,
+.today-done-card:active {
+  transform: scale(0.97);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .button-primary {
@@ -453,47 +506,49 @@ h1 {
 
 .daily-quote-text {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: var(--text-title);
   font-weight: 700;
-  line-height: 1.55;
-  color: #fbf3e7;
+  line-height: 1.5;
+  color: var(--color-text);
   margin: 0;
-  /* the wallpaper behind is photographic, so the text carries its own contrast */
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+  text-wrap: balance;
 }
 
 .daily-quote-author {
   margin-top: var(--space-2);
-  font-size: 10px;
+  font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(251, 243, 231, 0.72);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  color: var(--color-text-muted);
 }
 
 .summary-today-card {
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-4);
   text-align: center;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
+  box-shadow: var(--shadow-card);
 }
 
+/* The headline number is the one thing on the page that should dominate. */
 .summary-today-value {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: var(--text-stat);
   font-weight: 700;
+  line-height: 1;
   color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-today-label {
-  font-size: 11px;
+  font-size: var(--text-caption);
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-top: 4px;
+  letter-spacing: 0.1em;
+  margin-top: var(--space-2);
 }
 
 .health-scores {
@@ -509,9 +564,9 @@ h1 {
 
 .year-progress-track {
   margin-top: var(--space-3);
-  height: 8px;
-  border-radius: 4px;
-  background: var(--color-border);
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
   overflow: hidden;
 }
 
@@ -522,7 +577,7 @@ h1 {
 }
 
 .year-progress-label {
-  font-size: 10px;
+  font-size: var(--text-caption);
   color: var(--color-text-muted);
   margin-top: 4px;
 }
@@ -533,7 +588,7 @@ h1 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .summary-link {
@@ -541,17 +596,19 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 76px;
-  padding: var(--space-2) 4px;
-  background: var(--color-bg-card);
+  gap: var(--space-2);
+  min-height: 88px;
+  padding: var(--space-3) var(--space-1);
+  background: var(--surface-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
   font: inherit;
-  font-size: 11px;
+  font-size: var(--text-caption);
   font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
+  transition: transform 150ms var(--ease), background 150ms var(--ease);
 }
 
 .summary-link-icon {
@@ -560,35 +617,37 @@ h1 {
 }
 
 .summary-row {
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-2);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
 
 .summary-row-name {
   font-weight: 600;
-  margin-bottom: 2px;
+  margin-bottom: var(--space-1);
 }
 
 .summary-row-stats {
-  font-size: 12px;
+  font-size: var(--text-small);
   color: var(--color-text-muted);
-  margin-bottom: var(--space-2);
 }
 
+/* Small, quiet and letterspaced: a label marking a section rather than a
+   second headline competing with the page title. */
 .section-heading {
-  font-family: var(--font-display);
-  font-size: 1rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-caption);
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  margin: var(--space-4) 0 var(--space-3);
+  color: var(--color-text-muted);
+  margin: var(--space-5) 0 var(--space-3);
 }
 
 .goal-error {
-  font-size: 12px;
+  font-size: var(--text-small);
   color: var(--color-danger);
   margin: 0;
 }
@@ -601,7 +660,7 @@ h1 {
 }
 
 .sync-note {
-  font-size: 12px;
+  font-size: var(--text-small);
   color: var(--color-text-muted);
   margin: 0;
 }
@@ -649,18 +708,18 @@ h1 {
 }
 
 .suggestion-reason {
-  font-size: 12px;
+  font-size: var(--text-small);
   color: var(--color-text-muted);
   margin: 0;
 }
 
 .summary-empty {
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: var(--text-body);
 }
 
 .journal-prompt {
-  font-size: 14px;
+  font-size: var(--text-body);
   color: var(--color-text-muted);
   margin-bottom: var(--space-2);
 }
@@ -677,7 +736,7 @@ h1 {
   padding: 8px 2px 6px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -692,7 +751,7 @@ h1 {
 }
 
 .mood-label {
-  font-size: 9px;
+  font-size: var(--text-caption);
   font-weight: 600;
   color: var(--color-text-muted);
   text-align: center;
@@ -701,7 +760,7 @@ h1 {
 
 .modal-title {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: var(--text-title);
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -717,7 +776,7 @@ textarea.text-input {
   width: 100%;
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   text-align: left;
@@ -730,13 +789,13 @@ textarea.text-input {
 }
 
 .today-done-label {
-  font-size: 12px;
+  font-size: var(--text-small);
   color: var(--color-text-muted);
 }
 
 .calendar {
   margin-bottom: var(--space-4);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-3);
@@ -756,7 +815,7 @@ textarea.text-input {
   background: transparent;
   color: var(--color-text-muted);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--text-small);
   font-weight: 600;
   cursor: pointer;
 }
@@ -780,7 +839,7 @@ textarea.text-input {
   flex-shrink: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   color: var(--color-text);
   font-size: 16px;
   line-height: 1;
@@ -797,7 +856,7 @@ textarea.text-input {
 
 .calendar-month-label {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: var(--text-title);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -813,7 +872,7 @@ textarea.text-input {
 
 .calendar-weekday {
   text-align: center;
-  font-size: 10px;
+  font-size: var(--text-caption);
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -830,10 +889,10 @@ textarea.text-input {
   padding: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   color: var(--color-text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--text-small);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -894,7 +953,7 @@ textarea.text-input {
 }
 
 .year-month-label {
-  font-size: 10px;
+  font-size: var(--text-caption);
   font-weight: 700;
   text-align: center;
   text-transform: uppercase;
@@ -955,7 +1014,7 @@ textarea.text-input {
 /* The oraison is meant to be read slowly, so it gets a reading face, wide
    leading and room between verses rather than the tight rhythm of the UI. */
 .oraison {
-  background: var(--color-bg-card);
+  background: var(--surface-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-4) calc(var(--space-4) + var(--space-2));
@@ -963,7 +1022,7 @@ textarea.text-input {
 
 .oraison-title {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: var(--text-title);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -986,7 +1045,7 @@ textarea.text-input {
 }
 
 .oraison-opening {
-  font-size: 1.2rem;
+  font-size: var(--text-display);
   font-style: italic;
   line-height: 1.6;
   text-align: center;
@@ -995,7 +1054,7 @@ textarea.text-input {
 }
 
 .oraison-verse {
-  font-size: 1.06rem;
+  font-size: 17px;
   line-height: 1.75;
   margin-bottom: var(--space-3);
 }
@@ -1010,12 +1069,30 @@ textarea.text-input {
 
 .gratitude-prompt {
   font-style: italic;
-  font-size: 13px;
+  font-size: var(--text-small);
   color: var(--color-text-muted);
   margin: 0 0 var(--space-3);
 }
 
 .gratitude-echo {
-  font-size: 14px;
+  font-size: var(--text-body);
   margin: 0;
+}
+
+/* Someone who has asked their phone to calm down should not get bounce. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .button:active,
+  .icon-button:active,
+  .summary-link:active,
+  .hero-back:active,
+  .mood-option:active,
+  .day-toggle:active,
+  .today-done-card:active {
+    transform: none;
+  }
 }
