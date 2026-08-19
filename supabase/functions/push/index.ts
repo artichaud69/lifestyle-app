@@ -8,6 +8,11 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!
 const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:reminders@example.com'
+// A secret of our own for the scheduled job. Comparing against the injected
+// service role key looked simpler but is not portable: which key Supabase
+// injects depends on the project's key generation, and pasting a long JWT
+// into a SQL header is easy to break with a stray newline.
+const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? ''
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
@@ -55,7 +60,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
-    const { action, subscription, timezone, reminderHour, endpoint } = await req.json()
+    const { action, subscription, timezone, reminderHour, endpoint, secret } = await req.json()
 
     if (action === 'subscribe') {
       const user = await getCaller(req)
@@ -113,9 +118,13 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'run-reminders') {
       // Called by the scheduler, not by a signed-in browser, so it is gated on
-      // the service role key rather than on a user's token.
-      const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '')
-      if (token !== SERVICE_ROLE_KEY) return json({ error: 'Not allowed.' }, 401)
+      // a shared secret rather than on a user's token. Trimmed, because the
+      // value travels through hand-edited SQL.
+      const provided = String(secret ?? '').trim()
+      const bearer = (req.headers.get('Authorization') ?? '').replace('Bearer ', '').trim()
+      const allowed =
+        (CRON_SECRET && provided === CRON_SECRET) || (SERVICE_ROLE_KEY && bearer === SERVICE_ROLE_KEY)
+      if (!allowed) return json({ error: 'Not allowed.' }, 401)
 
       const now = new Date()
       const { data: rows, error } = await admin
