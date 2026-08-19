@@ -5,6 +5,7 @@ import SummaryPage from './components/SummaryPage.jsx'
 import JournalPage from './components/JournalPage.jsx'
 import HealthPage from './components/HealthPage.jsx'
 import OraisonPage from './components/OraisonPage.jsx'
+import GratitudePage from './components/GratitudePage.jsx'
 import NavBar from './components/NavBar.jsx'
 import PageWallpaper from './components/PageWallpaper.jsx'
 import { loadHabits, saveHabits } from './storage.js'
@@ -21,6 +22,9 @@ const WALLPAPERS = {
   journal: 'images/journal-wallpaper.jpg',
   health: 'images/health-wallpaper.jpg',
   oraison: 'images/oraison-wallpaper.jpg',
+  // No dedicated art yet - reuses the statues wallpaper, same stand-in used
+  // for Health and Oraison before their own images arrived.
+  gratitude: 'images/theme-wallpaper.jpg',
 }
 
 // Where the preview page sits before the drag has positioned it for real.
@@ -118,6 +122,7 @@ function App() {
     if (pageView === 'journal') return <JournalPage />
     if (pageView === 'health') return <HealthPage session={sync.session} initialMessage={ouraMessage} />
     if (pageView === 'oraison') return <OraisonPage />
+    if (pageView === 'gratitude') return <GratitudePage />
     return null
   }
 

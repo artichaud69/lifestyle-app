@@ -1027,3 +1027,15 @@ textarea.text-input {
 .oraison-closing {
   font-style: italic;
 }
+
+.gratitude-prompt {
+  font-style: italic;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-3);
+}
+
+.gratitude-echo {
+  font-size: 14px;
+  margin: 0;
+}

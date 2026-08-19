@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { toISODate, todayISO, lastNDates, startOfWeek, datesBetween } from './dates.js'
+import { toISODate, todayISO, lastNDates, startOfWeek, datesBetween, addDays } from './dates.js'
 
 // 2026-08-13 is a Thursday, so week boundaries are easy to reason about.
 const TODAY = new Date(2026, 7, 13, 12, 0, 0)
@@ -38,6 +38,33 @@ describe('todayISO', () => {
 describe('lastNDates', () => {
   it('returns n days ending today, oldest first', () => {
     expect(lastNDates(3)).toEqual(['2026-08-11', '2026-08-12', '2026-08-13'])
+  })
+})
+
+describe('addDays', () => {
+  it('steps forward', () => {
+    expect(addDays('2026-08-13', 1)).toBe('2026-08-14')
+  })
+
+  it('steps backward', () => {
+    expect(addDays('2026-08-13', -1)).toBe('2026-08-12')
+  })
+
+  it('is a no-op for zero', () => {
+    expect(addDays('2026-08-13', 0)).toBe('2026-08-13')
+  })
+
+  it('crosses a month boundary in both directions', () => {
+    expect(addDays('2026-08-31', 1)).toBe('2026-09-01')
+    expect(addDays('2026-09-01', -1)).toBe('2026-08-31')
+  })
+
+  it('crosses a year boundary', () => {
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01')
+  })
+
+  it('lands on a leap day correctly', () => {
+    expect(addDays('2028-02-28', 1)).toBe('2028-02-29')
   })
 })
 

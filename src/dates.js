@@ -26,6 +26,13 @@ export function formatShortLabel(iso) {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+export function addDays(dateISO, delta) {
+  const [year, month, day] = dateISO.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  date.setDate(date.getDate() + delta)
+  return toISODate(date)
+}
+
 export function startOfWeek(dateISO, weekStartsOn) {
   const [year, month, day] = dateISO.split('-').map(Number)
   const date = new Date(year, month - 1, day)

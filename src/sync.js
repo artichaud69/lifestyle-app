@@ -7,6 +7,7 @@ const SYNCED_KEYS = {
   habits: 'lifestyle-app.habits',
   journal: 'lifestyle-app.journal',
   goals: 'lifestyle-app.goals',
+  gratitude: 'lifestyle-app.gratitude',
 }
 
 const LOCAL_UPDATED_AT_KEY = 'lifestyle-app.updatedAt'
