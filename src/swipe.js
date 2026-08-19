@@ -6,8 +6,26 @@ export const DIRECTION_LOCK_DISTANCE = 10
 // How much more horizontal than vertical a drag must be before it is treated
 // as a page swipe rather than the page scrolling.
 export const SWIPE_DIRECTION_RATIO = 1.3
-// iOS reserves the screen edges for its own back/forward gesture.
+// A browser tab has to leave the edges alone, because iOS uses them for its
+// own back/forward gesture. An installed app has no such gesture to collide
+// with, and going back is precisely the swipe you start at the very edge - so
+// reserving 28px there was rejecting the most natural way to perform it.
 export const SWIPE_EDGE_GUARD = 28
+export const SWIPE_EDGE_GUARD_INSTALLED = 4
+
+export function edgeGuardFor(isInstalled) {
+  return isInstalled ? SWIPE_EDGE_GUARD_INSTALLED : SWIPE_EDGE_GUARD
+}
+
+export function startsInEdgeGuard(clientX, viewportWidth, guard) {
+  return clientX < guard || clientX > viewportWidth - guard
+}
+
+// Installed to the home screen, where the app owns the whole screen.
+export function isInstalledApp() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+}
 // Fraction of the screen width a released drag must have travelled to commit
 // to the next page, if it wasn't a fast flick.
 export const COMMIT_DISTANCE_RATIO = 0.35

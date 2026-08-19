@@ -5,6 +5,10 @@ import {
   shouldCommitDrag,
   nextView,
   startsInHorizontalScroller,
+  edgeGuardFor,
+  startsInEdgeGuard,
+  SWIPE_EDGE_GUARD,
+  SWIPE_EDGE_GUARD_INSTALLED,
   DIRECTION_LOCK_DISTANCE,
   COMMIT_DISTANCE_RATIO,
   COMMIT_VELOCITY_PX_MS,
@@ -119,6 +123,29 @@ describe('shouldCommitDrag', () => {
         velocity: 0,
       }),
     ).toBe(true)
+  })
+})
+
+describe('edge guard', () => {
+  it('barely reserves anything once installed, so a back swipe can start at the edge', () => {
+    const guard = edgeGuardFor(true)
+    expect(guard).toBe(SWIPE_EDGE_GUARD_INSTALLED)
+    // The natural place to begin a back gesture.
+    expect(startsInEdgeGuard(8, WIDTH, guard)).toBe(false)
+    expect(startsInEdgeGuard(20, WIDTH, guard)).toBe(false)
+  })
+
+  it('still leaves room for the browser back gesture in a tab', () => {
+    const guard = edgeGuardFor(false)
+    expect(guard).toBe(SWIPE_EDGE_GUARD)
+    expect(startsInEdgeGuard(8, WIDTH, guard)).toBe(true)
+  })
+
+  it('guards both edges', () => {
+    const guard = edgeGuardFor(false)
+    expect(startsInEdgeGuard(1, WIDTH, guard)).toBe(true)
+    expect(startsInEdgeGuard(WIDTH - 1, WIDTH, guard)).toBe(true)
+    expect(startsInEdgeGuard(WIDTH / 2, WIDTH, guard)).toBe(false)
   })
 })
 

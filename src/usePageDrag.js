@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  SWIPE_EDGE_GUARD,
+  edgeGuardFor,
+  isInstalledApp,
+  startsInEdgeGuard,
   startsInHorizontalScroller,
   lockDirection,
   clampDragOffset,
@@ -75,7 +77,7 @@ export function usePageDrag({ views, view, onCommit }) {
       // A modal owns the screen while it is open.
       if (target.closest?.('.modal-overlay')) return
       if (startsInHorizontalScroller(target, root)) return
-      if (touch.clientX < SWIPE_EDGE_GUARD || touch.clientX > window.innerWidth - SWIPE_EDGE_GUARD) return
+      if (startsInEdgeGuard(touch.clientX, window.innerWidth, edgeGuardFor(isInstalledApp()))) return
 
       gestureRef.current = {
         startX: touch.clientX,
