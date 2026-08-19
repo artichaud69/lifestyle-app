@@ -9,8 +9,14 @@ import {
 } from './swipe.js'
 
 const IGNORED_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
-const SETTLE_MS = 260
-const EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
+// Releasing a drag only has to carry the page the rest of the way, so it
+// settles quickly. A tap crosses the entire screen from a standing start,
+// which needs longer and a gentler curve or it reads as a snap rather than a
+// movement - the same duration for both made taps feel abrupt.
+const SETTLE_MS = 300
+const SETTLE_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
+const NAVIGATE_MS = 420
+const NAVIGATE_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)'
 
 // Drives a finger-tracked slide between adjacent tabs: while a finger is
 // down, the current page follows it 1:1 and the neighbour being revealed
@@ -42,8 +48,8 @@ export function usePageDrag({ views, view, onCommit }) {
     }
   }, [])
 
-  const setTransition = useCallback((on) => {
-    const value = on ? `transform ${SETTLE_MS}ms ${EASING}` : ''
+  const setTransition = useCallback((on, duration = SETTLE_MS, easing = SETTLE_EASING) => {
+    const value = on ? `transform ${duration}ms ${easing}` : ''
     for (const ref of [currentContentRef, previewContentRef]) {
       if (ref.current) ref.current.style.transition = value
     }
@@ -218,7 +224,7 @@ export function usePageDrag({ views, view, onCommit }) {
     // Flush that starting position, or the browser coalesces both transforms
     // into one and the page simply appears where it was going.
     void node.offsetWidth
-    setTransition(true)
+    setTransition(true, NAVIGATE_MS, NAVIGATE_EASING)
     position(pending.direction === 'next' ? -window.innerWidth : window.innerWidth, pending.direction)
 
     let done = false
@@ -230,7 +236,7 @@ export function usePageDrag({ views, view, onCommit }) {
       finish()
     }
     node.addEventListener('transitionend', onSettled)
-    const timeoutId = setTimeout(onSettled, SETTLE_MS + 60)
+    const timeoutId = setTimeout(onSettled, NAVIGATE_MS + 60)
 
     return () => {
       clearTimeout(timeoutId)

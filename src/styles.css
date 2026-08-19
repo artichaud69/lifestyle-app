@@ -178,7 +178,7 @@ body {
   font-size: 26px;
   line-height: 1;
   cursor: pointer;
-  transition: transform 150ms var(--ease), background 150ms var(--ease);
+  transition: transform 220ms var(--ease), background 220ms var(--ease);
 }
 
 .hero-settings {
@@ -201,7 +201,7 @@ body {
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
-  transition: transform 150ms var(--ease), background 150ms var(--ease);
+  transition: transform 220ms var(--ease), background 220ms var(--ease);
 }
 
 .hero-settings:active {
@@ -449,7 +449,7 @@ h1 {
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   color: var(--color-text);
-  transition: border-color 150ms var(--ease);
+  transition: border-color 220ms var(--ease);
 }
 
 .text-input:focus {
@@ -483,7 +483,7 @@ h1 {
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 150ms var(--ease), filter 150ms var(--ease);
+  transition: transform 220ms var(--ease), filter 220ms var(--ease);
 }
 
 /* Nothing in the app responded to being pressed, which is most of what makes
@@ -635,7 +635,7 @@ h1 {
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
-  transition: transform 150ms var(--ease), background 150ms var(--ease);
+  transition: transform 220ms var(--ease), background 220ms var(--ease);
 }
 
 .summary-link-icon {
