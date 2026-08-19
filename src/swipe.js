@@ -1,4 +1,4 @@
-import { HUB_VIEW } from './navIcons.js'
+import { HUB_VIEW, SETTINGS_VIEW } from './navIcons.js'
 
 // Minimum drag before a gesture means anything at all - below this it could
 // just be a stationary tap.
@@ -45,14 +45,24 @@ export function shouldCommitDrag({ offset, direction, viewportWidth, velocity })
   )
 }
 
-// Hub and spoke: a backward swipe from any spoke returns to the hub, the way
-// a back gesture does, and there is nothing to swipe forward to. Returning
-// `current` means "nothing to reveal", which the drag hook reads as a signal
-// to hand the gesture back rather than start a page drag.
-export function nextView(views, current, direction, hub = HUB_VIEW) {
+// Hub and spoke, with settings parked one step left of the hub:
+//
+//   settings  <-  summary  <-  any spoke
+//
+// So a backward swipe from a spoke returns to the hub, and one more from the
+// hub pulls settings in like a drawer. Returning `current` means "nothing to
+// reveal", which the drag hook reads as a signal to hand the gesture back
+// rather than start a page drag.
+export function nextView(views, current, direction, hub = HUB_VIEW, settings = SETTINGS_VIEW) {
   if (!views.includes(current)) return current
-  if (direction !== 'previous') return current
-  return current === hub ? current : hub
+
+  if (direction === 'previous') {
+    if (current === settings) return current
+    return current === hub ? settings : hub
+  }
+
+  // Forward only means anything on settings, where it is the way back out.
+  return current === settings ? hub : current
 }
 
 // A drag that starts on something the user can scroll sideways - the habit

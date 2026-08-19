@@ -9,7 +9,7 @@ import {
   COMMIT_DISTANCE_RATIO,
   COMMIT_VELOCITY_PX_MS,
 } from './swipe.js'
-import { ALL_VIEWS, HUB_VIEW, SPOKES } from './navIcons.js'
+import { ALL_VIEWS, HUB_VIEW, SETTINGS_VIEW, SPOKES } from './navIcons.js'
 
 const WIDTH = 375
 
@@ -129,14 +129,27 @@ describe('nextView', () => {
     }
   })
 
-  it('has nowhere to go backwards from the hub itself', () => {
-    expect(nextView(ALL_VIEWS, HUB_VIEW, 'previous')).toBe(HUB_VIEW)
+  it('pulls settings in on a backward swipe from the hub', () => {
+    expect(nextView(ALL_VIEWS, HUB_VIEW, 'previous')).toBe(SETTINGS_VIEW)
   })
 
-  it('has nothing to reveal on a forward swipe, from anywhere', () => {
+  it('has nowhere further left to go from settings', () => {
+    expect(nextView(ALL_VIEWS, SETTINGS_VIEW, 'previous')).toBe(SETTINGS_VIEW)
+  })
+
+  it('lets a forward swipe close settings again', () => {
+    expect(nextView(ALL_VIEWS, SETTINGS_VIEW, 'next')).toBe(HUB_VIEW)
+  })
+
+  it('has nothing to reveal on a forward swipe anywhere else', () => {
     expect(nextView(ALL_VIEWS, HUB_VIEW, 'next')).toBe(HUB_VIEW)
     expect(nextView(ALL_VIEWS, 'habits', 'next')).toBe('habits')
     expect(nextView(ALL_VIEWS, 'gratitude', 'next')).toBe('gratitude')
+  })
+
+  it('opening settings and closing it again is a round trip', () => {
+    const opened = nextView(ALL_VIEWS, HUB_VIEW, 'previous')
+    expect(nextView(ALL_VIEWS, opened, 'next')).toBe(HUB_VIEW)
   })
 
   it('leaves an unknown view alone', () => {
@@ -144,11 +157,11 @@ describe('nextView', () => {
     expect(nextView(ALL_VIEWS, 'nonsense', 'next')).toBe('nonsense')
   })
 
-  it('reaches the hub in one swipe from every page, however many exist', () => {
+  it('reaches the hub in one swipe from every spoke, however many exist', () => {
     // The point of hub and spoke: no page is ever more than one gesture from
     // home, so adding pages never lengthens the journey back.
-    for (const view of ALL_VIEWS) {
-      expect(nextView(ALL_VIEWS, view, 'previous')).toBe(HUB_VIEW)
+    for (const spoke of SPOKES.map((entry) => entry.key)) {
+      expect(nextView(ALL_VIEWS, spoke, 'previous')).toBe(HUB_VIEW)
     }
   })
 })

@@ -2,12 +2,10 @@ import { todayISO, datesBetween } from '../dates.js'
 import { currentStreak, bestStreak } from '../streaks.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import PageHero from './PageHero.jsx'
-import SyncPanel from './SyncPanel.jsx'
-import NotificationsPanel from './NotificationsPanel.jsx'
 import DailyQuote from './DailyQuote.jsx'
 import { PAGE_ICONS, SPOKES } from '../navIcons.js'
 
-function SummaryPage({ habits, onChangeView, sync }) {
+function SummaryPage({ habits, onChangeView, onOpenSettings }) {
   const today = todayISO()
   const doneToday = habits.filter((habit) => habit.doneDates.includes(today)).length
   const year = Number(today.slice(0, 4))
@@ -17,7 +15,7 @@ function SummaryPage({ habits, onChangeView, sync }) {
 
   return (
     <div className="page">
-      <PageHero view="summary" title="Summary" />
+      <PageHero view="summary" title="Summary" onSettings={onOpenSettings} />
 
       <div className="page-body">
 
@@ -75,22 +73,6 @@ function SummaryPage({ habits, onChangeView, sync }) {
           })}
         </div>
       )}
-
-      <h2 className="section-heading">Backup</h2>
-      <SyncPanel
-        session={sync.session}
-        ready={sync.ready}
-        status={sync.status}
-        message={sync.message}
-        syncedAt={sync.syncedAt}
-        onSignIn={sync.signIn}
-        onSignUp={sync.signUp}
-        onSetPassword={sync.setPassword}
-        onSignOut={sync.signOut}
-      />
-
-      <h2 className="section-heading">Reminders</h2>
-      <NotificationsPanel session={sync.session} />
       </div>
     </div>
   )

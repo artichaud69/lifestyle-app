@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   SWIPE_EDGE_GUARD,
   startsInHorizontalScroller,
@@ -30,37 +30,37 @@ export function usePageDrag({ views, view, onCommit }) {
   const [preview, setPreview] = useState(null)
 
   const gestureRef = useRef(null)
+  const pendingRef = useRef(null)
   const latest = useRef({ views, view, onCommit })
   latest.current = { views, view, onCommit }
+
+  const position = useCallback((offset, direction) => {
+    if (currentContentRef.current) currentContentRef.current.style.transform = `translateX(${offset}px)`
+    if (previewContentRef.current) {
+      const base = direction === 'next' ? window.innerWidth : -window.innerWidth
+      previewContentRef.current.style.transform = `translateX(${base + offset}px)`
+    }
+  }, [])
+
+  const setTransition = useCallback((on) => {
+    const value = on ? `transform ${SETTLE_MS}ms ${EASING}` : ''
+    for (const ref of [currentContentRef, previewContentRef]) {
+      if (ref.current) ref.current.style.transition = value
+    }
+  }, [])
+
+  const clear = useCallback(() => {
+    setTransition(false)
+    for (const ref of [currentContentRef, previewContentRef]) {
+      if (ref.current) ref.current.style.transform = ''
+    }
+    gestureRef.current = null
+    setPreview(null)
+  }, [setTransition])
 
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
-
-    function position(offset, direction) {
-      if (currentContentRef.current) currentContentRef.current.style.transform = `translateX(${offset}px)`
-      if (previewContentRef.current) {
-        const base = direction === 'next' ? window.innerWidth : -window.innerWidth
-        previewContentRef.current.style.transform = `translateX(${base + offset}px)`
-      }
-    }
-
-    function setTransition(on) {
-      const value = on ? `transform ${SETTLE_MS}ms ${EASING}` : ''
-      for (const ref of [currentContentRef, previewContentRef]) {
-        if (ref.current) ref.current.style.transition = value
-      }
-    }
-
-    function clear() {
-      setTransition(false)
-      for (const ref of [currentContentRef, previewContentRef]) {
-        if (ref.current) ref.current.style.transform = ''
-      }
-      gestureRef.current = null
-      setPreview(null)
-    }
-
     function handleTouchStart(event) {
       if (event.touches.length !== 1) return
       const touch = event.touches[0]
@@ -183,5 +183,60 @@ export function usePageDrag({ views, view, onCommit }) {
     }
   }, [])
 
-  return { rootRef, currentContentRef, previewContentRef, preview }
+  // A tap navigates with the same motion a swipe would, so tapping into a
+  // page and swiping back are the same movement in reverse rather than a
+  // silent jump one way and an animation the other.
+  const navigateTo = useCallback(
+    (target, direction = 'next') => {
+      if (pendingRef.current || target === latest.current.view) return
+      pendingRef.current = { target, direction }
+      setPreview({ view: target, direction })
+    },
+    [],
+  )
+
+  // Runs once the tapped page has actually mounted off-screen, which is the
+  // earliest its transform can be animated from.
+  useEffect(() => {
+    const pending = pendingRef.current
+    if (!pending || preview?.view !== pending.target) return
+    const node = previewContentRef.current
+    if (!node) return
+
+    function finish() {
+      pendingRef.current = null
+      clear()
+      latest.current.onCommit(pending.target)
+    }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      finish()
+      return
+    }
+
+    position(0, pending.direction)
+    // Flush that starting position, or the browser coalesces both transforms
+    // into one and the page simply appears where it was going.
+    void node.offsetWidth
+    setTransition(true)
+    position(pending.direction === 'next' ? -window.innerWidth : window.innerWidth, pending.direction)
+
+    let done = false
+    function onSettled() {
+      if (done) return
+      done = true
+      clearTimeout(timeoutId)
+      node.removeEventListener('transitionend', onSettled)
+      finish()
+    }
+    node.addEventListener('transitionend', onSettled)
+    const timeoutId = setTimeout(onSettled, SETTLE_MS + 60)
+
+    return () => {
+      clearTimeout(timeoutId)
+      node.removeEventListener('transitionend', onSettled)
+    }
+  }, [preview, position, setTransition, clear])
+
+  return { rootRef, currentContentRef, previewContentRef, preview, navigateTo }
 }

@@ -6,12 +6,13 @@ import JournalPage from './components/JournalPage.jsx'
 import HealthPage from './components/HealthPage.jsx'
 import OraisonPage from './components/OraisonPage.jsx'
 import GratitudePage from './components/GratitudePage.jsx'
+import SettingsPage from './components/SettingsPage.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
 import { useSync } from './useSync.js'
 import { usePageDrag } from './usePageDrag.js'
 import { consumeOuraCallback } from './oura.js'
-import { ALL_VIEWS, HUB_VIEW } from './navIcons.js'
+import { ALL_VIEWS, HUB_VIEW, SETTINGS_VIEW } from './navIcons.js'
 
 // Where the preview page sits before the drag has positioned it for real.
 // Without this it would render at rest - fully on screen - for one frame,
@@ -42,14 +43,30 @@ function App() {
     })
   }, [])
 
-  const { rootRef, currentContentRef, previewContentRef, preview } = usePageDrag({
+  const { rootRef, currentContentRef, previewContentRef, preview, navigateTo } = usePageDrag({
     views: ALL_VIEWS,
     view,
     onCommit: changeView,
   })
 
+  // Tapping animates in the same direction the equivalent swipe would, so
+  // going in and coming back are one movement and its reverse.
+  function openSpoke(next) {
+    navigateTo(next, 'next')
+  }
+
   function goToHub() {
-    changeView(HUB_VIEW)
+    navigateTo(HUB_VIEW, 'previous')
+  }
+
+  function openSettings() {
+    navigateTo(SETTINGS_VIEW, 'previous')
+  }
+
+  // Settings sits to the left of the hub, so leaving it travels forward -
+  // the hub slides back in from the right, undoing the way it opened.
+  function closeSettings() {
+    navigateTo(HUB_VIEW, 'next')
   }
 
   useEffect(() => {
@@ -106,7 +123,10 @@ function App() {
       )
     }
     if (pageView === 'goals') return <GoalsPage habits={habits} onAddHabits={addHabits} onBack={goToHub} />
-    if (pageView === 'summary') return <SummaryPage habits={habits} onChangeView={changeView} sync={sync} />
+    if (pageView === 'summary') {
+      return <SummaryPage habits={habits} onChangeView={openSpoke} onOpenSettings={openSettings} />
+    }
+    if (pageView === SETTINGS_VIEW) return <SettingsPage sync={sync} onBack={closeSettings} />
     if (pageView === 'journal') return <JournalPage onBack={goToHub} />
     if (pageView === 'health') {
       return <HealthPage session={sync.session} initialMessage={ouraMessage} onBack={goToHub} />
