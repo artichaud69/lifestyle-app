@@ -7,6 +7,7 @@ import {
   averageRPE,
   findLastEntry,
   findEntryHistory,
+  formatWorkoutAsText,
 } from './workout.js'
 
 describe('estimateOneRepMax', () => {
@@ -103,5 +104,58 @@ describe('findLastEntry / findEntryHistory', () => {
   it('returns history oldest-to-newest, capped at the limit', () => {
     const history = findEntryHistory(logs, 'squat', 10)
     expect(history.map((h) => h.date)).toEqual(['2026-01-01', '2026-01-08'])
+  })
+})
+
+describe('formatWorkoutAsText', () => {
+  const log = {
+    sessionName: 'Full Body A',
+    date: '2026-01-08',
+    startedAt: '2026-01-08T10:00:00.000Z',
+    finishedAt: '2026-01-08T10:45:00.000Z',
+    notes: 'Felt strong today',
+    entries: [
+      {
+        exerciseId: 'back-squat',
+        exerciseName: 'Back Squat',
+        sets: [
+          { weight: 40, reps: 10, rpe: null, isWarmup: true, completed: true },
+          { weight: 100, reps: 5, rpe: 8, isWarmup: false, completed: true },
+          { weight: 100, reps: 5, rpe: 8.5, isWarmup: false, completed: true },
+          { weight: 100, reps: 4, rpe: null, isWarmup: false, completed: false },
+        ],
+      },
+    ],
+  }
+
+  it('includes the session name, date, and duration', () => {
+    const text = formatWorkoutAsText(log, 'kg')
+    expect(text).toContain('Full Body A')
+    expect(text).toContain('Duration: 45 min')
+  })
+
+  it('labels warm-ups separately and numbers working sets from 1', () => {
+    const text = formatWorkoutAsText(log, 'kg')
+    expect(text).toContain('Warm-up: 40kg × 10')
+    expect(text).toContain('Set 1: 100kg × 5 @ RPE 8')
+    expect(text).toContain('Set 2: 100kg × 5 @ RPE 8.5')
+  })
+
+  it('excludes sets that were never marked complete', () => {
+    expect(formatWorkoutAsText(log, 'kg')).not.toContain('× 4')
+  })
+
+  it('includes the best-set estimated 1RM and total volume', () => {
+    const text = formatWorkoutAsText(log, 'kg')
+    expect(text).toContain('Best set est. 1RM:')
+    expect(text).toContain('Total volume: 1000kg')
+  })
+
+  it('includes notes when present', () => {
+    expect(formatWorkoutAsText(log, 'kg')).toContain('Notes: Felt strong today')
+  })
+
+  it('omits the notes line when there are none', () => {
+    expect(formatWorkoutAsText({ ...log, notes: '' }, 'kg')).not.toContain('Notes:')
   })
 })
