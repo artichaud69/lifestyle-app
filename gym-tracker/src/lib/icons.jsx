@@ -125,3 +125,17 @@ export const FlameIcon = (props) => (
     <path d="M12 2.5s5 4.7 5 9.8a5 5 0 0 1-10 0c0-1 .3-1.9.8-2.7.4.9 1.2 1.5 1.7 1.2-.6-1.7-.2-4.3 2.5-6.5Z" />
   </Icon>
 )
+
+export const DownloadIcon = (props) => (
+  <Icon {...props}>
+    <path d="M12 3v12M7.5 10.5 12 15l4.5-4.5" />
+    <path d="M4.5 17.5V19a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-1.5" />
+  </Icon>
+)
+
+export const CopyIcon = (props) => (
+  <Icon {...props}>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="1.8" />
+    <path d="M15.5 8.5V6a1.8 1.8 0 0 0-1.8-1.8H6A1.8 1.8 0 0 0 4.2 6v7.7A1.8 1.8 0 0 0 6 15.5h2.5" />
+  </Icon>
+)
