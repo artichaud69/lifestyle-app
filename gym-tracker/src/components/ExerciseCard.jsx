@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { findLastEntry, formatSetsSummary } from '../lib/workout.js'
 import { CheckIcon, TrashIcon } from '../lib/icons.jsx'
+import Sheet from './Sheet.jsx'
 
 function targetLabel(planExercise) {
   if (!planExercise) return null
@@ -8,7 +10,35 @@ function targetLabel(planExercise) {
   return `Target: ${planExercise.targetSets} × ${reps}${rpe}`
 }
 
+const RPE_SCALE = [
+  ['10', 'Max effort — could not do another rep'],
+  ['9', '1 rep left in the tank'],
+  ['8', '2 reps left in the tank'],
+  ['7', '3 reps left in the tank'],
+  ['≤6', 'Warm-up or easy — 4+ reps left'],
+]
+
+function RpeInfoSheet({ onClose }) {
+  return (
+    <Sheet title="What is RPE?" onClose={onClose}>
+      <p>
+        Rate of Perceived Exertion — how hard a set felt, on a 1-10 scale. It's optional: the coach works fine off
+        reps alone, but logging RPE helps it tell a genuinely maxed-out set from one with room to spare.
+      </p>
+      <div className="card card-tight">
+        {RPE_SCALE.map(([value, desc]) => (
+          <div key={value} className="ex-name">
+            <span>RPE {value}</span>
+            <span className="muted">{desc}</span>
+          </div>
+        ))}
+      </div>
+    </Sheet>
+  )
+}
+
 function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddSet, onRemoveLastSet, onRemoveExercise }) {
+  const [showRpeInfo, setShowRpeInfo] = useState(false)
   const last = findLastEntry(logs, entry.exerciseId)
   const lastSummary = last ? formatSetsSummary(last.entry.sets, unit) : null
 
@@ -30,7 +60,9 @@ function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddS
         <span>#</span>
         <span>{unit}</span>
         <span>Reps</span>
-        <span>RPE</span>
+        <button type="button" className="rpe-info-btn" onClick={() => setShowRpeInfo(true)}>
+          RPE ⓘ
+        </button>
         <span></span>
       </div>
 
@@ -82,6 +114,8 @@ function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddS
           </button>
         )}
       </div>
+
+      {showRpeInfo && <RpeInfoSheet onClose={() => setShowRpeInfo(false)} />}
     </div>
   )
 }

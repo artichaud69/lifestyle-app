@@ -3,13 +3,19 @@ import ExerciseCard from './ExerciseCard.jsx'
 import ExercisePicker from './ExercisePicker.jsx'
 import RestTimer from './RestTimer.jsx'
 import { PlusIcon, XIcon } from '../lib/icons.jsx'
+import { primeAudio } from '../lib/sound.js'
 
-function elapsedLabel(startedAt) {
+function elapsedClock(startedAt) {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000))
-  const m = Math.floor(seconds / 60)
-  const h = Math.floor(m / 60)
-  if (h > 0) return `${h}h ${m % 60}m`
-  return `${m}m ${seconds % 60}s`
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+function startedAtClock(startedAt) {
+  return new Date(startedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 }
 
 function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, settings, customExercises, onAddCustomExercise }) {
@@ -35,6 +41,7 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
   }
 
   function toggleComplete(entryIndex, setIndex) {
+    primeAudio() // real click, the one chance to unlock audio before the rest-over chime needs to fire unattended
     const entry = draft.entries[entryIndex]
     const set = entry.sets[setIndex]
     const willComplete = !set.completed
@@ -43,6 +50,8 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
     if (willComplete && !set.isWarmup) {
       const restSeconds = entry.planExercise?.restSeconds ?? settings.restSeconds
       setRestTimer({ total: restSeconds, key: Date.now() })
+    } else if (!willComplete) {
+      setRestTimer(null)
     }
   }
 
@@ -83,7 +92,11 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
       <div className="page-header">
         <div>
           <h1>{draft.sessionName}</h1>
-          <div className="muted">{elapsedLabel(draft.startedAt)} elapsed</div>
+          <div className="session-clock">
+            <span className="live-dot" />
+            <span className="session-clock-time">{elapsedClock(draft.startedAt)}</span>
+            <span className="muted">started {startedAtClock(draft.startedAt)}</span>
+          </div>
         </div>
         <div className="top-actions">
           <button type="button" className="icon-btn" onClick={() => setConfirmCancel(true)} aria-label="Cancel workout">
