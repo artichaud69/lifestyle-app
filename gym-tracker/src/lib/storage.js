@@ -6,6 +6,7 @@ const KEYS = {
   draft: 'gym-tracker.activeWorkoutDraft',
   goalSettings: 'gym-tracker.goalSettings',
   pendingSessionId: 'gym-tracker.pendingSessionId',
+  bodyweightLogs: 'gym-tracker.bodyweightLogs',
 }
 
 function load(key, fallback) {
@@ -81,4 +82,11 @@ export function loadPendingSessionId() {
 }
 export function savePendingSessionId(sessionId) {
   save(KEYS.pendingSessionId, sessionId)
+}
+
+export function loadBodyweightLogs() {
+  return load(KEYS.bodyweightLogs, [])
+}
+export function saveBodyweightLogs(bodyweightLogs) {
+  save(KEYS.bodyweightLogs, bodyweightLogs)
 }

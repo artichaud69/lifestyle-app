@@ -20,6 +20,8 @@ import {
   saveGoalSettings,
   loadPendingSessionId,
   savePendingSessionId,
+  loadBodyweightLogs,
+  saveBodyweightLogs,
 } from './lib/storage.js'
 import { generateProgram, nextSessionTemplate, suggestSessionTargets, analyzeWorkout } from './lib/coach.js'
 import { findExercise } from './lib/exercises.js'
@@ -34,6 +36,7 @@ function App() {
   const [draft, setDraft] = useState(() => loadDraft())
   const [goalSettings, setGoalSettings] = useState(() => loadGoalSettings())
   const [pendingSessionId, setPendingSessionId] = useState(() => loadPendingSessionId())
+  const [bodyweightLogs, setBodyweightLogs] = useState(() => loadBodyweightLogs())
   const [view, setView] = useState('train')
   const [summary, setSummary] = useState(null)
 
@@ -44,6 +47,7 @@ function App() {
   useEffect(() => saveDraft(draft), [draft])
   useEffect(() => saveGoalSettings(goalSettings), [goalSettings])
   useEffect(() => savePendingSessionId(pendingSessionId), [pendingSessionId])
+  useEffect(() => saveBodyweightLogs(bodyweightLogs), [bodyweightLogs])
 
   // "Choose a different session" only swaps what Train shows as up next; a
   // stale id (program regenerated/imported since) just falls back silently.
@@ -173,6 +177,14 @@ function App() {
     setLogs((prev) => prev.filter((l) => l.id !== logId))
   }
 
+  function addBodyweightEntry(entry) {
+    setBodyweightLogs((prev) => [...prev, entry])
+  }
+
+  function deleteBodyweightEntry(entryId) {
+    setBodyweightLogs((prev) => prev.filter((e) => e.id !== entryId))
+  }
+
   function renderPage() {
     if (view === 'train') {
       return (
@@ -197,7 +209,16 @@ function App() {
       return <HistoryPage logs={logs} settings={settings} onDeleteLog={deleteLog} />
     }
     if (view === 'progress') {
-      return <ProgressPage logs={logs} customExercises={customExercises} settings={settings} />
+      return (
+        <ProgressPage
+          logs={logs}
+          customExercises={customExercises}
+          settings={settings}
+          bodyweightLogs={bodyweightLogs}
+          onAddBodyweight={addBodyweightEntry}
+          onDeleteBodyweight={deleteBodyweightEntry}
+        />
+      )
     }
     if (view === 'plan') {
       return (
