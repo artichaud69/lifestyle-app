@@ -17,18 +17,35 @@ function niceMax(max) {
   return magnitude * 10
 }
 
-// Single-series est. 1RM trend. No legend (one series), direct end-label,
-// hairline gridlines, and a pointer-tracked crosshair + tooltip per the
-// dataviz interaction spec.
-function LineChart({ points, unit = 'kg' }) {
+// Single-series trend (est. 1RM, bodyweight, ...). No legend (one series),
+// direct end-label, hairline gridlines, and a pointer-tracked crosshair +
+// tooltip per the dataviz interaction spec.
+//
+// `zeroBased` controls the y-axis floor: a lift's 1RM naturally reads
+// against a 0 baseline, but bodyweight fluctuates in a narrow band (say
+// 78-82kg) where forcing the axis down to 0 flattens the trend into an
+// unreadable near-flat line — pass false to instead zoom to the data's own
+// range with a little padding. `decimals` controls label/tooltip rounding
+// (0 for whole-kg lifts, 1 for bodyweight tracked to a tenth of a kg/lb).
+function LineChart({ points, unit = 'kg', zeroBased = true, decimals = 0 }) {
   const [hoverIndex, setHoverIndex] = useState(null)
   const svgRef = useRef(null)
 
   if (points.length === 0) return null
 
   const values = points.map((p) => p.value)
-  const minVal = Math.min(0, ...values)
-  const maxVal = niceMax(Math.max(...values) * 1.05)
+  const dataMin = Math.min(...values)
+  const dataMax = Math.max(...values)
+  let minVal, maxVal
+  if (zeroBased) {
+    minVal = Math.min(0, ...values)
+    maxVal = niceMax(dataMax * 1.05)
+  } else {
+    const range = dataMax - dataMin
+    const pad = range > 0 ? range * 0.2 : Math.max(1, dataMax * 0.02)
+    minVal = dataMin - pad
+    maxVal = dataMax + pad
+  }
   const plotW = WIDTH - PAD_X * 2
   const plotH = HEIGHT - PAD_TOP - PAD_BOTTOM
 
@@ -74,7 +91,7 @@ function LineChart({ points, unit = 'kg' }) {
       >
         {[0, 0.5, 1].map((t) => {
           const y = PAD_TOP + plotH - t * plotH
-          const value = Math.round(minVal + t * (maxVal - minVal))
+          const value = (minVal + t * (maxVal - minVal)).toFixed(decimals)
           return (
             <g key={t}>
               <line x1={PAD_X} x2={WIDTH - PAD_X} y1={y} y2={y} stroke="var(--color-border)" strokeWidth="1" />
@@ -111,7 +128,7 @@ function LineChart({ points, unit = 'kg' }) {
         ))}
 
         <text x={xFor(points.length - 1)} y={yFor(last.value) - 12} fontSize="11" fontWeight="700" fill="var(--color-text)" textAnchor="end">
-          {Math.round(last.value)}
+          {last.value.toFixed(decimals)}
         </text>
       </svg>
       {activePoint && (
@@ -130,7 +147,7 @@ function LineChart({ points, unit = 'kg' }) {
             whiteSpace: 'nowrap',
           }}
         >
-          <strong>{Math.round(activePoint.value)}{unit}</strong> · {activePoint.label}
+          <strong>{activePoint.value.toFixed(decimals)}{unit}</strong> · {activePoint.label}
         </div>
       )}
     </div>

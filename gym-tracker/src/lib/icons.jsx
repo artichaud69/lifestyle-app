@@ -155,3 +155,12 @@ export const UnlinkIcon = (props) => (
     <path d="M4 4l16 16" />
   </Icon>
 )
+
+export const ScaleIcon = (props) => (
+  <Icon {...props}>
+    <rect x="3" y="4" width="18" height="16" rx="3" />
+    <circle cx="12" cy="12.5" r="3.4" />
+    <path d="M12 9.1v1.4M14.4 14.9l-1.7-1.7" />
+    <path d="M7.5 4V2.6M16.5 4V2.6" />
+  </Icon>
+)

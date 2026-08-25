@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import PageHeader from './PageHeader.jsx'
 import LineChart from './LineChart.jsx'
+import BodyweightSection from './BodyweightSection.jsx'
 import { ChartIcon, AlertIcon, AwardIcon } from '../lib/icons.jsx'
 import { findEntryHistory, bestSet, estimateOneRepMax } from '../lib/workout.js'
 import { findExercise } from '../lib/exercises.js'
@@ -17,20 +18,17 @@ function loggedExerciseIds(logs) {
   return [...seen.entries()].map(([id, name]) => ({ id, name }))
 }
 
-function ProgressPage({ logs, customExercises, settings }) {
+function ExerciseProgress({ logs, customExercises, settings }) {
   const options = useMemo(() => loggedExerciseIds(logs), [logs])
   const [selectedId, setSelectedId] = useState(options[0]?.id ?? null)
   const activeId = options.some((o) => o.id === selectedId) ? selectedId : options[0]?.id ?? null
 
   if (options.length === 0) {
     return (
-      <div>
-        <PageHeader title="Progress" />
-        <div className="card empty-state">
-          <ChartIcon size={36} />
-          <h3>Nothing to chart yet</h3>
-          <p>Log a few workouts and this tab will track your estimated 1-rep max over time.</p>
-        </div>
+      <div className="card empty-state">
+        <ChartIcon size={36} />
+        <h3>Nothing to chart yet</h3>
+        <p>Log a few workouts and this tab will track your estimated 1-rep max over time.</p>
       </div>
     )
   }
@@ -49,9 +47,7 @@ function ProgressPage({ logs, customExercises, settings }) {
   const exerciseInfo = findExercise(activeId, customExercises)
 
   return (
-    <div>
-      <PageHeader title="Progress" />
-
+    <>
       <div className="chip-row" style={{ marginBottom: 'var(--space-3)' }}>
         {options.map((opt) => (
           <button
@@ -99,6 +95,16 @@ function ProgressPage({ logs, customExercises, settings }) {
           <p>This lift has been flat for your last 3 sessions. The coach will suggest a deload or a lighter jump next time.</p>
         </div>
       )}
+    </>
+  )
+}
+
+function ProgressPage({ logs, customExercises, settings, bodyweightLogs, onAddBodyweight, onDeleteBodyweight }) {
+  return (
+    <div>
+      <PageHeader title="Progress" />
+      <BodyweightSection entries={bodyweightLogs} unit={settings.unit} onAdd={onAddBodyweight} onDelete={onDeleteBodyweight} />
+      <ExerciseProgress logs={logs} customExercises={customExercises} settings={settings} />
     </div>
   )
 }
