@@ -4,6 +4,14 @@ import ExercisePicker from './ExercisePicker.jsx'
 import RestTimer from './RestTimer.jsx'
 import { PlusIcon, XIcon } from '../lib/icons.jsx'
 import { primeAudio } from '../lib/sound.js'
+import { groupLabels, isLastInGroup } from '../lib/superset.js'
+
+// Real rest happens only after the last exercise in a superset round; the
+// handoff between paired exercises just needs enough time to walk to the
+// next station or change the weight, not a full rest period.
+const SUPERSET_TRANSITION_SECONDS = 15
+
+const getEntryGroup = (entry) => entry.planExercise?.supersetGroup
 
 function elapsedClock(startedAt) {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000))
@@ -16,6 +24,56 @@ function elapsedClock(startedAt) {
 
 function startedAtClock(startedAt) {
   return new Date(startedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+}
+
+function renderCard(entry, index, handlers) {
+  const { logs, unit, updateSet, toggleComplete, addSet, removeLastSet, removeExercise } = handlers
+  return (
+    <ExerciseCard
+      key={entry.exerciseId + index}
+      entry={entry}
+      logs={logs}
+      unit={unit}
+      onUpdateSet={(setIndex, field, value) => updateSet(index, setIndex, field, value)}
+      onToggleComplete={(setIndex) => toggleComplete(index, setIndex)}
+      onAddSet={(isWarmup) => addSet(index, isWarmup)}
+      onRemoveLastSet={() => removeLastSet(index)}
+      onRemoveExercise={() => removeExercise(index)}
+    />
+  )
+}
+
+// Clusters consecutive entries sharing a supersetGroup so they render inside
+// one labeled wrapper ("Superset A") instead of scattered among the other
+// exercise cards — linking only matters visually if the linked exercises
+// actually sit next to each other.
+function renderEntryBlocks(entries, handlers) {
+  const labels = groupLabels(entries.map((e) => ({ supersetGroup: getEntryGroup(e) })))
+  const blocks = []
+  let i = 0
+  while (i < entries.length) {
+    const group = getEntryGroup(entries[i])
+    if (!group) {
+      blocks.push({ type: 'single', index: i })
+      i++
+      continue
+    }
+    const start = i
+    while (i < entries.length && getEntryGroup(entries[i]) === group) i++
+    blocks.push({ type: 'group', group, indices: Array.from({ length: i - start }, (_, k) => start + k) })
+  }
+
+  return blocks.map((block) => {
+    if (block.type === 'single') {
+      return renderCard(entries[block.index], block.index, handlers)
+    }
+    return (
+      <div key={block.group} className="superset-group">
+        <div className="superset-group-label">Superset {labels.get(block.group)}</div>
+        {block.indices.map((index) => renderCard(entries[index], index, handlers))}
+      </div>
+    )
+  })
 }
 
 function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, settings, customExercises, onAddCustomExercise }) {
@@ -63,7 +121,8 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
     // time (see RestTimer.jsx).
     let rest = draft.rest
     if (willComplete && !set.isWarmup) {
-      const restSeconds = entry.planExercise?.restSeconds ?? settings.restSeconds
+      const last = isLastInGroup(draft.entries, entryIndex, getEntryGroup)
+      const restSeconds = last ? entry.planExercise?.restSeconds ?? settings.restSeconds : SUPERSET_TRANSITION_SECONDS
       const now = Date.now()
       rest = { startedAt: now, endsAt: now + restSeconds * 1000 }
     } else if (!willComplete) {
@@ -137,19 +196,15 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
         </div>
       )}
 
-      {draft.entries.map((entry, index) => (
-        <ExerciseCard
-          key={entry.exerciseId + index}
-          entry={entry}
-          logs={logs}
-          unit={settings.unit}
-          onUpdateSet={(setIndex, field, value) => updateSet(index, setIndex, field, value)}
-          onToggleComplete={(setIndex) => toggleComplete(index, setIndex)}
-          onAddSet={(isWarmup) => addSet(index, isWarmup)}
-          onRemoveLastSet={() => removeLastSet(index)}
-          onRemoveExercise={() => removeExercise(index)}
-        />
-      ))}
+      {renderEntryBlocks(draft.entries, {
+        logs,
+        unit: settings.unit,
+        updateSet,
+        toggleComplete,
+        addSet,
+        removeLastSet,
+        removeExercise,
+      })}
 
       {draft.finisherNote && <div className="finisher-note">Optional finisher: {draft.finisherNote}</div>}
 

@@ -5,6 +5,7 @@ import SessionEditSheet from './SessionEditSheet.jsx'
 import SettingsSheet from './SettingsSheet.jsx'
 import { CalendarIcon, SettingsIcon, EditIcon } from '../lib/icons.jsx'
 import { findExercise } from '../lib/exercises.js'
+import { groupLabels } from '../lib/superset.js'
 
 function PlanPage({
   program,
@@ -54,19 +55,26 @@ function PlanPage({
                   <EditIcon size={15} />
                 </button>
               </div>
-              {session.exercises.map((ex) => {
-                const info = findExercise(ex.exerciseId, customExercises)
-                const reps = ex.repsMin === ex.repsMax ? `${ex.repsMin}` : `${ex.repsMin}-${ex.repsMax}`
-                return (
-                  <Fragment key={ex.id}>
-                    <div className="ex-name">
-                      <span>{info?.name ?? ex.exerciseId}</span>
-                      <span className="muted">{ex.targetSets} × {reps}</span>
-                    </div>
-                    {ex.notes && <div className="exercise-note">{ex.notes}</div>}
-                  </Fragment>
-                )
-              })}
+              {(() => {
+                const labels = groupLabels(session.exercises)
+                return session.exercises.map((ex) => {
+                  const info = findExercise(ex.exerciseId, customExercises)
+                  const reps = ex.repsMin === ex.repsMax ? `${ex.repsMin}` : `${ex.repsMin}-${ex.repsMax}`
+                  const label = ex.supersetGroup ? labels.get(ex.supersetGroup) : null
+                  return (
+                    <Fragment key={ex.id}>
+                      <div className="ex-name">
+                        <span>
+                          {label && <span className="badge primary" style={{ marginRight: 6 }}>{label}</span>}
+                          {info?.name ?? ex.exerciseId}
+                        </span>
+                        <span className="muted">{ex.targetSets} × {reps}</span>
+                      </div>
+                      {ex.notes && <div className="exercise-note">{ex.notes}</div>}
+                    </Fragment>
+                  )
+                })
+              })()}
               {session.finisherNote && <div className="finisher-note">{session.finisherNote}</div>}
             </div>
           ))}
