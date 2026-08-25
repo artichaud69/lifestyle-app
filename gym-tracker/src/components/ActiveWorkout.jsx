@@ -38,7 +38,7 @@ function renderCard(entry, index, handlers) {
       onUpdateSet={(setIndex, field, value) => updateSet(index, setIndex, field, value)}
       onToggleComplete={(setIndex) => toggleComplete(index, setIndex)}
       onAddSet={(isWarmup) => addSet(index, isWarmup)}
-      onAddWarmup={() => addWarmup(index)}
+      onAddWarmup={(weightOverride) => addWarmup(index, weightOverride)}
       onRemoveLastSet={() => removeLastSet(index)}
       onRemoveExercise={() => removeExercise(index)}
     />
@@ -145,15 +145,16 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
   }
 
   // First tap with no warm-ups yet: fill in a full percentage-based ramp at
-  // once, using whatever working weight is already known (typed in, or the
-  // coach's suggestion). Once warm-ups exist, or there's no weight to ramp
-  // to yet, it falls back to just adding one blank warm-up set.
-  function addWarmup(entryIndex) {
+  // once, using (in priority order) an explicit weightOverride from the
+  // "what are you working up to?" prompt (see ExerciseCard), a weight
+  // already typed into a working set, or the coach's suggestion. Once
+  // warm-ups exist, it falls back to just adding one blank warm-up set.
+  function addWarmup(entryIndex, weightOverride) {
     const entry = draft.entries[entryIndex]
     const hasWarmup = entry.sets.some((set) => set.isWarmup)
     if (!hasWarmup) {
       const typedWeight = entry.sets.find((set) => !set.isWarmup && Number(set.weight) > 0)?.weight
-      const referenceWeight = Number(typedWeight) || Number(entry.planExercise?.targetWeight) || 0
+      const referenceWeight = Number(weightOverride) || Number(typedWeight) || Number(entry.planExercise?.targetWeight) || 0
       const ramp = suggestWarmupSets(referenceWeight, settings.unit)
       if (ramp.length > 0) {
         patchEntry(entryIndex, { sets: [...ramp, ...entry.sets] })
