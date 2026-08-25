@@ -6,7 +6,7 @@ import { PAGE_ICONS } from '../navIcons.js'
 function HabitsPage({ habits, onAddHabit, onToggleDate, onUpdateHabit, onDeleteHabit, onBack }) {
   return (
     <div className="page">
-      <PageHero view="habits" title="Habit Tracker" onBack={onBack}>
+      <PageHero view="habits" title="Habits" onBack={onBack}>
         <AddHabitForm onAdd={onAddHabit} />
       </PageHero>
 

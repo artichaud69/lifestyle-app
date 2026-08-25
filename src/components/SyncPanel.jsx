@@ -95,14 +95,14 @@ function SyncPanel({
         <div className="button-row">
           <button
             type="submit"
-            className="button button-primary"
+            className="btn btn-primary"
             disabled={!email.trim() || !password || isBusy}
           >
             {isBusy ? 'Working…' : 'Sign in'}
           </button>
           <button
             type="button"
-            className="button button-secondary"
+            className="btn btn-secondary"
             onClick={handleSignUp}
             disabled={!email.trim() || !password || isBusy}
           >
@@ -139,12 +139,12 @@ function SyncPanel({
             autoComplete="new-password"
           />
           <div className="button-row">
-            <button type="submit" className="button button-primary" disabled={!newPassword || isBusy}>
+            <button type="submit" className="btn btn-primary" disabled={!newPassword || isBusy}>
               {isBusy ? 'Saving…' : 'Save password'}
             </button>
             <button
               type="button"
-              className="button button-secondary"
+              className="btn btn-secondary"
               onClick={() => setShowPasswordForm(false)}
             >
               Cancel
@@ -155,12 +155,12 @@ function SyncPanel({
         <div className="button-row">
           <button
             type="button"
-            className="button button-secondary"
+            className="btn btn-secondary"
             onClick={() => setShowPasswordForm(true)}
           >
             Set a password
           </button>
-          <button type="button" className="button button-secondary" onClick={onSignOut}>
+          <button type="button" className="btn btn-secondary" onClick={onSignOut}>
             Sign out
           </button>
         </div>

@@ -25,22 +25,29 @@ function JournalCalendar({ entries, onSelectDay }) {
   }
 
   return (
-    <div className="calendar">
-      <div className="view-toggle">
-        <button
-          type="button"
-          className={`view-toggle-option${mode === 'month' ? ' active' : ''}`}
-          onClick={() => setMode('month')}
-        >
-          Month
-        </button>
-        <button
-          type="button"
-          className={`view-toggle-option${mode === 'year' ? ' active' : ''}`}
-          onClick={() => setMode('year')}
-        >
-          Year
-        </button>
+    <section className="section">
+      <div className="section-header">
+        <h2 className="label-sm">History</h2>
+        <div className="segmented" role="tablist" aria-label="Calendar range">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'month'}
+            className={`segmented-option${mode === 'month' ? ' is-active' : ''}`}
+            onClick={() => setMode('month')}
+          >
+            Month
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'year'}
+            className={`segmented-option${mode === 'year' ? ' is-active' : ''}`}
+            onClick={() => setMode('year')}
+          >
+            Year
+          </button>
+        </div>
       </div>
 
       {mode === 'month' ? (
@@ -61,7 +68,7 @@ function JournalCalendar({ entries, onSelectDay }) {
           onNavigate={(delta) => setYearCursor(yearCursor + delta)}
         />
       )}
-    </div>
+    </section>
   )
 }
 

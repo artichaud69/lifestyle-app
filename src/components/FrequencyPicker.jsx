@@ -7,7 +7,8 @@ function FrequencyPicker({ timesPerWeek, onChange }) {
         <button
           key={n}
           type="button"
-          className={`frequency-option${n === timesPerWeek ? ' active' : ''}`}
+          aria-pressed={n === timesPerWeek}
+          className={`frequency-option${n === timesPerWeek ? ' is-active' : ''}`}
           onClick={() => onChange(n)}
         >
           {n}

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { loadJournal, saveJournal, MOODS } from '../journal.js'
+import { loadJournal, saveJournal } from '../journal.js'
 import { todayISO } from '../dates.js'
-import FlameIcon from './FlameIcon.jsx'
+import MoodSelector from './MoodSelector.jsx'
 import JournalCalendar from './JournalCalendar.jsx'
 import JournalDayModal from './JournalDayModal.jsx'
 import PageHero from './PageHero.jsx'
-import { PAGE_ICONS } from '../navIcons.js'
+import Section from './ui/Section.jsx'
+import Button from './ui/Button.jsx'
 
 function JournalPage({ onBack }) {
   const [entries, setEntries] = useState(() => loadJournal())
@@ -22,7 +23,7 @@ function JournalPage({ onBack }) {
   }
 
   function handleQuickPick(mood) {
-    setEntries({ ...entries, [today]: { mood, note: '' } })
+    setEntries({ ...entries, [today]: { mood, note: todayEntry?.note ?? '' } })
   }
 
   return (
@@ -30,45 +31,29 @@ function JournalPage({ onBack }) {
       <PageHero view="journal" title="Journal" onBack={onBack} />
 
       <div className="page-body">
+        <Section
+          title="How do you feel today?"
+          action={
+            todayEntry && (
+              <Button variant="ghost" onClick={() => setSelectedDate(today)}>
+                Add a note
+              </Button>
+            )
+          }
+        >
+          <MoodSelector value={todayEntry?.mood ?? null} onSelect={handleQuickPick} />
+        </Section>
 
-      {todayEntry ? (
-        <button type="button" className="today-done-card" onClick={() => setSelectedDate(today)}>
-          <FlameIcon level={todayEntry.mood} size={32} />
-          <div>
-            <div className="today-done-title">Today logged</div>
-            <div className="today-done-label">Tap to edit</div>
-          </div>
-        </button>
-      ) : (
-        <>
-          <p className="journal-prompt">How do you feel today?</p>
-          <div className="mood-picker">
-            {MOODS.map((moodOption) => (
-              <button
-                key={moodOption.value}
-                type="button"
-                className="mood-option"
-                onClick={() => handleQuickPick(moodOption.value)}
-                aria-label={moodOption.label}
-              >
-                <FlameIcon level={moodOption.value} />
-                <span className="mood-label">{moodOption.label}</span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+        <JournalCalendar entries={entries} onSelectDay={setSelectedDate} />
 
-      <JournalCalendar entries={entries} onSelectDay={setSelectedDate} />
-
-      {selectedDate && (
-        <JournalDayModal
-          date={selectedDate}
-          entry={entries[selectedDate]}
-          onSave={handleSave}
-          onClose={() => setSelectedDate(null)}
-        />
-      )}
+        {selectedDate && (
+          <JournalDayModal
+            date={selectedDate}
+            entry={entries[selectedDate]}
+            onSave={handleSave}
+            onClose={() => setSelectedDate(null)}
+          />
+        )}
       </div>
     </div>
   )

@@ -129,7 +129,14 @@ function App() {
     if (pageView === SETTINGS_VIEW) return <SettingsPage sync={sync} onBack={closeSettings} />
     if (pageView === 'journal') return <JournalPage onBack={goToHub} />
     if (pageView === 'health') {
-      return <HealthPage session={sync.session} initialMessage={ouraMessage} onBack={goToHub} />
+      return (
+        <HealthPage
+          session={sync.session}
+          initialMessage={ouraMessage}
+          onBack={goToHub}
+          onOpenSettings={openSettings}
+        />
+      )
     }
     if (pageView === 'oraison') return <OraisonPage onBack={goToHub} />
     if (pageView === 'gratitude') return <GratitudePage onBack={goToHub} />

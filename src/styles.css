@@ -1,40 +1,40 @@
-/* One committed palette rather than a light and a dark one. Every page was
-   already forcing dark colours over the artwork, so this makes the app's real
-   identity explicit - torchlight on stone - and removes a whole class of bug
-   where a value resolved against the wrong theme. */
+/* ---------------------------------------------------------------------------
+   Design tokens. Every colour, size, radius and duration in this file comes
+   from here - a value written inline is a bug. One committed dark palette
+   rather than a light and a dark one, because the app only ever renders dark
+   and maintaining a second theme invited values resolving against the wrong
+   one.
+   --------------------------------------------------------------------------- */
 :root {
   color-scheme: dark;
 
-  /* Surfaces, darkest to lightest: the page, a card on it, something raised
-     or interactive on that. Three steps is enough to build hierarchy with. */
-  --surface-0: #14110d;
-  --surface-1: #1e1a14;
-  --surface-2: #272119;
-  --surface-3: #322a20;
+  /* Backgrounds, in order of elevation. */
+  --bg-app: #0e0d0b;
+  --bg-surface: #171511;
+  --bg-surface-raised: #1c1914;
+  --bg-interactive: #211e18;
 
-  --color-text: #f2e9d8;
-  --color-text-muted: #a2957e;
-  --color-text-faint: #6f6555;
-  --color-border: #322b21;
-  --color-border-strong: #443a2c;
+  --text-primary: #f2ede3;
+  --text-secondary: #b2a99b;
+  --text-muted: #7d756a;
 
-  --color-primary: #d1541f;
-  --color-primary-soft: rgba(209, 84, 31, 0.16);
-  --color-primary-text: #fdf6ea;
-  --color-success: #7f9a4f;
-  --color-danger: #c1453d;
+  --accent-primary: #c95024;
+  --accent-primary-hover: #dd5a29;
+  --accent-gold: #c9a663;
+  --accent-on-primary: #fdf6ea;
 
-  /* A deliberate scale rather than ad-hoc sizes. Roughly a 1.25 ratio. */
-  --text-caption: 11px;
-  --text-small: 13px;
-  --text-body: 15px;
-  --text-title: 18px;
-  --text-display: 24px;
-  --text-hero: 30px;
-  --text-stat: 40px;
+  --success: #8daa57;
+  --warning: #c9a663;
+  --danger: #b85445;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  /* Borders are a tint of the gold, so edges read as part of the palette
+     rather than as grey lines drawn on top of it. */
+  --border-subtle: rgba(201, 166, 99, 0.12);
+  --border-default: rgba(201, 166, 99, 0.18);
+  --border-strong: rgba(201, 166, 99, 0.28);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius-lg: 16px;
   --radius-pill: 999px;
 
@@ -42,18 +42,26 @@
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-raised: 0 6px 20px rgba(0, 0, 0, 0.45);
+  /* Inter runs the interface; Cinzel and Garamond carry the identity and are
+     reserved for titles, statistics and editorial text. */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Cinzel', Georgia, serif;
+  --font-editorial: 'EB Garamond', Georgia, serif;
+
+  --duration-fast: 120ms;
+  --duration-base: 160ms;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-display: 'Cinzel', Georgia, serif;
-  /* A reading face for long passages meant to be dwelt on rather than
-     scanned - the UI's system sans would make a prayer look like a form. */
-  --font-reading: 'EB Garamond', Georgia, serif;
+  --hero-height: 200px;
+  --tap-target: 44px;
+  --content-width: 720px;
+  --reading-width: 620px;
 
   --mood-1: #2d4a6b;
   --mood-2: #4a7a9d;
@@ -62,411 +70,365 @@
   --mood-5: #f5e169;
 }
 
+/* ---------------------------------------------------------------------------
+   Type scale. Pages compose these rather than naming sizes of their own.
+   --------------------------------------------------------------------------- */
+.display-lg,
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.display-lg {
+  font-size: 30px;
+}
+
+.display-md {
+  font-size: 22px;
+}
+
+.stat-xl {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.heading-md {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.body-md,
+.body-sm {
+  font-family: var(--font-ui);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.body-md {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.body-sm {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Uppercase, letterspaced and quiet: marks a section without competing with
+   the page title for attention. */
+.label-sm {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.caption {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Shell
+   --------------------------------------------------------------------------- */
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
-  font-size: var(--text-body);
-  background: var(--surface-0);
-  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  background: var(--bg-app);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
 .app {
-  /* No horizontal padding: the hero bleeds edge to edge, and the content
-     below carries its own inset via .page-body. */
-  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
-  max-width: 480px;
+  /* The hero bleeds edge to edge, so horizontal inset lives on .page-body. */
+  padding-bottom: calc(var(--space-12) + env(safe-area-inset-bottom));
+  max-width: var(--content-width);
   margin: 0 auto;
   min-height: 100vh;
-  background: var(--surface-0);
+  background: var(--bg-app);
 }
 
 .page-body {
-  padding: 0 var(--space-4);
+  width: min(100% - var(--space-8), var(--content-width));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
-.stat-icon {
-  height: 13px;
-  width: auto;
-  vertical-align: -2px;
-  margin-right: 2px;
+/* A titled block of related content. Sections carry the vertical rhythm so
+   individual pages never set their own margins. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-/* --- The band of artwork each page opens on --- */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
 
+:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   Hero. One geometry for every page: the artwork fills the band and fades
+   into the app background, so it reads as part of the environment rather than
+   as a picture pasted at the top of a document.
+   --------------------------------------------------------------------------- */
 .page-hero {
   position: relative;
-  height: 210px;
+  min-height: var(--hero-height);
   background-size: cover;
   background-position: center;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: var(--space-4);
-  padding-top: calc(var(--space-4) + env(safe-area-inset-top));
-  margin-bottom: var(--space-5);
+  padding: var(--space-6) var(--space-4) var(--space-5);
+  padding-top: calc(var(--space-6) + env(safe-area-inset-top));
+  margin-bottom: var(--space-8);
 }
 
-/* Darkens only the lower part of the image, so the artwork stays vivid at the
-   top and the title below it still has something solid to sit on. */
 .page-hero-veil {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(20, 17, 13, 0.1) 0%,
-    rgba(20, 17, 13, 0.45) 55%,
-    var(--surface-0) 100%
+    rgba(14, 13, 11, 0.15) 0%,
+    rgba(14, 13, 11, 0.55) 58%,
+    var(--bg-app) 100%
   );
 }
 
 .page-hero-bar {
   position: relative;
+  width: min(100% - var(--space-4), var(--content-width));
+  margin-inline: auto;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .page-hero-title {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-width: 0;
 }
 
+/* One optical size for every category mark, so the set reads as a family. */
 .page-hero-icon {
-  height: 34px;
-  width: auto;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
-.page-hero h1 {
+.page-hero-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.page-hero-subtitle {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-secondary);
   margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-hero);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.1;
-  color: #fdf6ea;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-  text-wrap: balance;
 }
 
-.hero-back {
+.hero-corner {
   position: absolute;
-  top: calc(var(--space-3) + env(safe-area-inset-top));
-  left: var(--space-3);
+  top: calc(var(--space-4) + env(safe-area-inset-top));
   z-index: 1;
-  width: 38px;
-  height: 38px;
-  padding: 0 0 4px;
+  width: var(--tap-target);
+  height: var(--tap-target);
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   border-radius: var(--radius-pill);
-  background: rgba(20, 17, 13, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #fdf6ea;
-  font-family: var(--font-display);
-  font-size: 26px;
-  line-height: 1;
+  background: rgba(14, 13, 11, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-primary);
   cursor: pointer;
-  transition: transform 220ms var(--ease), background 220ms var(--ease);
+  transition: background var(--duration-base) var(--ease), transform var(--duration-fast) var(--ease);
 }
 
-.hero-settings {
-  position: absolute;
-  top: calc(var(--space-3) + env(safe-area-inset-top));
-  right: var(--space-3);
-  z-index: 1;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: rgba(20, 17, 13, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #fdf6ea;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  transition: transform 220ms var(--ease), background 220ms var(--ease);
+.hero-corner:hover {
+  background: rgba(14, 13, 11, 0.72);
 }
 
-.hero-settings:active {
+.hero-corner:active {
   transform: scale(0.94);
 }
 
-h1 {
-  font-family: var(--font-display);
-  font-size: var(--text-display);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  margin: 0 0 var(--space-4);
+.hero-corner.is-start {
+  left: var(--space-4);
 }
 
-/* The finger-tracked swipe (src/usePageDrag.js) moves these by writing
-   transform directly to the DOM, bypassing React, so the drag has zero lag.
-   These rules only set up the resting z-order; the live motion is inline. */
+.hero-corner.is-end {
+  right: var(--space-4);
+}
+
+/* ---------------------------------------------------------------------------
+   Swipe layers. usePageDrag writes transforms straight to the DOM, so these
+   rules only establish the resting stacking order.
+   --------------------------------------------------------------------------- */
 .app-content {
   position: relative;
   z-index: 1;
 }
 
-/* The page being revealed during a drag sits above the outgoing one and does
-   not receive taps - it is a preview, not yet the real page. */
 .swipe-preview-content {
   position: fixed;
   inset: 0;
   z-index: 3;
   overflow: hidden;
-  box-sizing: border-box;
-  max-width: 480px;
+  max-width: var(--content-width);
   margin: 0 auto;
-  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
-  background: var(--surface-0);
+  padding-bottom: calc(var(--space-12) + env(safe-area-inset-bottom));
+  background: var(--bg-app);
   pointer-events: none;
 }
 
-.icon-button {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  font-size: 22px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
-  z-index: 100;
-}
-
-.modal-card {
-  width: 100%;
-  max-width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  background: var(--surface-1);
-  border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-
-.habit-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.habit-card {
-  padding: var(--space-4);
-  margin-bottom: var(--space-3);
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-}
-
-.habit-name-button {
-  display: block;
-  margin-bottom: var(--space-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  font-size: var(--text-title);
+/* ---------------------------------------------------------------------------
+   Buttons. Five kinds, and pages use them rather than inventing their own.
+   --------------------------------------------------------------------------- */
+.btn {
+  font-family: var(--font-ui);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.habit-name-button .edit-icon {
-  font-size: var(--text-caption);
-  color: var(--color-text-muted);
-  margin-left: 2px;
-}
-
-.habit-ticks-scroll {
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.habit-ticks-row {
-  display: flex;
-  gap: 6px;
-}
-
-.tick-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  width: 38px;
-}
-
-.tick-date-label {
-  font-size: var(--text-caption);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-}
-
-.tick-date-label.today {
-  color: var(--color-primary);
-  font-weight: 700;
-}
-
-.day-toggle {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1.5px solid var(--color-border);
-  background: transparent;
-  color: transparent;
-  font-size: var(--text-small);
-  line-height: 1;
-  display: flex;
+  min-height: var(--tap-target);
+  padding: var(--space-3) var(--space-5);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease), transform var(--duration-fast) var(--ease),
+    opacity var(--duration-base) var(--ease);
 }
 
-.day-toggle.checked {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-primary-text);
+.btn:active {
+  transform: translateY(1px);
 }
 
-.frequency-picker {
-  display: flex;
-  gap: 4px;
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
 }
 
-.frequency-option {
-  flex: 1;
-  aspect-ratio: 1;
-  border: 1px solid var(--color-border);
+.btn-primary {
+  background: var(--accent-primary);
+  color: var(--accent-on-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--bg-interactive);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding-inline: var(--space-3);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  margin-left: auto;
+}
+
+.btn-icon {
+  width: var(--tap-target);
+  height: var(--tap-target);
+  min-height: var(--tap-target);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-text-muted);
-  font: inherit;
-  font-size: var(--text-small);
-  font-weight: 600;
+  color: var(--text-secondary);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: background-color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease), color var(--duration-base) var(--ease);
 }
 
-.frequency-option.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-primary-text);
+.btn-icon:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  background: var(--bg-interactive);
 }
 
-.habit-heatmap {
-  margin-top: var(--space-3);
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
-.habit-streak {
-  font-size: var(--text-small);
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: 2px;
+.btn-icon-accent {
+  background: var(--accent-primary);
+  border-color: transparent;
+  color: var(--accent-on-primary);
 }
 
-.habit-heatmap-summary {
-  font-size: var(--text-caption);
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-1);
-}
-
-.heatmap-squares {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  max-width: 100%;
-}
-
-.heatmap-square {
-  width: 13px;
-  height: 13px;
-  border-radius: 3px;
-  background-color: var(--surface-3);
-}
-
-.heatmap-square.done {
-  background-color: var(--color-success);
-}
-
-.edit-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  margin-top: var(--space-3);
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.text-input {
-  font: inherit;
-  /* A step above the panel it sits on, so a field reads as something you
-     can type into rather than as more panel. */
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--color-text);
-  transition: border-color 220ms var(--ease);
-}
-
-.text-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.text-input::placeholder {
-  color: var(--color-text-faint);
-}
-
-.field-label {
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.btn-icon-accent:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+  color: var(--accent-on-primary);
 }
 
 .button-row {
@@ -476,146 +438,84 @@ h1 {
   align-items: center;
 }
 
-.button {
-  font: inherit;
-  font-weight: 600;
-  padding: 11px 18px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: transform 220ms var(--ease), filter 220ms var(--ease);
-}
-
-/* Nothing in the app responded to being pressed, which is most of what makes
-   a page feel like a web page rather than an app on a phone. */
-.button:active,
-.icon-button:active,
-.summary-link:active,
-.hero-back:active,
-.mood-option:active,
-.day-toggle:active,
-.today-done-card:active {
-  transform: scale(0.97);
-}
-
-.button:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.button-primary {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-}
-
-.button-secondary {
-  background: transparent;
-  color: var(--color-text);
-  border-color: var(--color-border);
-}
-
-.button-danger {
-  background: transparent;
-  color: var(--color-danger);
-  margin-left: auto;
-}
-
-.error-boundary {
-  padding: var(--space-4);
-}
-
-/* Deliberately has no panel behind it so the wallpaper shows through. */
-.daily-quote {
-  margin: 0 0 var(--space-4);
-  padding: var(--space-4) var(--space-2) var(--space-3);
-  text-align: center;
-}
-
-.daily-quote-text {
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 700;
-  line-height: 1.5;
-  color: var(--color-text);
-  margin: 0;
-  text-wrap: balance;
-}
-
-.daily-quote-author {
-  margin-top: var(--space-2);
-  font-size: var(--text-caption);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.summary-today-card {
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
+/* ---------------------------------------------------------------------------
+   Cards. A card means "these things belong together" - not "here is some
+   content". Most content sits directly on the background.
+   --------------------------------------------------------------------------- */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: var(--space-5) var(--space-4);
-  text-align: center;
-  margin-bottom: var(--space-3);
-  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
 }
 
-/* The headline number is the one thing on the page that should dominate. */
-.summary-today-value {
-  font-family: var(--font-display);
-  font-size: var(--text-stat);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--color-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-.summary-today-label {
-  font-size: var(--text-caption);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-top: var(--space-2);
-}
-
-.health-scores {
-  display: flex;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
-.health-scores .summary-today-card {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.year-progress-track {
-  margin-top: var(--space-3);
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-3);
+/* A card whose children are rows divided by hairlines rather than separate
+   cards - one surface for a list of like things. */
+.list-group {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
-.year-progress-fill {
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  min-height: var(--tap-target);
+}
+
+.list-row + .list-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.list-row-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list-row-name {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   Progress
+   --------------------------------------------------------------------------- */
+.progress {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-interactive);
+  overflow: hidden;
+}
+
+.progress-fill {
   height: 100%;
-  background: var(--color-primary);
-  border-radius: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-primary);
+  transition: width var(--duration-base) var(--ease);
 }
 
-.year-progress-label {
-  font-size: var(--text-caption);
-  color: var(--color-text-muted);
-  margin-top: 4px;
+.progress-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
-/* The launcher for every other page. A fixed three-column grid rather than a
-   row, so the tiles stay a comfortable tap size however many pages exist. */
+/* ---------------------------------------------------------------------------
+   Summary
+   --------------------------------------------------------------------------- */
 .summary-links {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
-  margin-bottom: var(--space-5);
 }
 
 .summary-link {
@@ -624,98 +524,734 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: 88px;
-  padding: var(--space-3) var(--space-1);
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
+  min-height: 80px;
+  padding: var(--space-4) var(--space-2);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  color: var(--color-text);
-  font: inherit;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  transition: transform 220ms var(--ease), background 220ms var(--ease);
+  transition: background-color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease), color var(--duration-base) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.summary-link:hover {
+  border-color: var(--border-default);
+  background: var(--bg-surface-raised);
+  color: var(--text-primary);
+}
+
+.summary-link:active {
+  transform: translateY(1px);
 }
 
 .summary-link-icon {
-  height: 30px;
-  width: auto;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 
-.summary-row {
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-2);
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.summary-row-name {
-  font-weight: 600;
-  margin-bottom: var(--space-1);
-}
-
-.summary-row-stats {
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-}
-
-/* Small, quiet and letterspaced: a label marking a section rather than a
-   second headline competing with the page title. */
-.section-heading {
-  font-family: var(--font-sans);
-  font-size: var(--text-caption);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin: var(--space-5) 0 var(--space-3);
-}
-
-.goal-error {
-  font-size: var(--text-small);
-  color: var(--color-danger);
+/* ---------------------------------------------------------------------------
+   Quote. Editorial, so it sits on the background rather than in a card.
+   --------------------------------------------------------------------------- */
+.quote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--border-subtle);
   margin: 0;
 }
 
+.quote-text {
+  font-family: var(--font-editorial);
+  font-size: 20px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.quote-author {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   Habits
+   --------------------------------------------------------------------------- */
+.habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.habit-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.habit-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.habit-name {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A fixed seven-day week with explicit navigation, rather than a native
+   horizontal scrollbar running the whole history. */
+.habit-week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.habit-week-range {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.habit-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+}
+
+.habit-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  min-height: var(--tap-target);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease);
+}
+
+.habit-day:hover:not(:disabled) {
+  background: var(--bg-interactive);
+}
+
+.habit-day:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.habit-day-weekday {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.habit-day-number {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.habit-day.is-today .habit-day-number {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.habit-day-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background-color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.habit-day.is-done .habit-day-dot {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-on-primary);
+}
+
+.habit-day:active .habit-day-dot {
+  transform: scale(0.88);
+}
+
+.habit-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+}
+
+.habit-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.habit-stat-value {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Four weeks of history at three opacities - a deliberate contribution grid
+   rather than a run of unrelated coloured blocks. */
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  max-width: 220px;
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--bg-interactive);
+}
+
+.heatmap-cell.is-done {
+  background: color-mix(in srgb, var(--success) 78%, transparent);
+}
+
+.heatmap-cell.is-outside {
+  background: var(--bg-surface-raised);
+  opacity: 0.5;
+}
+
+/* ---------------------------------------------------------------------------
+   Forms
+   --------------------------------------------------------------------------- */
+.edit-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.text-input {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  min-height: var(--tap-target);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-interactive);
+  color: var(--text-primary);
+  transition: border-color var(--duration-base) var(--ease);
+  width: 100%;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.text-input::placeholder {
+  color: var(--text-muted);
+}
+
+textarea.text-input {
+  resize: vertical;
+  min-height: 88px;
+}
+
+.field-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.frequency-picker {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.frequency-option {
+  flex: 1;
+  min-height: var(--tap-target);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease), color var(--duration-base) var(--ease);
+}
+
+.frequency-option.is-active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-on-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   Modal
+   --------------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 100;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+/* ---------------------------------------------------------------------------
+   Journal
+   --------------------------------------------------------------------------- */
+.mood-segment {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.mood-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-1);
+  min-height: var(--tap-target);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease), color var(--duration-base) var(--ease);
+}
+
+.mood-option:hover {
+  color: var(--text-secondary);
+}
+
+.mood-option.is-active {
+  background: var(--bg-interactive);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.mood-option img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* A calendar built from whitespace rather than thirty-one bordered boxes. */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.cal-month {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+}
+
+.cal-weekdays {
+  margin-bottom: var(--space-2);
+}
+
+.cal-weekday {
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease), color var(--duration-base) var(--ease);
+}
+
+.cal-day:hover:not(:disabled) {
+  background: var(--bg-interactive);
+}
+
+.cal-day.is-empty {
+  visibility: hidden;
+}
+
+.cal-day.is-future {
+  color: var(--text-muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.cal-day.is-today {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.cal-day.has-entry {
+  color: var(--bg-app);
+  font-weight: 600;
+}
+
+.cal-day.mood-1 { background: var(--mood-1); color: var(--text-primary); }
+.cal-day.mood-2 { background: var(--mood-2); color: var(--text-primary); }
+.cal-day.mood-3 { background: var(--mood-3); }
+.cal-day.mood-4 { background: var(--mood-4); }
+.cal-day.mood-5 { background: var(--mood-5); }
+
+.year-view {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.year-month-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.year-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.year-month-day {
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: var(--bg-interactive);
+  cursor: pointer;
+}
+
+.year-month-day.is-empty {
+  visibility: hidden;
+}
+
+.year-month-day.is-future {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.year-month-day.is-today {
+  outline: 1.5px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+.year-month-day.mood-1 { background: var(--mood-1); }
+.year-month-day.mood-2 { background: var(--mood-2); }
+.year-month-day.mood-3 { background: var(--mood-3); }
+.year-month-day.mood-4 { background: var(--mood-4); }
+.year-month-day.mood-5 { background: var(--mood-5); }
+
+.segmented {
+  display: inline-flex;
+  padding: var(--space-1);
+  gap: var(--space-1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+}
+
+.segmented-option {
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease), color var(--duration-base) var(--ease);
+}
+
+.segmented-option.is-active {
+  background: var(--accent-primary);
+  color: var(--accent-on-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   Gratitude
+   --------------------------------------------------------------------------- */
+.gratitude-prompt {
+  font-family: var(--font-editorial);
+  font-size: 20px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.gratitude-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.gratitude-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gratitude-index {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.gratitude-echo {
+  font-family: var(--font-editorial);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Oraison. No enclosing card - a reading surface, not a panel.
+   --------------------------------------------------------------------------- */
+.oraison {
+  width: min(100%, var(--reading-width));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.oraison-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.oraison-rule {
+  height: 1px;
+  background: var(--border-default);
+  width: 64px;
+  margin-inline: auto;
+}
+
+.oraison-opening {
+  font-family: var(--font-editorial);
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--text-primary);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.oraison-verses {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.oraison-verse {
+  font-family: var(--font-editorial);
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.oraison-closing {
+  font-style: italic;
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   Empty states
+   --------------------------------------------------------------------------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-10) var(--space-5);
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+.empty-state-body {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 34ch;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Status and misc
+   --------------------------------------------------------------------------- */
 .sync-title {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 15px;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .sync-note {
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .sync-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   flex-shrink: 0;
-  background: var(--color-success);
+  background: var(--success);
 }
 
 .sync-dot.pending,
 .sync-dot.syncing {
-  background: var(--color-primary);
+  background: var(--warning);
 }
 
 .sync-dot.error {
-  background: var(--color-danger);
+  background: var(--danger);
+}
+
+.goal-error {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--danger);
+  margin: 0;
 }
 
 .suggestion-row {
-  padding-bottom: var(--space-3);
-  margin-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .suggestion-row:last-of-type {
@@ -735,391 +1271,29 @@ h1 {
 }
 
 .suggestion-reason {
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-secondary);
   margin: 0;
 }
 
-.summary-empty {
-  color: var(--color-text-muted);
-  font-size: var(--text-body);
+.error-boundary {
+  padding: var(--space-6);
 }
 
-.journal-prompt {
-  font-size: var(--text-body);
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-2);
-}
-
-.mood-picker {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
-.mood-option {
-  flex: 1;
-  min-height: 84px;
-  padding: 8px 2px 6px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--surface-1);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.mood-option.active {
-  border-width: 2px;
-  border-color: var(--color-primary);
-}
-
-.mood-label {
-  font-size: var(--text-caption);
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-align: center;
-  line-height: 1.15;
-}
-
-.modal-title {
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-textarea.text-input {
-  resize: vertical;
-}
-
-.today-done-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
-}
-
-.today-done-title {
-  font-weight: 600;
-}
-
-.today-done-label {
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-}
-
-.calendar {
-  margin-bottom: var(--space-4);
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-}
-
-.view-toggle {
-  display: flex;
-  gap: 4px;
-  margin-bottom: var(--space-3);
-}
-
-.view-toggle-option {
-  flex: 1;
-  padding: 6px 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  font: inherit;
-  font-size: var(--text-small);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.view-toggle-option.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-primary-text);
-}
-
-.calendar-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-2);
-}
-
-.calendar-nav-button {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-1);
-  color: var(--color-text);
-  font-size: 16px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.calendar-nav-button:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.calendar-month-label {
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  margin-bottom: 4px;
-}
-
-.calendar-weekday {
-  text-align: center;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.calendar-day {
-  aspect-ratio: 1;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-1);
-  color: var(--color-text);
-  font: inherit;
-  font-size: var(--text-small);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.calendar-day.empty {
-  visibility: hidden;
-  cursor: default;
-}
-
-.calendar-day.future {
-  color: var(--color-text-muted);
-  opacity: 0.4;
-  cursor: default;
-}
-
-.calendar-day.today {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
-}
-
-.calendar-day.mood-1 {
-  background: var(--mood-1);
-  border-color: var(--mood-1);
-  color: #f5f0e4;
-}
-
-.calendar-day.mood-2 {
-  background: var(--mood-2);
-  border-color: var(--mood-2);
-  color: #f5f0e4;
-}
-
-.calendar-day.mood-3 {
-  background: var(--mood-3);
-  border-color: var(--mood-3);
-  color: #201b12;
-}
-
-.calendar-day.mood-4 {
-  background: var(--mood-4);
-  border-color: var(--mood-4);
-  color: #201b12;
-}
-
-.calendar-day.mood-5 {
-  background: var(--mood-5);
-  border-color: var(--mood-5);
-  color: #201b12;
-}
-
-.year-view {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
-}
-
-.year-month-label {
-  font-size: var(--text-caption);
-  font-weight: 700;
-  text-align: center;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin-bottom: 3px;
-}
-
-.year-month-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
-
-.year-month-day {
-  aspect-ratio: 1;
-  padding: 0;
-  border: none;
-  border-radius: 1px;
-  background: var(--color-border);
-  cursor: pointer;
-}
-
-.year-month-day.empty {
-  visibility: hidden;
-  cursor: default;
-}
-
-.year-month-day.future {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.year-month-day.today {
-  outline: 1.5px solid var(--color-primary);
-  outline-offset: 1px;
-}
-
-.year-month-day.mood-1 {
-  background: var(--mood-1);
-}
-
-.year-month-day.mood-2 {
-  background: var(--mood-2);
-}
-
-.year-month-day.mood-3 {
-  background: var(--mood-3);
-}
-
-.year-month-day.mood-4 {
-  background: var(--mood-4);
-}
-
-.year-month-day.mood-5 {
-  background: var(--mood-5);
-}
-
-/* The oraison is meant to be read slowly, so it gets a reading face, wide
-   leading and room between verses rather than the tight rhythm of the UI. */
-.oraison {
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4) var(--space-4) calc(var(--space-4) + var(--space-2));
-}
-
-.oraison-title {
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-align: center;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.oraison-rule {
-  height: 1px;
-  margin: var(--space-3) 0;
-  background: linear-gradient(to right, transparent, rgba(251, 243, 231, 0.38), transparent);
-}
-
-.oraison-opening,
-.oraison-verse {
-  font-family: var(--font-reading);
-  color: var(--color-text);
-  margin: 0;
-}
-
-.oraison-opening {
-  font-size: var(--text-display);
-  font-style: italic;
-  line-height: 1.6;
-  text-align: center;
-  text-wrap: balance;
-  margin-bottom: var(--space-4);
-}
-
-.oraison-verse {
-  font-size: 17px;
-  line-height: 1.75;
-  margin-bottom: var(--space-3);
-}
-
-.oraison-verse:last-child {
-  margin-bottom: 0;
-}
-
-.oraison-closing {
-  font-style: italic;
-}
-
-.gratitude-prompt {
-  font-style: italic;
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-  margin: 0 0 var(--space-3);
-}
-
-.gratitude-echo {
-  font-size: var(--text-body);
-  margin: 0;
-}
-
-/* Someone who has asked their phone to calm down should not get bounce. */
+/* Someone who has asked their phone to calm down should not get movement. */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
 
-  .button:active,
-  .icon-button:active,
+  .btn:active,
   .summary-link:active,
-  .hero-back:active,
-  .mood-option:active,
-  .day-toggle:active,
-  .today-done-card:active {
+  .hero-corner:active,
+  .habit-day:active .habit-day-dot {
     transform: none;
   }
 }

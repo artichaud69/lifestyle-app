@@ -1,43 +1,33 @@
-import { datesBetween, todayISO, formatShortLabel } from '../dates.js'
-import { weeksList, weeklyCompletionPercent } from '../frequency.js'
-import { currentStreak, bestStreak } from '../streaks.js'
+import { addDays, todayISO, startOfWeek } from '../dates.js'
+import { WEEK_STARTS_ON } from '../frequency.js'
 
-function HabitHeatmap({ startDate, doneDates, timesPerWeek }) {
-  const allDates = datesBetween(startDate, todayISO())
+const WEEKS = 4
+
+// Four weeks of history as a fixed contribution grid. The old version drew
+// one square per day since the habit began, so its width - and its meaning -
+// changed with every habit.
+function HabitHeatmap({ doneDates, startDate }) {
+  const today = todayISO()
   const doneSet = new Set(doneDates)
-  const weeks = weeksList(startDate)
-  const percent = weeklyCompletionPercent(startDate, doneDates, timesPerWeek)
-  const streak = currentStreak(startDate, doneDates, timesPerWeek)
-  const best = bestStreak(startDate, doneDates, timesPerWeek)
+  const firstWeek = startOfWeek(addDays(today, -7 * (WEEKS - 1)), WEEK_STARTS_ON)
+
+  const cells = []
+  for (let index = 0; index < WEEKS * 7; index++) {
+    const date = addDays(firstWeek, index)
+    // Days outside the habit's life are held open so the grid keeps its shape.
+    const outside = date > today || date < startDate
+    cells.push({ date, done: doneSet.has(date), outside })
+  }
 
   return (
-    <div className="habit-heatmap">
-      <div className="habit-streak">
-        {streak > 0 ? (
-          <>
-            <img src={`${import.meta.env.BASE_URL}icons/streak-current.png`} alt="" className="stat-icon" />
-            {streak}-week streak
-          </>
-        ) : (
-          'No active streak'
-        )}
-        {' · '}
-        <img src={`${import.meta.env.BASE_URL}icons/nav-summary.png`} alt="" className="stat-icon" />
-        Best {best}
-      </div>
-      <div className="habit-heatmap-summary">
-        {percent}% · Target {timesPerWeek}x/week · since {formatShortLabel(startDate)} ({weeks.length} week
-        {weeks.length === 1 ? '' : 's'})
-      </div>
-      <div className="heatmap-squares">
-        {allDates.map((date) => (
-          <div
-            key={date}
-            title={`${date}: ${doneSet.has(date) ? 'done' : 'not done'}`}
-            className={`heatmap-square${doneSet.has(date) ? ' done' : ''}`}
-          />
-        ))}
-      </div>
+    <div className="heatmap" aria-hidden="true">
+      {cells.map((cell) => (
+        <div
+          key={cell.date}
+          title={cell.outside ? undefined : `${cell.date}: ${cell.done ? 'done' : 'not done'}`}
+          className={`heatmap-cell${cell.outside ? ' is-outside' : cell.done ? ' is-done' : ''}`}
+        />
+      ))}
     </div>
   )
 }

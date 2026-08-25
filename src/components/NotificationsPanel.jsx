@@ -149,17 +149,17 @@ function NotificationsPanel({ session }) {
       <div className="button-row">
         {enabled ? (
           <>
-            <button type="button" className="button button-secondary" onClick={handleTest} disabled={busy}>
+            <button type="button" className="btn btn-secondary" onClick={handleTest} disabled={busy}>
               Send a test
             </button>
-            <button type="button" className="button button-secondary" onClick={handleDisable} disabled={busy}>
+            <button type="button" className="btn btn-secondary" onClick={handleDisable} disabled={busy}>
               Turn off
             </button>
           </>
         ) : (
           <button
             type="button"
-            className="button button-primary"
+            className="btn btn-primary"
             onClick={handleEnable}
             disabled={busy || !checked}
           >

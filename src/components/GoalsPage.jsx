@@ -95,7 +95,7 @@ function GoalsPage({ habits, onAddHabits, onBack }) {
 
       {!apiKey || showApiKeyForm ? (
         <form className="edit-panel" onSubmit={handleSaveApiKey}>
-          <p className="journal-prompt">
+          <p className="body-md">
             Paste your Anthropic API key to let the app suggest habits for your goals. It's stored only on
             this device and sent straight to Anthropic when you generate a plan.
           </p>
@@ -107,11 +107,11 @@ function GoalsPage({ habits, onAddHabits, onBack }) {
             placeholder="sk-ant-..."
           />
           <div className="button-row">
-            <button type="submit" className="button button-primary" disabled={!apiKeyDraft.trim()}>
+            <button type="submit" className="btn btn-primary" disabled={!apiKeyDraft.trim()}>
               Save key
             </button>
             {apiKey && (
-              <button type="button" className="button button-secondary" onClick={() => setShowApiKeyForm(false)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowApiKeyForm(false)}>
                 Cancel
               </button>
             )}
@@ -131,10 +131,10 @@ function GoalsPage({ habits, onAddHabits, onBack }) {
               />
             </label>
             <div className="button-row">
-              <button type="submit" className="button button-primary" disabled={!goalText.trim() || isGenerating}>
+              <button type="submit" className="btn btn-primary" disabled={!goalText.trim() || isGenerating}>
                 {isGenerating ? 'Thinking…' : 'Suggest habits'}
               </button>
-              <button type="button" className="button button-secondary" onClick={() => setShowApiKeyForm(true)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowApiKeyForm(true)}>
                 Change API key
               </button>
             </div>
@@ -143,7 +143,7 @@ function GoalsPage({ habits, onAddHabits, onBack }) {
 
           {suggestions && (
             <div className="edit-panel">
-              <div className="modal-title">Suggested habits</div>
+              <div className="display-md">Suggested habits</div>
               {suggestions.map((s, index) => (
                 <div key={index} className="suggestion-row">
                   <div className="suggestion-header">
@@ -167,13 +167,13 @@ function GoalsPage({ habits, onAddHabits, onBack }) {
               <div className="button-row">
                 <button
                   type="button"
-                  className="button button-primary"
+                  className="btn btn-primary"
                   onClick={handleAccept}
                   disabled={!suggestions.some((s) => s.included)}
                 >
                   Add to my habits
                 </button>
-                <button type="button" className="button button-secondary" onClick={() => setSuggestions(null)}>
+                <button type="button" className="btn btn-secondary" onClick={() => setSuggestions(null)}>
                   Discard
                 </button>
               </div>
@@ -182,17 +182,17 @@ function GoalsPage({ habits, onAddHabits, onBack }) {
         </>
       )}
 
-      <h2 className="section-heading">Your goals</h2>
+      <h2 className="label-sm">Your goals</h2>
       {goals.length === 0 ? (
-        <p className="summary-empty">No goals yet.</p>
+        <p className="body-md">No goals yet.</p>
       ) : (
-        <div className="summary-list">
+        <div className="list-group">
           {goals.map((goal) => {
             const linkedHabits = habits.filter((habit) => goal.habitIds.includes(habit.id))
             return (
-              <div key={goal.id} className="summary-row">
-                <div className="summary-row-name">{goal.text}</div>
-                <div className="summary-row-stats">
+              <div key={goal.id} className="list-row">
+                <div className="list-row-name">{goal.text}</div>
+                <div className="caption">
                   {linkedHabits.length === 0
                     ? 'No linked habits'
                     : linkedHabits
@@ -202,7 +202,7 @@ function GoalsPage({ habits, onAddHabits, onBack }) {
                         )
                         .join(' · ')}
                 </div>
-                <button type="button" className="button button-danger" onClick={() => handleRemoveGoal(goal.id)}>
+                <button type="button" className="btn btn-danger" onClick={() => handleRemoveGoal(goal.id)}>
                   Remove
                 </button>
               </div>

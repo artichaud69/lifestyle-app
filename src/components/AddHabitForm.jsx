@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
+import IconButton from './ui/IconButton.jsx'
 import { todayISO } from '../dates.js'
 import { DAILY } from '../frequency.js'
 import FrequencyPicker from './FrequencyPicker.jsx'
@@ -26,9 +28,7 @@ function AddHabitForm({ onAdd }) {
 
   return (
     <>
-      <button type="button" className="icon-button" onClick={openModal} aria-label="Add habit">
-        +
-      </button>
+      <IconButton label="Add habit" icon={Plus} variant="btn-icon-accent" size={20} onClick={openModal} />
       {isOpen && (
         <div className="modal-overlay">
           <form onSubmit={handleSubmit} className="modal-card">
@@ -55,10 +55,10 @@ function AddHabitForm({ onAdd }) {
               <FrequencyPicker timesPerWeek={timesPerWeek} onChange={setTimesPerWeek} />
             </div>
             <div className="button-row">
-              <button type="submit" className="button button-primary">
+              <button type="submit" className="btn btn-primary">
                 Add
               </button>
-              <button type="button" className="button button-secondary" onClick={() => setIsOpen(false)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setIsOpen(false)}>
                 Cancel
               </button>
             </div>

@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { buildMonthGrid, MONTH_NAMES_SHORT } from '../calendarGrid.js'
 import { WEEK_STARTS_ON } from '../frequency.js'
 import { todayISO } from '../dates.js'
@@ -7,25 +8,25 @@ function JournalYearView({ year, entries, onSelectDay, canGoPrev, canGoNext, onN
 
   return (
     <>
-      <div className="calendar-nav">
+      <div className="cal-nav">
         <button
           type="button"
-          className="calendar-nav-button"
+          className="btn-icon"
           onClick={() => onNavigate(-1)}
           disabled={!canGoPrev}
           aria-label="Previous year"
         >
-          ‹
+          <ChevronLeft size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
-        <div className="calendar-month-label">{year}</div>
+        <div className="cal-month">{year}</div>
         <button
           type="button"
-          className="calendar-nav-button"
+          className="btn-icon"
           onClick={() => onNavigate(1)}
           disabled={!canGoNext}
           aria-label="Next year"
         >
-          ›
+          <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
       <div className="year-view">
@@ -38,7 +39,7 @@ function JournalYearView({ year, entries, onSelectDay, canGoPrev, canGoNext, onN
                 {weeks.flatMap((week, weekIndex) =>
                   week.map((cell, dayIndex) => {
                     if (!cell) {
-                      return <div key={`${weekIndex}-${dayIndex}`} className="year-month-day empty" />
+                      return <div key={`${weekIndex}-${dayIndex}`} className="year-month-day is-empty" />
                     }
                     const entry = entries[cell.date]
                     const moodClass = entry ? ` mood-${entry.mood}` : ''
@@ -48,7 +49,7 @@ function JournalYearView({ year, entries, onSelectDay, canGoPrev, canGoNext, onN
                       <button
                         key={cell.date}
                         type="button"
-                        className={`year-month-day${moodClass}${isToday ? ' today' : ''}${isFuture ? ' future' : ''}`}
+                        className={`year-month-day${moodClass}${isToday ? ' is-today' : ''}${isFuture ? ' is-future' : ''}`}
                         onClick={() => onSelectDay(cell.date)}
                         disabled={isFuture}
                         aria-label={cell.date}

@@ -12,6 +12,7 @@ import {
 } from '../gratitude.js'
 import { todayISO, formatShortLabel, addDays } from '../dates.js'
 import PageHero from './PageHero.jsx'
+import Section from './ui/Section.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
 const HISTORY_DAYS = 14
@@ -56,65 +57,70 @@ function GratitudePage({ onBack }) {
       <PageHero view="gratitude" title="Gratitude" onBack={onBack} />
 
       <div className="page-body">
+        <Section
+          title="Today's gratitude"
+          action={streak > 0 && <span className="caption">{streak}-day streak · Best {best}</span>}
+        >
+          {/* The prompt is editorial, the fields are interface - so the two
+              take different faces. */}
+          <p className="gratitude-prompt">{promptForDate(today)}</p>
 
-      {streak > 0 && (
-        <p className="journal-prompt">
-          🔥 {streak}-day streak{best > streak ? ` · Best ${best}` : ''}
-        </p>
-      )}
-
-      <div className="edit-panel">
-        <p className="gratitude-prompt">{promptForDate(today)}</p>
-        {items.map((value, index) => (
-          <input
-            key={index}
-            type="text"
-            className="text-input"
-            value={value}
-            onChange={(event) => {
-              const next = [...items]
-              next[index] = event.target.value
-              setItems(next)
-            }}
-            onBlur={(event) => commit(index, event.target.value)}
-            placeholder={`${index + 1}.`}
-            maxLength={140}
-          />
-        ))}
-      </div>
-
-      {lastYearItems.length > 0 && (
-        <>
-          <h2 className="section-heading">A year ago today</h2>
-          <div className="edit-panel">
-            {lastYearItems.map((item, index) => (
-              <p key={index} className="gratitude-echo">
-                {item}
-              </p>
-            ))}
-          </div>
-        </>
-      )}
-
-      {history.length > 0 && (
-        <>
-          <h2 className="section-heading">Recent days</h2>
-          <div className="summary-list">
-            {history.map((date) => (
-              <div key={date} className="summary-row">
-                <div className="summary-row-name">{formatShortLabel(date)}</div>
-                {itemsForDay(entries, date)
-                  .filter((item) => item?.trim())
-                  .map((item, index) => (
-                    <div key={index} className="summary-row-stats">
-                      {item}
-                    </div>
-                  ))}
+          <div className="gratitude-fields">
+            {items.map((value, index) => (
+              <div key={index} className="gratitude-field">
+                <label className="gratitude-index" htmlFor={`gratitude-${index}`}>
+                  {String(index + 1).padStart(2, '0')}
+                </label>
+                <input
+                  id={`gratitude-${index}`}
+                  type="text"
+                  className="text-input"
+                  value={value}
+                  onChange={(event) => {
+                    const next = [...items]
+                    next[index] = event.target.value
+                    setItems(next)
+                  }}
+                  onBlur={(event) => commit(index, event.target.value)}
+                  maxLength={140}
+                />
               </div>
             ))}
           </div>
-        </>
-      )}
+        </Section>
+
+        {lastYearItems.length > 0 && (
+          <Section title="A year ago today">
+            <div className="card">
+              {lastYearItems.map((item, index) => (
+                <p key={index} className="gratitude-echo">
+                  {item}
+                </p>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {history.length > 0 && (
+          <Section title="Recent days">
+            <div className="list-group">
+              {history.map((date) => (
+                <div key={date} className="list-row">
+                  <div className="list-row-main">
+                    <span className="list-row-name">{formatShortLabel(date)}</span>
+                    {itemsForDay(entries, date)
+                      .filter((item) => item?.trim())
+                      .map((item, index) => (
+                        <span key={index} className="caption">
+                          {item}
+                        </span>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
       </div>
     </div>
   )

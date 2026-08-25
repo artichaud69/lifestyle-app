@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { MOODS } from '../journal.js'
-import FlameIcon from './FlameIcon.jsx'
+import MoodSelector from './MoodSelector.jsx'
 import { formatShortLabel } from '../dates.js'
 
 function JournalDayModal({ date, entry, onSave, onClose }) {
@@ -17,21 +16,8 @@ function JournalDayModal({ date, entry, onSave, onClose }) {
   return (
     <div className="modal-overlay">
       <form onSubmit={handleSubmit} className="modal-card">
-        <div className="modal-title">{formatShortLabel(date)}</div>
-        <div className="mood-picker">
-          {MOODS.map((moodOption) => (
-            <button
-              key={moodOption.value}
-              type="button"
-              className={`mood-option${mood === moodOption.value ? ' active' : ''}`}
-              onClick={() => setMood(moodOption.value)}
-              aria-label={moodOption.label}
-            >
-              <FlameIcon level={moodOption.value} />
-              <span className="mood-label">{moodOption.label}</span>
-            </button>
-          ))}
-        </div>
+        <div className="display-md">{formatShortLabel(date)}</div>
+        <MoodSelector value={mood} onSelect={setMood} />
         <label className="field-label">
           Note
           <textarea
@@ -43,10 +29,10 @@ function JournalDayModal({ date, entry, onSave, onClose }) {
           />
         </label>
         <div className="button-row">
-          <button type="submit" className="button button-primary">
+          <button type="submit" className="btn btn-primary">
             Save
           </button>
-          <button type="button" className="button button-secondary" onClick={onClose}>
+          <button type="button" className="btn btn-secondary" onClick={onClose}>
             Cancel
           </button>
         </div>

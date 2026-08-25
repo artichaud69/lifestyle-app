@@ -5,10 +5,10 @@ import NotificationsPanel from './NotificationsPanel.jsx'
 function SettingsPage({ sync, onBack }) {
   return (
     <div className="page">
-      <PageHero view="settings" title="Settings" onBack={onBack} backGlyph="×" />
+      <PageHero view="settings" title="Settings" onBack={onBack} closeIcon />
 
       <div className="page-body">
-        <h2 className="section-heading">Backup</h2>
+        <h2 className="label-sm">Backup</h2>
         <SyncPanel
           session={sync.session}
           ready={sync.ready}
@@ -21,7 +21,7 @@ function SettingsPage({ sync, onBack }) {
           onSignOut={sync.signOut}
         />
 
-        <h2 className="section-heading">Reminders</h2>
+        <h2 className="label-sm">Reminders</h2>
         <NotificationsPanel session={sync.session} />
       </div>
     </div>
