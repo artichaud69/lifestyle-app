@@ -37,7 +37,7 @@ function RpeInfoSheet({ onClose }) {
   )
 }
 
-function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddSet, onRemoveLastSet, onRemoveExercise }) {
+function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddSet, onAddWarmup, onRemoveLastSet, onRemoveExercise }) {
   const [showRpeInfo, setShowRpeInfo] = useState(false)
   const last = findLastEntry(logs, entry.exerciseId)
   const lastSummary = last ? formatSetsSummary(last.entry.sets, unit) : null
@@ -105,7 +105,7 @@ function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddS
         <button type="button" className="link-btn" onClick={() => onAddSet(false)}>
           + Add set
         </button>
-        <button type="button" className="link-btn" onClick={() => onAddSet(true)}>
+        <button type="button" className="link-btn" onClick={onAddWarmup}>
           + Warm-up
         </button>
         {entry.sets.length > 1 && (
