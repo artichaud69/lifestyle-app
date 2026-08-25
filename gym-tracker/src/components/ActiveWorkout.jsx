@@ -5,6 +5,7 @@ import RestTimer from './RestTimer.jsx'
 import { PlusIcon, XIcon } from '../lib/icons.jsx'
 import { primeAudio } from '../lib/sound.js'
 import { groupLabels, isLastInGroup } from '../lib/superset.js'
+import { suggestWarmupSets } from '../lib/warmup.js'
 
 // Real rest happens only after the last exercise in a superset round; the
 // handoff between paired exercises just needs enough time to walk to the
@@ -27,7 +28,7 @@ function startedAtClock(startedAt) {
 }
 
 function renderCard(entry, index, handlers) {
-  const { logs, unit, updateSet, toggleComplete, addSet, removeLastSet, removeExercise } = handlers
+  const { logs, unit, updateSet, toggleComplete, addSet, addWarmup, removeLastSet, removeExercise } = handlers
   return (
     <ExerciseCard
       key={entry.exerciseId + index}
@@ -37,6 +38,7 @@ function renderCard(entry, index, handlers) {
       onUpdateSet={(setIndex, field, value) => updateSet(index, setIndex, field, value)}
       onToggleComplete={(setIndex) => toggleComplete(index, setIndex)}
       onAddSet={(isWarmup) => addSet(index, isWarmup)}
+      onAddWarmup={() => addWarmup(index)}
       onRemoveLastSet={() => removeLastSet(index)}
       onRemoveExercise={() => removeExercise(index)}
     />
@@ -142,6 +144,25 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
     patchEntry(entryIndex, { sets })
   }
 
+  // First tap with no warm-ups yet: fill in a full percentage-based ramp at
+  // once, using whatever working weight is already known (typed in, or the
+  // coach's suggestion). Once warm-ups exist, or there's no weight to ramp
+  // to yet, it falls back to just adding one blank warm-up set.
+  function addWarmup(entryIndex) {
+    const entry = draft.entries[entryIndex]
+    const hasWarmup = entry.sets.some((set) => set.isWarmup)
+    if (!hasWarmup) {
+      const typedWeight = entry.sets.find((set) => !set.isWarmup && Number(set.weight) > 0)?.weight
+      const referenceWeight = Number(typedWeight) || Number(entry.planExercise?.targetWeight) || 0
+      const ramp = suggestWarmupSets(referenceWeight, settings.unit)
+      if (ramp.length > 0) {
+        patchEntry(entryIndex, { sets: [...ramp, ...entry.sets] })
+        return
+      }
+    }
+    addSet(entryIndex, true)
+  }
+
   function removeLastSet(entryIndex) {
     const entry = draft.entries[entryIndex]
     patchEntry(entryIndex, { sets: entry.sets.slice(0, -1) })
@@ -201,6 +222,7 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
         unit: settings.unit,
         updateSet,
         toggleComplete,
+        addWarmup,
         addSet,
         removeLastSet,
         removeExercise,
