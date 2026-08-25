@@ -9,8 +9,10 @@ const RAMP = [
 ]
 
 // Below this there's nothing meaningful to ramp up to - bodyweight moves and
-// light isolation work don't need a warm-up ramp.
-const MIN_WEIGHT_FOR_RAMP = 20
+// light isolation work don't need a warm-up ramp. Exported so the UI can
+// decide, before calling suggestWarmupSets, whether it already has a usable
+// reference weight or needs to ask for one.
+export const MIN_WEIGHT_FOR_RAMP = 20
 
 function roundToStep(value, step) {
   return Math.max(step, Math.round(value / step) * step)

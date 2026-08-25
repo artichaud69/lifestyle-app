@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { findLastEntry, formatSetsSummary } from '../lib/workout.js'
+import { MIN_WEIGHT_FOR_RAMP } from '../lib/warmup.js'
 import { CheckIcon, TrashIcon } from '../lib/icons.jsx'
 import Sheet from './Sheet.jsx'
 
@@ -39,8 +40,33 @@ function RpeInfoSheet({ onClose }) {
 
 function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddSet, onAddWarmup, onRemoveLastSet, onRemoveExercise }) {
   const [showRpeInfo, setShowRpeInfo] = useState(false)
+  const [showWarmupPrompt, setShowWarmupPrompt] = useState(false)
+  const [warmupWeightInput, setWarmupWeightInput] = useState('')
   const last = findLastEntry(logs, entry.exerciseId)
   const lastSummary = last ? formatSetsSummary(last.entry.sets, unit) : null
+
+  const hasWarmupAlready = entry.sets.some((set) => set.isWarmup)
+  const typedWeight = entry.sets.find((set) => !set.isWarmup && Number(set.weight) > 0)?.weight
+  const knownWeight = Number(typedWeight) || Number(entry.planExercise?.targetWeight) || 0
+  // Without a working weight there's nothing to build a percentage ramp
+  // from, so ask for it once instead of silently falling back to a blank
+  // set with no explanation - that read as the feature just not working.
+  const needsWarmupPrompt = !hasWarmupAlready && knownWeight < MIN_WEIGHT_FOR_RAMP
+
+  function handleWarmupClick() {
+    if (needsWarmupPrompt) {
+      setShowWarmupPrompt(true)
+    } else {
+      onAddWarmup()
+    }
+  }
+
+  function submitWarmupPrompt() {
+    if (!warmupWeightInput) return
+    onAddWarmup(warmupWeightInput)
+    setShowWarmupPrompt(false)
+    setWarmupWeightInput('')
+  }
 
   return (
     <div className="card exercise-card">
@@ -105,7 +131,7 @@ function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddS
         <button type="button" className="link-btn" onClick={() => onAddSet(false)}>
           + Add set
         </button>
-        <button type="button" className="link-btn" onClick={onAddWarmup}>
+        <button type="button" className="link-btn" onClick={handleWarmupClick}>
           + Warm-up
         </button>
         {entry.sets.length > 1 && (
@@ -114,6 +140,46 @@ function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddS
           </button>
         )}
       </div>
+
+      {showWarmupPrompt && (
+        <div className="card card-tight" style={{ marginTop: 'var(--space-2)' }}>
+          <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 }}>
+            What weight are you working up to?
+          </label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={warmupWeightInput}
+              placeholder={`0${unit}`}
+              autoFocus
+              onChange={(e) => setWarmupWeightInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submitWarmupPrompt()}
+              style={{
+                flex: 1,
+                padding: '9px 8px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-bg-raised)',
+                color: 'var(--color-text)',
+              }}
+            />
+            <button type="button" className="btn btn-primary btn-sm" onClick={submitWarmupPrompt}>
+              Suggest
+            </button>
+          </div>
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => {
+              onAddSet(true)
+              setShowWarmupPrompt(false)
+            }}
+          >
+            Just add a blank warm-up set instead
+          </button>
+        </div>
+      )}
 
       {showRpeInfo && <RpeInfoSheet onClose={() => setShowRpeInfo(false)} />}
     </div>
