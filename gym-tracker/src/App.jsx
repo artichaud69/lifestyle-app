@@ -18,8 +18,10 @@ import {
   saveDraft,
   loadGoalSettings,
   saveGoalSettings,
+  loadPendingSessionId,
+  savePendingSessionId,
 } from './lib/storage.js'
-import { generateProgram, suggestSessionTargets, analyzeWorkout } from './lib/coach.js'
+import { generateProgram, nextSessionTemplate, suggestSessionTargets, analyzeWorkout } from './lib/coach.js'
 import { findExercise } from './lib/exercises.js'
 import { genId } from './lib/id.js'
 import { todayISO, nowISO } from './lib/dates.js'
@@ -31,6 +33,7 @@ function App() {
   const [settings, setSettings] = useState(() => loadSettings())
   const [draft, setDraft] = useState(() => loadDraft())
   const [goalSettings, setGoalSettings] = useState(() => loadGoalSettings())
+  const [pendingSessionId, setPendingSessionId] = useState(() => loadPendingSessionId())
   const [view, setView] = useState('train')
   const [summary, setSummary] = useState(null)
 
@@ -40,6 +43,12 @@ function App() {
   useEffect(() => saveSettings(settings), [settings])
   useEffect(() => saveDraft(draft), [draft])
   useEffect(() => saveGoalSettings(goalSettings), [goalSettings])
+  useEffect(() => savePendingSessionId(pendingSessionId), [pendingSessionId])
+
+  // "Choose a different session" only swaps what Train shows as up next; a
+  // stale id (program regenerated/imported since) just falls back silently.
+  const upNextOverride = program?.sessions.find((s) => s.id === pendingSessionId) ?? null
+  const upNext = upNextOverride ?? (program ? nextSessionTemplate(program, logs) : null)
 
   function changeView(next) {
     setView(next)
@@ -50,6 +59,12 @@ function App() {
     const newProgram = generateProgram(newGoalSettings)
     setProgram(newProgram)
     setGoalSettings(newGoalSettings)
+    setPendingSessionId(null)
+  }
+
+  function handleImportProgram(importedProgram) {
+    setProgram(importedProgram)
+    setPendingSessionId(null)
   }
 
   function handleUpdateSession(updatedSession) {
@@ -98,6 +113,7 @@ function App() {
       notes: '',
       rest: null,
     })
+    setPendingSessionId(null)
   }
 
   function finishWorkout() {
@@ -162,6 +178,7 @@ function App() {
       return (
         <TrainPage
           program={program}
+          upNext={upNext}
           logs={logs}
           draft={draft}
           settings={settings}
@@ -172,6 +189,7 @@ function App() {
           onCancelWorkout={cancelWorkout}
           onAddCustomExercise={handleAddCustomExercise}
           onGoToPlan={() => changeView('plan')}
+          onSelectSession={(sessionId) => setPendingSessionId(sessionId)}
         />
       )
     }
@@ -192,7 +210,7 @@ function App() {
           onUpdateSession={handleUpdateSession}
           onSaveSettings={setSettings}
           onAddCustomExercise={handleAddCustomExercise}
-          onImportProgram={setProgram}
+          onImportProgram={handleImportProgram}
         />
       )
     }

@@ -3,13 +3,13 @@ import ActiveWorkout from './ActiveWorkout.jsx'
 import PageHeader from './PageHeader.jsx'
 import Sheet from './Sheet.jsx'
 import { DumbbellIcon, PlayIcon, ChevronRightIcon } from '../lib/icons.jsx'
-import { nextSessionTemplate, suggestSessionTargets } from '../lib/coach.js'
+import { suggestSessionTargets } from '../lib/coach.js'
 import { findExercise } from '../lib/exercises.js'
 
 function SessionPickerSheet({ program, upNext, onPick, onClose }) {
   return (
     <Sheet title="Choose a Session" onClose={onClose}>
-      <p style={{ marginTop: 0 }}>Not the right one today? Pick any session from {program.name} to start instead.</p>
+      <p style={{ marginTop: 0 }}>Swap what's up next from {program.name} — this won't start anything yet.</p>
       <div className="card">
         {program.sessions.map((session) => (
           <div key={session.id} className="history-log-item" onClick={() => onPick(session)}>
@@ -30,6 +30,7 @@ function SessionPickerSheet({ program, upNext, onPick, onClose }) {
 
 function TrainPage({
   program,
+  upNext,
   logs,
   draft,
   settings,
@@ -40,6 +41,7 @@ function TrainPage({
   onCancelWorkout,
   onAddCustomExercise,
   onGoToPlan,
+  onSelectSession,
 }) {
   const [showPicker, setShowPicker] = useState(false)
 
@@ -58,7 +60,6 @@ function TrainPage({
     )
   }
 
-  const upNext = program ? nextSessionTemplate(program, logs) : null
   const suggested = upNext ? suggestSessionTargets(upNext, logs, settings.unit) : null
 
   return (
@@ -115,8 +116,8 @@ function TrainPage({
           program={program}
           upNext={upNext}
           onPick={(session) => {
+            onSelectSession(session.id)
             setShowPicker(false)
-            onStartWorkout(session)
           }}
           onClose={() => setShowPicker(false)}
         />

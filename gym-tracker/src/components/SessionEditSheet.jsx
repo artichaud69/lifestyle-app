@@ -1,20 +1,24 @@
 import { useState } from 'react'
 import Sheet from './Sheet.jsx'
 import ExercisePicker from './ExercisePicker.jsx'
-import { TrashIcon, PlusIcon } from '../lib/icons.jsx'
+import { TrashIcon, PlusIcon, LinkIcon, UnlinkIcon } from '../lib/icons.jsx'
 import { findExercise } from '../lib/exercises.js'
 import { genId } from '../lib/id.js'
+import { groupLabels, linkExercises, unlinkExercise } from '../lib/superset.js'
 
 function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSave, onClose }) {
   const [exercises, setExercises] = useState(session.exercises)
   const [showPicker, setShowPicker] = useState(false)
+  const [linkingId, setLinkingId] = useState(null)
 
   function updateField(index, field, value) {
     setExercises(exercises.map((ex, i) => (i === index ? { ...ex, [field]: value } : ex)))
   }
 
   function removeExercise(index) {
-    setExercises(exercises.filter((_, i) => i !== index))
+    const id = exercises[index].id
+    setExercises(unlinkExercise(exercises, id).filter((ex) => ex.id !== id))
+    if (linkingId === id) setLinkingId(null)
   }
 
   function addExercise(exercise) {
@@ -30,22 +34,67 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
         targetWeight: null,
         progression: 'double',
         restSeconds: 90,
+        supersetGroup: null,
       },
     ])
     setShowPicker(false)
   }
 
+  function handleLinkClick(ex) {
+    if (ex.supersetGroup) {
+      setExercises(unlinkExercise(exercises, ex.id))
+      return
+    }
+    if (linkingId === null) {
+      setLinkingId(ex.id)
+      return
+    }
+    if (linkingId === ex.id) {
+      setLinkingId(null)
+      return
+    }
+    setExercises(linkExercises(exercises, linkingId, ex.id))
+    setLinkingId(null)
+  }
+
+  const labels = groupLabels(exercises)
+
   return (
     <Sheet title={`Edit ${session.name}`} onClose={onClose}>
+      <p style={{ marginTop: 0 }}>
+        {linkingId
+          ? 'Tap the link icon on another exercise to pair it as a superset — or tap it again to cancel.'
+          : 'Tap the link icon on two exercises to pair them as a superset (minimal rest between them, full rest after the last one).'}
+      </p>
+
       {exercises.map((ex, index) => {
         const info = findExercise(ex.exerciseId, customExercises)
+        const label = ex.supersetGroup ? labels.get(ex.supersetGroup) : null
         return (
-          <div key={ex.id} className="card card-tight">
+          <div
+            key={ex.id}
+            className="card card-tight"
+            style={{ borderColor: linkingId === ex.id ? 'var(--color-primary)' : undefined }}
+          >
             <div className="card-title-row">
-              <strong>{info?.name ?? ex.exerciseId}</strong>
-              <button type="button" className="icon-btn" onClick={() => removeExercise(index)} aria-label="Remove">
-                <TrashIcon size={16} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <strong>{info?.name ?? ex.exerciseId}</strong>
+                {label && <span className="badge primary">Superset {label}</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => handleLinkClick(ex)}
+                  aria-label={ex.supersetGroup ? 'Unlink from superset' : 'Link as superset'}
+                  style={{ color: ex.supersetGroup || linkingId === ex.id ? 'var(--color-primary)' : undefined }}
+                >
+                  {ex.supersetGroup ? <UnlinkIcon size={16} /> : <LinkIcon size={16} />}
+                </button>
+                <button type="button" className="icon-btn" onClick={() => removeExercise(index)} aria-label="Remove">
+                  <TrashIcon size={16} />
+                </button>
+              </div>
             </div>
             <div className="set-table-head" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
               <span>Sets</span>

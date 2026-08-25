@@ -139,3 +139,19 @@ export const CopyIcon = (props) => (
     <path d="M15.5 8.5V6a1.8 1.8 0 0 0-1.8-1.8H6A1.8 1.8 0 0 0 4.2 6v7.7A1.8 1.8 0 0 0 6 15.5h2.5" />
   </Icon>
 )
+
+export const LinkIcon = (props) => (
+  <Icon {...props}>
+    <path d="M9.5 14.5 14.5 9.5" />
+    <path d="M11 7.5 13.2 5.3a3.2 3.2 0 0 1 4.5 4.5L15.5 12" />
+    <path d="M13 16.5 10.8 18.7a3.2 3.2 0 0 1-4.5-4.5L8.5 12" />
+  </Icon>
+)
+
+export const UnlinkIcon = (props) => (
+  <Icon {...props}>
+    <path d="M11 7.5 13.2 5.3a3.2 3.2 0 0 1 4.5 4.5L15.5 12" />
+    <path d="M13 16.5 10.8 18.7a3.2 3.2 0 0 1-4.5-4.5L8.5 12" />
+    <path d="M4 4l16 16" />
+  </Icon>
+)

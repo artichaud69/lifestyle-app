@@ -5,6 +5,7 @@ const KEYS = {
   settings: 'gym-tracker.settings',
   draft: 'gym-tracker.activeWorkoutDraft',
   goalSettings: 'gym-tracker.goalSettings',
+  pendingSessionId: 'gym-tracker.pendingSessionId',
 }
 
 function load(key, fallback) {
@@ -70,4 +71,14 @@ export function loadGoalSettings() {
 }
 export function saveGoalSettings(goalSettings) {
   save(KEYS.goalSettings, goalSettings)
+}
+
+// Manually overrides which session nextSessionTemplate() would otherwise
+// pick, until a workout is started (see App.jsx). Lets "choose a different
+// session" just swap what's queued up without starting anything.
+export function loadPendingSessionId() {
+  return load(KEYS.pendingSessionId, null)
+}
+export function savePendingSessionId(sessionId) {
+  save(KEYS.pendingSessionId, sessionId)
 }

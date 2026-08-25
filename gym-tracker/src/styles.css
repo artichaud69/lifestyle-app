@@ -616,6 +616,27 @@ p {
   color: var(--color-primary-text);
 }
 
+.superset-group {
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-3) 0;
+  margin-bottom: var(--space-3);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.superset-group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-2);
+}
+
+.superset-group .exercise-card:last-child {
+  margin-bottom: var(--space-3);
+}
+
 .session-list-item {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

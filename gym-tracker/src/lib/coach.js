@@ -24,6 +24,7 @@ function mkPlanExercise(exerciseId, { sets, repsMin, repsMax, rpe, progression }
     targetWeight: null,
     progression,
     restSeconds: progression === 'linear' ? 150 : 75,
+    supersetGroup: null,
   }
 }
 
