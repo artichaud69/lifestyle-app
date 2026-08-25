@@ -96,6 +96,7 @@ function App() {
       startedAt: nowISO(),
       entries,
       notes: '',
+      rest: null,
     })
   }
 

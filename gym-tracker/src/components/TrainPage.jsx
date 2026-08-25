@@ -1,8 +1,32 @@
+import { useState } from 'react'
 import ActiveWorkout from './ActiveWorkout.jsx'
 import PageHeader from './PageHeader.jsx'
-import { DumbbellIcon, PlayIcon } from '../lib/icons.jsx'
+import Sheet from './Sheet.jsx'
+import { DumbbellIcon, PlayIcon, ChevronRightIcon } from '../lib/icons.jsx'
 import { nextSessionTemplate, suggestSessionTargets } from '../lib/coach.js'
 import { findExercise } from '../lib/exercises.js'
+
+function SessionPickerSheet({ program, upNext, onPick, onClose }) {
+  return (
+    <Sheet title="Choose a Session" onClose={onClose}>
+      <p style={{ marginTop: 0 }}>Not the right one today? Pick any session from {program.name} to start instead.</p>
+      <div className="card">
+        {program.sessions.map((session) => (
+          <div key={session.id} className="history-log-item" onClick={() => onPick(session)}>
+            <div>
+              <div className="name">{session.name}</div>
+              <div className="date">
+                {session.exercises.length} exercises
+                {session.id === upNext?.id ? ' · up next' : ''}
+              </div>
+            </div>
+            <ChevronRightIcon size={18} />
+          </div>
+        ))}
+      </div>
+    </Sheet>
+  )
+}
 
 function TrainPage({
   program,
@@ -17,6 +41,8 @@ function TrainPage({
   onAddCustomExercise,
   onGoToPlan,
 }) {
+  const [showPicker, setShowPicker] = useState(false)
+
   if (draft) {
     return (
       <ActiveWorkout
@@ -61,6 +87,11 @@ function TrainPage({
           <button type="button" className="btn btn-primary" style={{ marginTop: 'var(--space-3)' }} onClick={() => onStartWorkout(upNext)}>
             <PlayIcon size={18} /> Start Workout
           </button>
+          {program.sessions.length > 1 && (
+            <button type="button" className="link-btn" style={{ display: 'block', width: '100%', textAlign: 'center' }} onClick={() => setShowPicker(true)}>
+              Not the right session? Choose another
+            </button>
+          )}
         </div>
       )}
 
@@ -78,6 +109,18 @@ function TrainPage({
       <button type="button" className="btn btn-secondary" onClick={() => onStartWorkout(null)}>
         Start Empty Workout
       </button>
+
+      {showPicker && (
+        <SessionPickerSheet
+          program={program}
+          upNext={upNext}
+          onPick={(session) => {
+            setShowPicker(false)
+            onStartWorkout(session)
+          }}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
     </div>
   )
 }

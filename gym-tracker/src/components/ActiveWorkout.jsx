@@ -21,12 +21,21 @@ function startedAtClock(startedAt) {
 function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, settings, customExercises, onAddCustomExercise }) {
   const [tick, setTick] = useState(0)
   const [showPicker, setShowPicker] = useState(false)
-  const [restTimer, setRestTimer] = useState(null)
   const [confirmCancel, setConfirmCancel] = useState(false)
 
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000)
-    return () => clearInterval(id)
+    const bump = () => setTick((t) => t + 1)
+    const id = setInterval(bump, 1000)
+    // A locked screen or backgrounded tab throttles/suspends the interval,
+    // so the displayed elapsed time can lag; force an immediate refresh the
+    // moment the app is actually visible again instead of waiting up to 1s.
+    document.addEventListener('visibilitychange', bump)
+    window.addEventListener('focus', bump)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', bump)
+      window.removeEventListener('focus', bump)
+    }
   }, [])
 
   function patchEntry(entryIndex, patch) {
@@ -46,13 +55,22 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
     const set = entry.sets[setIndex]
     const willComplete = !set.completed
     const sets = entry.sets.map((s, i) => (i === setIndex ? { ...s, completed: willComplete } : s))
-    patchEntry(entryIndex, { sets })
+    const entries = draft.entries.map((e, i) => (i === entryIndex ? { ...e, sets } : e))
+
+    // Rest is a real end-timestamp on the persisted draft, not component
+    // state — it has to survive the app being backgrounded, the phone
+    // locked, or the tab fully reloaded, and still show the true remaining
+    // time (see RestTimer.jsx).
+    let rest = draft.rest
     if (willComplete && !set.isWarmup) {
       const restSeconds = entry.planExercise?.restSeconds ?? settings.restSeconds
-      setRestTimer({ total: restSeconds, key: Date.now() })
+      const now = Date.now()
+      rest = { startedAt: now, endsAt: now + restSeconds * 1000 }
     } else if (!willComplete) {
-      setRestTimer(null)
+      rest = null
     }
+
+    onChangeDraft({ ...draft, entries, rest })
   }
 
   function addSet(entryIndex, isWarmup) {
@@ -161,7 +179,14 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
         />
       )}
 
-      {restTimer && <RestTimer totalSeconds={restTimer.total} timerKey={restTimer.key} onDone={() => setRestTimer(null)} />}
+      {draft.rest && (
+        <RestTimer
+          rest={draft.rest}
+          onDone={() => onChangeDraft({ ...draft, rest: null })}
+          onExtend={() => onChangeDraft({ ...draft, rest: { ...draft.rest, endsAt: draft.rest.endsAt + 30000 } })}
+          onSkip={() => onChangeDraft({ ...draft, rest: { ...draft.rest, endsAt: Date.now() } })}
+        />
+      )}
     </div>
   )
 }
