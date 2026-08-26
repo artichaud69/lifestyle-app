@@ -164,3 +164,11 @@ export const ScaleIcon = (props) => (
     <path d="M7.5 4V2.6M16.5 4V2.6" />
   </Icon>
 )
+
+export const TargetIcon = (props) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="8" />
+    <circle cx="12" cy="12" r="4.2" />
+    <circle cx="12" cy="12" r="0.6" fill="currentColor" />
+  </Icon>
+)

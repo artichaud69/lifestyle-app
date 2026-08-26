@@ -430,6 +430,23 @@ p {
   margin-bottom: var(--space-3);
 }
 
+.form-cue {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  background: var(--color-info-bg);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-bottom: var(--space-3);
+}
+
+.form-cue svg {
+  color: var(--color-info);
+  margin-top: 2px;
+}
+
 .set-actions {
   display: flex;
   justify-content: space-between;
