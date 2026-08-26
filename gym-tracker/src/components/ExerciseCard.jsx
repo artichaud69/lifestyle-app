@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { findLastEntry, formatSetsSummary } from '../lib/workout.js'
+import { findExercise } from '../lib/exercises.js'
 import { MIN_WEIGHT_FOR_RAMP } from '../lib/warmup.js'
-import { CheckIcon, TrashIcon } from '../lib/icons.jsx'
+import { CheckIcon, TrashIcon, TargetIcon } from '../lib/icons.jsx'
 import Sheet from './Sheet.jsx'
 
 function targetLabel(planExercise) {
@@ -38,12 +39,13 @@ function RpeInfoSheet({ onClose }) {
   )
 }
 
-function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddSet, onAddWarmup, onRemoveLastSet, onRemoveExercise }) {
+function ExerciseCard({ entry, logs, unit, customExercises, onUpdateSet, onToggleComplete, onAddSet, onAddWarmup, onRemoveLastSet, onRemoveExercise }) {
   const [showRpeInfo, setShowRpeInfo] = useState(false)
   const [showWarmupPrompt, setShowWarmupPrompt] = useState(false)
   const [warmupWeightInput, setWarmupWeightInput] = useState('')
   const last = findLastEntry(logs, entry.exerciseId)
   const lastSummary = last ? formatSetsSummary(last.entry.sets, unit) : null
+  const exerciseInfo = findExercise(entry.exerciseId, customExercises)
 
   const hasWarmupAlready = entry.sets.some((set) => set.isWarmup)
   const typedWeight = entry.sets.find((set) => !set.isWarmup && Number(set.weight) > 0)?.weight
@@ -78,6 +80,12 @@ function ExerciseCard({ entry, logs, unit, onUpdateSet, onToggleComplete, onAddS
       </div>
 
       {entry.planExercise && <div className="muted" style={{ marginBottom: 6 }}>{targetLabel(entry.planExercise)}</div>}
+      {exerciseInfo?.cue && (
+        <div className="form-cue">
+          <TargetIcon size={15} />
+          <span>{exerciseInfo.cue}</span>
+        </div>
+      )}
       {entry.planExercise?.notes && <div className="exercise-note">{entry.planExercise.notes}</div>}
       {lastSummary && <div className="last-time">Last time: {lastSummary}</div>}
       {entry.planExercise?.rationale && <div className="rationale">{entry.planExercise.rationale}</div>}

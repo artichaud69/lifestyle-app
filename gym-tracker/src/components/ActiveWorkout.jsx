@@ -28,13 +28,14 @@ function startedAtClock(startedAt) {
 }
 
 function renderCard(entry, index, handlers) {
-  const { logs, unit, updateSet, toggleComplete, addSet, addWarmup, removeLastSet, removeExercise } = handlers
+  const { logs, unit, customExercises, updateSet, toggleComplete, addSet, addWarmup, removeLastSet, removeExercise } = handlers
   return (
     <ExerciseCard
       key={entry.exerciseId + index}
       entry={entry}
       logs={logs}
       unit={unit}
+      customExercises={customExercises}
       onUpdateSet={(setIndex, field, value) => updateSet(index, setIndex, field, value)}
       onToggleComplete={(setIndex) => toggleComplete(index, setIndex)}
       onAddSet={(isWarmup) => addSet(index, isWarmup)}
@@ -221,6 +222,7 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
       {renderEntryBlocks(draft.entries, {
         logs,
         unit: settings.unit,
+        customExercises,
         updateSet,
         toggleComplete,
         addWarmup,
