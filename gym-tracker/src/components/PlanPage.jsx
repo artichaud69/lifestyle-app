@@ -3,9 +3,10 @@ import PageHeader from './PageHeader.jsx'
 import ProgramWizard from './ProgramWizard.jsx'
 import SessionEditSheet from './SessionEditSheet.jsx'
 import SettingsSheet from './SettingsSheet.jsx'
-import { CalendarIcon, SettingsIcon, EditIcon } from '../lib/icons.jsx'
+import { CalendarIcon, SettingsIcon, EditIcon, PlusIcon } from '../lib/icons.jsx'
 import { findExercise } from '../lib/exercises.js'
 import { groupLabels } from '../lib/superset.js'
+import { genId } from '../lib/id.js'
 
 function PlanPage({
   program,
@@ -14,6 +15,8 @@ function PlanPage({
   goalSettings,
   onGenerateProgram,
   onUpdateSession,
+  onAddSession,
+  onDeleteSession,
   onSaveSettings,
   onAddCustomExercise,
   onImportProgram,
@@ -23,6 +26,12 @@ function PlanPage({
   const [editingSessionId, setEditingSessionId] = useState(null)
 
   const editingSession = program?.sessions.find((s) => s.id === editingSessionId)
+
+  function addSession() {
+    const newSession = { id: genId(), name: 'New Session', finisherNote: null, exercises: [] }
+    onAddSession(newSession)
+    setEditingSessionId(newSession.id)
+  }
 
   return (
     <div>
@@ -78,6 +87,10 @@ function PlanPage({
               {session.finisherNote && <div className="finisher-note">{session.finisherNote}</div>}
             </div>
           ))}
+
+          <button type="button" className="btn btn-secondary" onClick={addSession}>
+            <PlusIcon size={18} /> Add Session
+          </button>
         </>
       ) : (
         <div className="card empty-state">
@@ -111,6 +124,14 @@ function PlanPage({
             onUpdateSession(updated)
             setEditingSessionId(null)
           }}
+          onDelete={
+            program.sessions.length > 1
+              ? (sessionId) => {
+                  onDeleteSession(sessionId)
+                  setEditingSessionId(null)
+                }
+              : undefined
+          }
           onClose={() => setEditingSessionId(null)}
         />
       )}

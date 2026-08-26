@@ -78,6 +78,15 @@ function App() {
     })
   }
 
+  function handleAddSession(newSession) {
+    setProgram({ ...program, sessions: [...program.sessions, newSession] })
+  }
+
+  function handleDeleteSession(sessionId) {
+    setProgram({ ...program, sessions: program.sessions.filter((s) => s.id !== sessionId) })
+    if (pendingSessionId === sessionId) setPendingSessionId(null)
+  }
+
   function handleAddCustomExercise(exercise) {
     setCustomExercises((prev) => [...prev, exercise])
   }
@@ -229,6 +238,8 @@ function App() {
           goalSettings={goalSettings}
           onGenerateProgram={handleGenerateProgram}
           onUpdateSession={handleUpdateSession}
+          onAddSession={handleAddSession}
+          onDeleteSession={handleDeleteSession}
           onSaveSettings={setSettings}
           onAddCustomExercise={handleAddCustomExercise}
           onImportProgram={handleImportProgram}
