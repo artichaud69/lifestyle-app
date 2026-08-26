@@ -6,10 +6,12 @@ import { findExercise } from '../lib/exercises.js'
 import { genId } from '../lib/id.js'
 import { groupLabels, linkExercises, unlinkExercise } from '../lib/superset.js'
 
-function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSave, onClose }) {
+function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSave, onDelete, onClose }) {
+  const [name, setName] = useState(session.name)
   const [exercises, setExercises] = useState(session.exercises)
   const [showPicker, setShowPicker] = useState(false)
   const [linkingId, setLinkingId] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   function updateField(index, field, value) {
     setExercises(exercises.map((ex, i) => (i === index ? { ...ex, [field]: value } : ex)))
@@ -60,11 +62,18 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
   const labels = groupLabels(exercises)
 
   return (
-    <Sheet title={`Edit ${session.name}`} onClose={onClose}>
+    <Sheet title={`Edit ${name || session.name}`} onClose={onClose}>
+      <div className="field">
+        <label>Session name</label>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Push Day" />
+      </div>
+
       <p style={{ marginTop: 0 }}>
         {linkingId
           ? 'Tap the link icon on another exercise to pair it as a superset — or tap it again to cancel.'
-          : 'Tap the link icon on two exercises to pair them as a superset (minimal rest between them, full rest after the last one).'}
+          : exercises.length > 1
+            ? 'Tap the link icon on two exercises to pair them as a superset (minimal rest between them, full rest after the last one).'
+            : 'Add exercises below, or link two together as a superset once you have more than one.'}
       </p>
 
       {exercises.map((ex, index) => {
@@ -114,9 +123,33 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
         <PlusIcon size={18} /> Add Exercise
       </button>
 
-      <button type="button" className="btn btn-primary" style={{ marginTop: 'var(--space-3)' }} onClick={() => onSave({ ...session, exercises })}>
+      <button
+        type="button"
+        className="btn btn-primary"
+        style={{ marginTop: 'var(--space-3)' }}
+        onClick={() => onSave({ ...session, name: name.trim() || session.name, exercises })}
+      >
         Save Changes
       </button>
+
+      {onDelete && (
+        <div style={{ marginTop: 'var(--space-4)' }}>
+          {!confirmDelete ? (
+            <button type="button" className="link-btn danger" onClick={() => setConfirmDelete(true)}>
+              Delete this session
+            </button>
+          ) : (
+            <div className="btn-block-row">
+              <button type="button" className="btn btn-ghost" onClick={() => setConfirmDelete(false)}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn-danger" onClick={() => onDelete(session.id)}>
+                Confirm Delete
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {showPicker && (
         <ExercisePicker
