@@ -6,6 +6,7 @@ export const PAGE_ICONS = {
   health: 'icons/nav-health.png',
   oraison: 'icons/nav-oraison.png',
   gratitude: 'icons/nav-gratitude.png',
+  anxiety: 'icons/nav-anxiety.png',
   settings: 'icons/nav-summary.png',
 }
 
@@ -19,6 +20,7 @@ export const PAGE_HEROES = {
   health: 'images/health-wallpaper.jpg',
   oraison: 'images/oraison-wallpaper.jpg',
   gratitude: 'images/theme-wallpaper.jpg',
+  anxiety: 'images/theme-wallpaper.jpg',
   settings: 'images/theme-wallpaper.jpg',
 }
 
@@ -40,6 +42,7 @@ export const SPOKES = [
   { key: 'health', label: 'Health' },
   { key: 'journal', label: 'Journal' },
   { key: 'gratitude', label: 'Gratitude' },
+  { key: 'anxiety', label: 'Anxiety' },
   { key: 'oraison', label: 'Oraison' },
 ]
 

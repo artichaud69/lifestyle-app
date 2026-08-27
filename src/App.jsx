@@ -6,6 +6,7 @@ import JournalPage from './components/JournalPage.jsx'
 import HealthPage from './components/HealthPage.jsx'
 import OraisonPage from './components/OraisonPage.jsx'
 import GratitudePage from './components/GratitudePage.jsx'
+import AnxietyPage from './components/AnxietyPage.jsx'
 import SettingsPage from './components/SettingsPage.jsx'
 import { loadHabits, saveHabits } from './storage.js'
 import { defaultHabits } from './defaultHabits.js'
@@ -140,6 +141,7 @@ function App() {
     }
     if (pageView === 'oraison') return <OraisonPage onBack={goToHub} />
     if (pageView === 'gratitude') return <GratitudePage onBack={goToHub} />
+    if (pageView === 'anxiety') return <AnxietyPage onBack={goToHub} />
     return null
   }
 

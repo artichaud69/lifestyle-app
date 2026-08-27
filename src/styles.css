@@ -1281,6 +1281,160 @@ textarea.text-input {
   padding: var(--space-6);
 }
 
+/* ---------------------------------------------------------------------------
+   Anxiety
+   --------------------------------------------------------------------------- */
+.anxiety-tools {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+.anxiety-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.breathing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.breathing-circle {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-interactive);
+  border: 1.5px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.75);
+  transition: transform 4s linear;
+}
+
+.breathing-circle.is-inhale,
+.breathing-circle.is-hold-in {
+  transform: scale(1.15);
+  background: color-mix(in srgb, var(--accent-primary) 22%, transparent);
+  border-color: var(--accent-primary);
+}
+
+.breathing-circle.is-exhale,
+.breathing-circle.is-hold-out {
+  transform: scale(0.75);
+}
+
+.breathing-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.grounding {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 96px;
+  justify-content: center;
+}
+
+.grounding-prompt {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.grounding-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.anxiety-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease), color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--border-strong);
+}
+
+.chip.is-active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-on-primary);
+}
+
+.anxiety-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.anxiety-day-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.anxiety-day-label {
+  padding-inline: var(--space-1);
+}
+
+.anxiety-severity-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  background: var(--success);
+}
+
+.anxiety-severity-dot.is-moderate {
+  background: var(--warning);
+}
+
+.anxiety-severity-dot.is-severe {
+  background: var(--danger);
+}
+
+.anxiety-disclaimer {
+  text-align: center;
+  padding-top: var(--space-2);
+}
+
 /* Someone who has asked their phone to calm down should not get movement. */
 @media (prefers-reduced-motion: reduce) {
   *,
