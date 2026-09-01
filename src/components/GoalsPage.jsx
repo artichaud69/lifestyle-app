@@ -6,6 +6,7 @@ import { todayISO } from '../dates.js'
 import { weeklyCompletionPercent } from '../frequency.js'
 import FrequencyPicker from './FrequencyPicker.jsx'
 import PageHero from './PageHero.jsx'
+import EmptyState from './ui/EmptyState.jsx'
 import { PAGE_ICONS } from '../navIcons.js'
 
 function GoalsPage({ habits, onAddHabits, onBack }) {
@@ -184,23 +185,29 @@ function GoalsPage({ habits, onAddHabits, onBack }) {
 
       <h2 className="label-sm">Your goals</h2>
       {goals.length === 0 ? (
-        <p className="body-md">No goals yet.</p>
+        <EmptyState
+          icon={`${import.meta.env.BASE_URL}${PAGE_ICONS.goals}`}
+          title="No goals yet"
+          body="Describe what you want to achieve above and the app will suggest habits to get you there."
+        />
       ) : (
         <div className="list-group">
           {goals.map((goal) => {
             const linkedHabits = habits.filter((habit) => goal.habitIds.includes(habit.id))
             return (
               <div key={goal.id} className="list-row">
-                <div className="list-row-name">{goal.text}</div>
-                <div className="caption">
-                  {linkedHabits.length === 0
-                    ? 'No linked habits'
-                    : linkedHabits
-                        .map(
-                          (habit) =>
-                            `${habit.name} (${weeklyCompletionPercent(habit.startDate, habit.doneDates, habit.timesPerWeek)}%)`,
-                        )
-                        .join(' · ')}
+                <div className="list-row-main">
+                  <span className="list-row-name">{goal.text}</span>
+                  <span className="caption">
+                    {linkedHabits.length === 0
+                      ? 'No linked habits'
+                      : linkedHabits
+                          .map(
+                            (habit) =>
+                              `${habit.name} (${weeklyCompletionPercent(habit.startDate, habit.doneDates, habit.timesPerWeek)}%)`,
+                          )
+                          .join(' · ')}
+                  </span>
                 </div>
                 <button type="button" className="btn btn-danger" onClick={() => handleRemoveGoal(goal.id)}>
                   Remove
