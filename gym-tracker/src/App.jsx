@@ -99,7 +99,7 @@ function App() {
       const plannedExercises = variant === 'quick' ? suggested.exercises.filter((ex) => !ex.longOnly) : suggested.exercises
       entries = plannedExercises.map((planExercise) => {
         const info = findExercise(planExercise.exerciseId, customExercises)
-        const startingReps = planExercise.repsMin
+        const startingReps = planExercise.targetReps ?? planExercise.repsMin
         const sets = Array.from({ length: planExercise.targetSets }, () => ({
           weight: planExercise.targetWeight ?? '',
           reps: startingReps ?? '',

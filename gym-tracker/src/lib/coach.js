@@ -5,7 +5,7 @@
 // for strength compounds — entirely from data already sitting in localStorage.
 import { genId } from './id.js'
 import { findExercise } from './exercises.js'
-import { estimateOneRepMax, workingSets, bestSet, totalVolume, averageRPE, findEntryHistory } from './workout.js'
+import { estimateOneRepMax, workingSets, bestSet, totalVolume, findEntryHistory } from './workout.js'
 
 const GOAL_LABELS = {
   strength: 'Strength',
@@ -206,20 +206,21 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg') {
   const last = history[history.length - 1]
   const lastTop = topWorkingSets(last.entry.sets)
   const lastWeight = lastTop[0]?.weight ?? planExercise.targetWeight ?? 0
-  const rpe = averageRPE(last.entry.sets)
+  // The weakest of the top sets, not the best — next session's rep target
+  // has to be something every set can actually reach, not just the best one.
+  const lastReps = lastTop.length > 0 ? Math.min(...lastTop.map((set) => set.reps)) : planExercise.repsMin
   const success = isSuccessful(planExercise, last.entry.sets)
   const metMinimum = metFloor(planExercise, last.entry.sets)
 
   if (planExercise.progression === 'linear') {
     if (success) {
-      let bump = increment
-      if (rpe !== null && rpe <= 6) bump = increment * 2
-      if (rpe !== null && rpe >= 9.5) bump = 0
-      const newWeight = roundToStep(lastWeight + bump, step)
-      const rationale = bump === 0
-        ? `Hit every rep last time but it was near-maximal (RPE ${rpe.toFixed(1)}) — repeat ${lastWeight}${unit} and let it feel easier.`
-        : `Hit all sets of ${planExercise.repsMin} last time — add ${bump}${unit}.`
-      return { ...planExercise, targetWeight: newWeight, rationale }
+      const newWeight = roundToStep(lastWeight + increment, step)
+      return {
+        ...planExercise,
+        targetWeight: newWeight,
+        targetReps: planExercise.repsMin,
+        rationale: `Hit all sets of ${planExercise.repsMin} last time — add ${increment}${unit}.`,
+      }
     }
     const streak = failStreakAtWeight(history, planExercise, lastWeight)
     if (streak >= 3) {
@@ -227,12 +228,14 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg') {
       return {
         ...planExercise,
         targetWeight: deload,
+        targetReps: planExercise.repsMin,
         rationale: `Stalled at ${lastWeight}${unit} for 3 sessions in a row — deload to ${deload}${unit} and build back up.`,
       }
     }
     return {
       ...planExercise,
       targetWeight: lastWeight,
+      targetReps: planExercise.repsMin,
       rationale: `Missed a rep last time — repeat ${lastWeight}${unit} and aim to hit them all.`,
     }
   }
@@ -243,14 +246,17 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg') {
     return {
       ...planExercise,
       targetWeight: newWeight,
+      targetReps: planExercise.repsMin,
       rationale: `Hit the top of your rep range (${planExercise.repsMax}) on every set — up to ${newWeight}${unit}, back to ${planExercise.repsMin} reps.`,
     }
   }
   if (metMinimum) {
+    const nextReps = Math.min(lastReps + 1, planExercise.repsMax)
     return {
       ...planExercise,
       targetWeight: lastWeight,
-      rationale: `In range but not maxed out yet — stay at ${lastWeight}${unit} and add a rep or two per set.`,
+      targetReps: nextReps,
+      rationale: `In range but not maxed out yet — stay at ${lastWeight}${unit} and aim for ${nextReps} reps across all sets (last time: ${lastReps}).`,
     }
   }
   const streak = failStreakAtWeight(history, planExercise, lastWeight)
@@ -259,12 +265,14 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg') {
     return {
       ...planExercise,
       targetWeight: deload,
+      targetReps: planExercise.repsMin,
       rationale: `Missed the rep range 3 sessions running at ${lastWeight}${unit} — drop to ${deload}${unit}.`,
     }
   }
   return {
     ...planExercise,
     targetWeight: lastWeight,
+    targetReps: planExercise.repsMin,
     rationale: `Missed the rep range last time — repeat ${lastWeight}${unit} before adding weight.`,
   }
 }
