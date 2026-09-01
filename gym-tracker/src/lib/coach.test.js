@@ -104,10 +104,11 @@ describe('suggestNextTarget - linear progression', () => {
     expect(result.rationale).toMatch(/deload/i)
   })
 
-  it('takes a bigger jump when the last session felt very easy (low RPE)', () => {
-    const logs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3, { rpe: 5 }))]
-    const result = suggestNextTarget(plan, logs, 'kg')
-    expect(result.targetWeight).toBe(110)
+  it('ignores RPE entirely — the jump size is always the flat increment', () => {
+    const easyLogs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3, { rpe: 5 }))]
+    const hardLogs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3, { rpe: 10 }))]
+    expect(suggestNextTarget(plan, easyLogs, 'kg').targetWeight).toBe(105)
+    expect(suggestNextTarget(plan, hardLogs, 'kg').targetWeight).toBe(105)
   })
 })
 
@@ -162,11 +163,22 @@ describe('suggestNextTarget - double progression', () => {
     expect(result.rationale).toMatch(/back to 10 reps/)
   })
 
-  it('holds weight when in range but not yet at the ceiling', () => {
+  it('holds weight when in range but not yet at the ceiling, and proposes one more rep than last time', () => {
     const logs = [makeLog('l1', '2026-01-01', 's1', 'dumbbell-curl', setsOf(20, 12, 3))]
     const result = suggestNextTarget(plan, logs, 'kg')
     expect(result.targetWeight).toBe(20)
-    expect(result.rationale).toMatch(/add a rep/i)
+    expect(result.targetReps).toBe(13)
+    expect(result.rationale).toMatch(/aim for 13 reps/i)
+  })
+
+  it('proposes the weakest top set plus one, not the strongest', () => {
+    const logs = [makeLog('l1', '2026-01-01', 's1', 'dumbbell-curl', [
+      { weight: 20, reps: 14, completed: true, isWarmup: false },
+      { weight: 20, reps: 14, completed: true, isWarmup: false },
+      { weight: 20, reps: 10, completed: true, isWarmup: false },
+    ])]
+    const result = suggestNextTarget(plan, logs, 'kg')
+    expect(result.targetReps).toBe(11)
   })
 
   it('holds weight after missing the bottom of the range', () => {
