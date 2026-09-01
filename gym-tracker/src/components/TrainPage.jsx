@@ -61,6 +61,7 @@ function TrainPage({
   }
 
   const suggested = upNext ? suggestSessionTargets(upNext, logs, settings.unit) : null
+  const hasLongOnly = suggested ? suggested.exercises.some((ex) => ex.longOnly) : false
 
   return (
     <div>
@@ -77,7 +78,10 @@ function TrainPage({
             const reps = ex.repsMin === ex.repsMax ? `${ex.repsMin}` : `${ex.repsMin}-${ex.repsMax}`
             return (
               <div key={ex.id} className="ex-name">
-                <span>{info?.name ?? ex.exerciseId}</span>
+                <span>
+                  {ex.longOnly && <span className="badge" style={{ marginRight: 6 }}>Full only</span>}
+                  {info?.name ?? ex.exerciseId}
+                </span>
                 <span className="muted">
                   {ex.targetSets} × {reps}
                   {ex.targetWeight ? ` @ ${ex.targetWeight}${settings.unit}` : ''}
@@ -85,9 +89,20 @@ function TrainPage({
               </div>
             )
           })}
-          <button type="button" className="btn btn-primary" style={{ marginTop: 'var(--space-3)' }} onClick={() => onStartWorkout(upNext)}>
-            <PlayIcon size={18} /> Start Workout
-          </button>
+          {hasLongOnly ? (
+            <div className="btn-block-row" style={{ marginTop: 'var(--space-3)' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => onStartWorkout(upNext, 'quick')}>
+                <PlayIcon size={18} /> Quick
+              </button>
+              <button type="button" className="btn btn-primary" onClick={() => onStartWorkout(upNext, 'full')}>
+                <PlayIcon size={18} /> Full
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-primary" style={{ marginTop: 'var(--space-3)' }} onClick={() => onStartWorkout(upNext, 'full')}>
+              <PlayIcon size={18} /> Start Workout
+            </button>
+          )}
           {program.sessions.length > 1 && (
             <button type="button" className="link-btn" style={{ display: 'block', width: '100%', textAlign: 'center' }} onClick={() => setShowPicker(true)}>
               Not the right session? Choose another

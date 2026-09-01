@@ -111,6 +111,47 @@ describe('suggestNextTarget - linear progression', () => {
   })
 })
 
+describe('suggestNextTarget - ramping/ascending sets', () => {
+  const plan = { exerciseId: 'safety-bar-squat', targetSets: 3, repsMin: 5, repsMax: 5, progression: 'linear', targetWeight: 100 }
+
+  it('bases the next weight on the heaviest working set, not the first', () => {
+    // Ramping scheme: lighter set first, then two heavy top sets — a common
+    // "3 heavy sets" protocol where the first set is not the target weight.
+    const sets = [
+      { weight: 90, reps: 5, completed: true, isWarmup: false },
+      { weight: 100, reps: 5, completed: true, isWarmup: false },
+      { weight: 100, reps: 5, completed: true, isWarmup: false },
+    ]
+    const logs = [makeLog('l1', '2026-01-01', 's1', 'safety-bar-squat', sets)]
+    const result = suggestNextTarget(plan, logs, 'kg')
+    expect(result.targetWeight).toBe(105)
+    expect(result.rationale).toMatch(/add 5kg/)
+  })
+
+  it('judges success only on the top sets, ignoring a lighter ramp-up set that misses the rep target', () => {
+    const sets = [
+      { weight: 90, reps: 3, completed: true, isWarmup: false },
+      { weight: 100, reps: 5, completed: true, isWarmup: false },
+      { weight: 100, reps: 5, completed: true, isWarmup: false },
+    ]
+    const logs = [makeLog('l1', '2026-01-01', 's1', 'safety-bar-squat', sets)]
+    const result = suggestNextTarget(plan, logs, 'kg')
+    expect(result.targetWeight).toBe(105)
+  })
+
+  it('still counts a genuine miss on the top set as a miss', () => {
+    const sets = [
+      { weight: 90, reps: 5, completed: true, isWarmup: false },
+      { weight: 100, reps: 5, completed: true, isWarmup: false },
+      { weight: 100, reps: 3, completed: true, isWarmup: false },
+    ]
+    const logs = [makeLog('l1', '2026-01-01', 's1', 'safety-bar-squat', sets)]
+    const result = suggestNextTarget(plan, logs, 'kg')
+    expect(result.targetWeight).toBe(100)
+    expect(result.rationale).toMatch(/missed a rep/i)
+  })
+})
+
 describe('suggestNextTarget - double progression', () => {
   const plan = { exerciseId: 'dumbbell-curl', targetSets: 3, repsMin: 10, repsMax: 15, progression: 'double', targetWeight: 20 }
 
@@ -170,6 +211,18 @@ describe('analyzeWorkout', () => {
     ]
     const result = analyzeWorkout(logs[3], logs, { bench: plan })
     expect(result.cards.some((c) => c.type === 'stall')).toBe(true)
+  })
+
+  it('does not flag a missed target when only a lighter ramp-up set falls short of the rep goal', () => {
+    const plan = { exerciseId: 'safety-bar-squat', targetSets: 3, repsMin: 5, repsMax: 5, progression: 'linear' }
+    const sets = [
+      { weight: 90, reps: 3, completed: true, isWarmup: false },
+      { weight: 100, reps: 5, completed: true, isWarmup: false },
+      { weight: 100, reps: 5, completed: true, isWarmup: false },
+    ]
+    const currentLog = makeLog('l1', '2026-01-08', 's1', 'safety-bar-squat', sets, 'Safety Bar Squat')
+    const result = analyzeWorkout(currentLog, [currentLog], { 'safety-bar-squat': plan })
+    expect(result.cards.some((c) => c.type === 'warning')).toBe(false)
   })
 
   it('has an encouraging default message when nothing notable happened', () => {

@@ -25,6 +25,7 @@ import {
 } from './lib/storage.js'
 import { generateProgram, nextSessionTemplate, suggestSessionTargets, analyzeWorkout } from './lib/coach.js'
 import { findExercise } from './lib/exercises.js'
+import { mergeEntriesByExercise } from './lib/workout.js'
 import { genId } from './lib/id.js'
 import { todayISO, nowISO } from './lib/dates.js'
 
@@ -91,11 +92,12 @@ function App() {
     setCustomExercises((prev) => [...prev, exercise])
   }
 
-  function startWorkout(sessionTemplate) {
+  function startWorkout(sessionTemplate, variant = 'full') {
     let entries = []
     if (sessionTemplate) {
       const suggested = suggestSessionTargets(sessionTemplate, logs, settings.unit)
-      entries = suggested.exercises.map((planExercise) => {
+      const plannedExercises = variant === 'quick' ? suggested.exercises.filter((ex) => !ex.longOnly) : suggested.exercises
+      entries = plannedExercises.map((planExercise) => {
         const info = findExercise(planExercise.exerciseId, customExercises)
         const startingReps = planExercise.repsMin
         const sets = Array.from({ length: planExercise.targetSets }, () => ({
@@ -119,7 +121,8 @@ function App() {
       date: todayISO(),
       programId: sessionTemplate ? program.id : null,
       sessionTemplateId: sessionTemplate ? sessionTemplate.id : null,
-      sessionName: sessionTemplate ? sessionTemplate.name : 'Freeform Workout',
+      sessionName: sessionTemplate ? sessionTemplate.name + (variant === 'quick' ? ' (Quick)' : '') : 'Freeform Workout',
+      variant,
       finisherNote: sessionTemplate?.finisherNote ?? null,
       startedAt: nowISO(),
       entries,
@@ -130,7 +133,7 @@ function App() {
   }
 
   function finishWorkout() {
-    const entries = draft.entries
+    const rawEntries = draft.entries
       .map((entry) => ({
         exerciseId: entry.exerciseId,
         exerciseName: entry.exerciseName,
@@ -145,6 +148,10 @@ function App() {
           })),
       }))
       .filter((entry) => entry.sets.length > 0)
+    // Defensive: an exercise picked twice mid-workout (see ActiveWorkout's
+    // addExercise guard) would otherwise save as two split entries in
+    // history, and the coach/report only ever look at the first match.
+    const entries = mergeEntriesByExercise(rawEntries)
 
     if (entries.length === 0) {
       window.alert('Log at least one completed set before finishing.')

@@ -75,6 +75,7 @@ function PlanPage({
                       <div className="ex-name">
                         <span>
                           {label && <span className="badge primary" style={{ marginRight: 6 }}>{label}</span>}
+                          {ex.longOnly && <span className="badge" style={{ marginRight: 6 }}>Full only</span>}
                           {info?.name ?? ex.exerciseId}
                         </span>
                         <span className="muted">{ex.targetSets} × {reps}</span>
