@@ -288,6 +288,20 @@ p {
   border-color: var(--color-primary);
 }
 
+/* For a chip row that can grow long (e.g. one chip per logged exercise) —
+   scrolls sideways in one line instead of wrapping into a wall of chips
+   that pushes the content below it off-screen. */
+.chip-row-scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chip-row-scroll .chip {
+  flex: 0 0 auto;
+}
+
 .nav-bar {
   position: fixed;
   left: 0;
