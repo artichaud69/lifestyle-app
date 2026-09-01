@@ -175,6 +175,15 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
   }
 
   function addExercise(exercise) {
+    // Already logging this one this session — add another set to the
+    // existing card instead of a second card, which used to split its sets
+    // across two entries (and drop the second half from history).
+    const existingIndex = draft.entries.findIndex((entry) => entry.exerciseId === exercise.id)
+    if (existingIndex !== -1) {
+      addSet(existingIndex, false)
+      setShowPicker(false)
+      return
+    }
     const newEntry = {
       exerciseId: exercise.id,
       exerciseName: exercise.name,

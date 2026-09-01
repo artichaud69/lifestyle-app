@@ -8,6 +8,7 @@ import {
   findLastEntry,
   findEntryHistory,
   formatWorkoutAsText,
+  mergeEntriesByExercise,
 } from './workout.js'
 
 describe('estimateOneRepMax', () => {
@@ -157,5 +158,29 @@ describe('formatWorkoutAsText', () => {
 
   it('omits the notes line when there are none', () => {
     expect(formatWorkoutAsText({ ...log, notes: '' }, 'kg')).not.toContain('Notes:')
+  })
+})
+
+describe('mergeEntriesByExercise', () => {
+  it('leaves entries for distinct exercises untouched', () => {
+    const entries = [
+      { exerciseId: 'a', exerciseName: 'A', sets: [{ weight: 10, reps: 5, completed: true }] },
+      { exerciseId: 'b', exerciseName: 'B', sets: [{ weight: 20, reps: 5, completed: true }] },
+    ]
+    expect(mergeEntriesByExercise(entries)).toEqual(entries)
+  })
+
+  it('combines sets from duplicate entries for the same exercise, preserving order', () => {
+    const entries = [
+      { exerciseId: 'a', exerciseName: 'A', sets: [{ weight: 10, reps: 5, completed: true }] },
+      { exerciseId: 'b', exerciseName: 'B', sets: [{ weight: 20, reps: 5, completed: true }] },
+      { exerciseId: 'a', exerciseName: 'A', sets: [{ weight: 12, reps: 5, completed: true }] },
+    ]
+    const merged = mergeEntriesByExercise(entries)
+    expect(merged).toHaveLength(2)
+    expect(merged[0].exerciseId).toBe('a')
+    expect(merged[0].sets).toHaveLength(2)
+    expect(merged[0].sets.map((s) => s.weight)).toEqual([10, 12])
+    expect(merged[1].exerciseId).toBe('b')
   })
 })

@@ -92,6 +92,27 @@ export function formatWorkoutAsText(log, unit = 'kg') {
   return lines.join('\n')
 }
 
+// Defensive merge for a finished workout's entries: if the same exercise
+// somehow ended up added twice (e.g. picked again mid-workout), combine
+// their sets into one entry instead of saving two split cards to history —
+// the coach and reports only ever look at the first entry matching an
+// exerciseId, so a split would silently drop the second entry's sets.
+export function mergeEntriesByExercise(entries) {
+  const order = []
+  const byExerciseId = new Map()
+  for (const entry of entries) {
+    const existing = byExerciseId.get(entry.exerciseId)
+    if (existing) {
+      existing.sets = [...existing.sets, ...entry.sets]
+    } else {
+      const copy = { ...entry, sets: [...entry.sets] }
+      byExerciseId.set(entry.exerciseId, copy)
+      order.push(entry.exerciseId)
+    }
+  }
+  return order.map((exerciseId) => byExerciseId.get(exerciseId))
+}
+
 export function findEntryHistory(logs, exerciseId, limit = 10) {
   const sorted = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date))
   const history = []

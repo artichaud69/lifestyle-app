@@ -25,6 +25,7 @@ function mkPlanExercise(exerciseId, { sets, repsMin, repsMax, rpe, progression }
     progression,
     restSeconds: progression === 'linear' ? 150 : 75,
     supersetGroup: null,
+    longOnly: false,
   }
 }
 
@@ -136,17 +137,34 @@ function roundToStep(value, step) {
   return Math.round(value / step) * step
 }
 
+// Ramping/ascending-set schemes (e.g. "3 heavy sets" where earlier sets are
+// lighter warm-ups-that-count-as-working-sets) log several weights inside
+// one entry. Success/failure should be judged on the sets actually taken at
+// the heaviest weight worked that session, not on every working set — a
+// lighter ramp-up set landing below the rep target shouldn't count as a
+// miss, and it also shouldn't be treated as "the" weight for next time. For
+// ordinary straight sets (all working sets share one weight) this returns
+// the same array workingSets() would, so behavior there is unchanged.
+function topWorkingSets(sets) {
+  const working = workingSets(sets)
+  if (working.length === 0) return working
+  const maxWeight = Math.max(...working.map((set) => set.weight))
+  return working.filter((set) => Math.round(set.weight * 100) === Math.round(maxWeight * 100))
+}
+
 function isSuccessful(planExercise, sets) {
   const working = workingSets(sets)
   if (working.length < planExercise.targetSets) return false
+  const top = topWorkingSets(sets)
   const target = planExercise.progression === 'linear' ? planExercise.repsMin : planExercise.repsMax
-  return working.every((set) => set.reps >= target)
+  return top.every((set) => set.reps >= target)
 }
 
 function metFloor(planExercise, sets) {
   const working = workingSets(sets)
   if (working.length < planExercise.targetSets) return false
-  return working.every((set) => set.reps >= planExercise.repsMin)
+  const top = topWorkingSets(sets)
+  return top.every((set) => set.reps >= planExercise.repsMin)
 }
 
 // Walks backwards through history to count how many sessions in a row have
@@ -156,9 +174,9 @@ function failStreakAtWeight(history, planExercise, weight) {
   let streak = 0
   for (let i = history.length - 1; i >= 0; i--) {
     const { entry } = history[i]
-    const working = workingSets(entry.sets)
-    if (working.length === 0) break
-    const sampleWeight = working[0].weight
+    const top = topWorkingSets(entry.sets)
+    if (top.length === 0) break
+    const sampleWeight = top[0].weight
     if (Math.round(sampleWeight * 100) !== Math.round(weight * 100)) break
     if (isSuccessful(planExercise, entry.sets)) break
     streak++
@@ -186,8 +204,8 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg') {
   }
 
   const last = history[history.length - 1]
-  const lastWorking = workingSets(last.entry.sets)
-  const lastWeight = lastWorking[0]?.weight ?? planExercise.targetWeight ?? 0
+  const lastTop = topWorkingSets(last.entry.sets)
+  const lastWeight = lastTop[0]?.weight ?? planExercise.targetWeight ?? 0
   const rpe = averageRPE(last.entry.sets)
   const success = isSuccessful(planExercise, last.entry.sets)
   const metMinimum = metFloor(planExercise, last.entry.sets)

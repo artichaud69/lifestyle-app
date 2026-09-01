@@ -24,6 +24,15 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
   }
 
   function addExercise(exercise) {
+    // Already in this session — bump its set count instead of adding a
+    // second row for the same exercise (that used to split logged sets
+    // across two entries at log time).
+    const existingIndex = exercises.findIndex((ex) => ex.exerciseId === exercise.id)
+    if (existingIndex !== -1) {
+      updateField(existingIndex, 'targetSets', exercises[existingIndex].targetSets + 1)
+      setShowPicker(false)
+      return
+    }
     setExercises([
       ...exercises,
       {
@@ -37,6 +46,7 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
         progression: 'double',
         restSeconds: 90,
         supersetGroup: null,
+        longOnly: false,
       },
     ])
     setShowPicker(false)
@@ -89,6 +99,7 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <strong>{info?.name ?? ex.exerciseId}</strong>
                 {label && <span className="badge primary">Superset {label}</span>}
+                {ex.longOnly && <span className="badge">Full only</span>}
               </div>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button
@@ -115,6 +126,14 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
               <input type="number" value={ex.repsMin} onChange={(e) => updateField(index, 'repsMin', Number(e.target.value))} />
               <input type="number" value={ex.repsMax} onChange={(e) => updateField(index, 'repsMax', Number(e.target.value))} />
             </div>
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={!!ex.longOnly}
+                onChange={(e) => updateField(index, 'longOnly', e.target.checked)}
+              />
+              Only include when doing the full session (skip on a Quick session)
+            </label>
           </div>
         )
       })}
