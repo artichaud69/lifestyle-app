@@ -48,7 +48,7 @@ function ExerciseProgress({ logs, customExercises, settings }) {
 
   return (
     <>
-      <div className="chip-row" style={{ marginBottom: 'var(--space-3)' }}>
+      <div className="chip-row chip-row-scroll" style={{ marginBottom: 'var(--space-3)' }}>
         {options.map((opt) => (
           <button
             key={opt.id}
