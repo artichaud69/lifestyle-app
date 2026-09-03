@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { findLastEntry, formatSetsSummary } from '../lib/workout.js'
-import { findExercise } from '../lib/exercises.js'
 import { MIN_WEIGHT_FOR_RAMP } from '../lib/warmup.js'
 import { CheckIcon, TrashIcon, TargetIcon } from '../lib/icons.jsx'
 import Sheet from './Sheet.jsx'
+import ExerciseLibrarySheet from './ExerciseLibrarySheet.jsx'
 
 function targetLabel(planExercise) {
   if (!planExercise) return null
@@ -41,11 +41,11 @@ function RpeInfoSheet({ onClose }) {
 
 function ExerciseCard({ entry, logs, unit, customExercises, onUpdateSet, onToggleComplete, onAddSet, onAddWarmup, onRemoveLastSet, onRemoveExercise }) {
   const [showRpeInfo, setShowRpeInfo] = useState(false)
+  const [showLibrary, setShowLibrary] = useState(false)
   const [showWarmupPrompt, setShowWarmupPrompt] = useState(false)
   const [warmupWeightInput, setWarmupWeightInput] = useState('')
   const last = findLastEntry(logs, entry.exerciseId)
   const lastSummary = last ? formatSetsSummary(last.entry.sets, unit) : null
-  const exerciseInfo = findExercise(entry.exerciseId, customExercises)
 
   const hasWarmupAlready = entry.sets.some((set) => set.isWarmup)
   const typedWeight = entry.sets.find((set) => !set.isWarmup && Number(set.weight) > 0)?.weight
@@ -80,12 +80,10 @@ function ExerciseCard({ entry, logs, unit, customExercises, onUpdateSet, onToggl
       </div>
 
       {entry.planExercise && <div className="muted" style={{ marginBottom: 6 }}>{targetLabel(entry.planExercise)}</div>}
-      {exerciseInfo?.cue && (
-        <div className="form-cue">
-          <TargetIcon size={15} />
-          <span>{exerciseInfo.cue}</span>
-        </div>
-      )}
+      <button type="button" className="more-info-btn" onClick={() => setShowLibrary(true)}>
+        <TargetIcon size={15} />
+        <span>+ More info</span>
+      </button>
       {entry.planExercise?.notes && <div className="exercise-note">{entry.planExercise.notes}</div>}
       {lastSummary && <div className="last-time">Last time: {lastSummary}</div>}
       {entry.planExercise?.rationale && <div className="rationale">{entry.planExercise.rationale}</div>}
@@ -190,6 +188,13 @@ function ExerciseCard({ entry, logs, unit, customExercises, onUpdateSet, onToggl
       )}
 
       {showRpeInfo && <RpeInfoSheet onClose={() => setShowRpeInfo(false)} />}
+      {showLibrary && (
+        <ExerciseLibrarySheet
+          exerciseId={entry.exerciseId}
+          customExercises={customExercises}
+          onClose={() => setShowLibrary(false)}
+        />
+      )}
     </div>
   )
 }
