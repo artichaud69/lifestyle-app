@@ -444,21 +444,76 @@ p {
   margin-bottom: var(--space-3);
 }
 
-.form-cue {
+.more-info-btn {
   display: flex;
-  align-items: flex-start;
-  gap: 7px;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
   font-size: 0.85rem;
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--color-info);
   background: var(--color-info-bg);
+  border: none;
   border-radius: var(--radius-sm);
   padding: 8px 10px;
   margin-bottom: var(--space-3);
+  cursor: pointer;
 }
 
-.form-cue svg {
-  color: var(--color-info);
-  margin-top: 2px;
+.library-image-row {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.library-image-wrap {
+  position: relative;
+  flex: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg-raised);
+}
+
+.library-image-wrap img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.library-image-label {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-bg-card) 80%, transparent);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.library-section {
+  margin-bottom: var(--space-4);
+}
+
+.library-section h3 {
+  margin-bottom: var(--space-2);
+}
+
+.library-list {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.library-list li {
+  line-height: 1.4;
 }
 
 .set-actions {
@@ -693,6 +748,7 @@ p {
 .ex-name {
   display: flex;
   justify-content: space-between;
+  gap: var(--space-2);
   padding: 6px 0;
   font-size: 0.9rem;
   border-top: 1px solid var(--color-border);
