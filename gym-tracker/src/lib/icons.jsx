@@ -172,3 +172,10 @@ export const TargetIcon = (props) => (
     <circle cx="12" cy="12" r="0.6" fill="currentColor" />
   </Icon>
 )
+
+export const BookIcon = (props) => (
+  <Icon {...props}>
+    <path d="M3.5 5.2c2.3-1 4.8-1 8 0v13.6c-3.2-1-5.7-1-8 0V5.2Z" />
+    <path d="M20.5 5.2c-2.3-1-4.8-1-8 0v13.6c3.2-1 5.7-1 8 0V5.2Z" />
+  </Icon>
+)

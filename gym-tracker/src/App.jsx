@@ -3,6 +3,7 @@ import TrainPage from './components/TrainPage.jsx'
 import HistoryPage from './components/HistoryPage.jsx'
 import ProgressPage from './components/ProgressPage.jsx'
 import PlanPage from './components/PlanPage.jsx'
+import LibraryPage from './components/LibraryPage.jsx'
 import NavBar from './components/NavBar.jsx'
 import WorkoutSummarySheet from './components/WorkoutSummarySheet.jsx'
 import {
@@ -252,6 +253,9 @@ function App() {
           onImportProgram={handleImportProgram}
         />
       )
+    }
+    if (view === 'library') {
+      return <LibraryPage customExercises={customExercises} />
     }
     return null
   }
