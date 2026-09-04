@@ -5,7 +5,7 @@ import { TrashIcon, PlusIcon, LinkIcon, UnlinkIcon, ChevronUpIcon, ChevronDownIc
 import { findExercise } from '../lib/exercises.js'
 import { genId } from '../lib/id.js'
 import { groupLabels, linkExercises, unlinkExercise } from '../lib/superset.js'
-import { moveItem } from '../lib/reorder.js'
+import { moveItemById } from '../lib/reorder.js'
 
 function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSave, onDelete, onClose }) {
   const [name, setName] = useState(session.name)
@@ -15,17 +15,21 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   function updateField(index, field, value) {
-    setExercises(exercises.map((ex, i) => (i === index ? { ...ex, [field]: value } : ex)))
+    setExercises((prev) => prev.map((ex, i) => (i === index ? { ...ex, [field]: value } : ex)))
   }
 
   function removeExercise(index) {
     const id = exercises[index].id
-    setExercises(unlinkExercise(exercises, id).filter((ex) => ex.id !== id))
+    setExercises((prev) => unlinkExercise(prev, id).filter((ex) => ex.id !== id))
     if (linkingId === id) setLinkingId(null)
   }
 
-  function moveExercise(index, direction) {
-    setExercises(moveItem(exercises, index, direction))
+  // Keyed by the exercise row's stable id, not its index — a button's
+  // onClick closure captures whatever index was true at the render that
+  // created it, and two clicks landing before a re-render would both act
+  // on that same stale index, undoing each other instead of compounding.
+  function moveExercise(id, direction) {
+    setExercises((prev) => moveItemById(prev, id, direction))
   }
 
   function addExercise(exercise) {
@@ -34,12 +38,12 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
     // across two entries at log time).
     const existingIndex = exercises.findIndex((ex) => ex.exerciseId === exercise.id)
     if (existingIndex !== -1) {
-      updateField(existingIndex, 'targetSets', exercises[existingIndex].targetSets + 1)
+      setExercises((prev) => prev.map((ex, i) => (i === existingIndex ? { ...ex, targetSets: ex.targetSets + 1 } : ex)))
       setShowPicker(false)
       return
     }
-    setExercises([
-      ...exercises,
+    setExercises((prev) => [
+      ...prev,
       {
         id: genId(),
         exerciseId: exercise.id,
@@ -59,7 +63,7 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
 
   function handleLinkClick(ex) {
     if (ex.supersetGroup) {
-      setExercises(unlinkExercise(exercises, ex.id))
+      setExercises((prev) => unlinkExercise(prev, ex.id))
       return
     }
     if (linkingId === null) {
@@ -70,7 +74,7 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
       setLinkingId(null)
       return
     }
-    setExercises(linkExercises(exercises, linkingId, ex.id))
+    setExercises((prev) => linkExercises(prev, linkingId, ex.id))
     setLinkingId(null)
   }
 
@@ -110,7 +114,7 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
                 <button
                   type="button"
                   className="icon-btn"
-                  onClick={() => moveExercise(index, 'up')}
+                  onClick={() => moveExercise(ex.id, 'up')}
                   disabled={index === 0}
                   aria-label="Move exercise up"
                 >
@@ -119,7 +123,7 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
                 <button
                   type="button"
                   className="icon-btn"
-                  onClick={() => moveExercise(index, 'down')}
+                  onClick={() => moveExercise(ex.id, 'down')}
                   disabled={index === exercises.length - 1}
                   aria-label="Move exercise down"
                 >

@@ -6,7 +6,6 @@ import SettingsSheet from './SettingsSheet.jsx'
 import { CalendarIcon, SettingsIcon, EditIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon } from '../lib/icons.jsx'
 import { findExercise } from '../lib/exercises.js'
 import { groupLabels } from '../lib/superset.js'
-import { moveItem } from '../lib/reorder.js'
 import { genId } from '../lib/id.js'
 
 function PlanPage({
@@ -35,8 +34,14 @@ function PlanPage({
     setEditingSessionId(newSession.id)
   }
 
-  function moveSession(index, direction) {
-    onReorderSessions(moveItem(program.sessions, index, direction))
+  // Passes the session's stable id up (not its index) so App.jsx can
+  // resolve its *current* position fresh, inside a functional setState
+  // update — a button's onClick closure otherwise captures a fixed index
+  // from the render that created it, and two clicks landing before React
+  // re-renders would both act on that same stale index, swapping the same
+  // two slots twice and canceling back to the start.
+  function moveSession(sessionId, direction) {
+    onReorderSessions(sessionId, direction)
   }
 
   return (
@@ -70,7 +75,7 @@ function PlanPage({
                   <button
                     type="button"
                     className="icon-btn"
-                    onClick={() => moveSession(index, 'up')}
+                    onClick={() => moveSession(session.id, 'up')}
                     disabled={index === 0}
                     aria-label="Move session up"
                   >
@@ -79,7 +84,7 @@ function PlanPage({
                   <button
                     type="button"
                     className="icon-btn"
-                    onClick={() => moveSession(index, 'down')}
+                    onClick={() => moveSession(session.id, 'down')}
                     disabled={index === program.sessions.length - 1}
                     aria-label="Move session down"
                   >
