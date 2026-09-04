@@ -89,6 +89,10 @@ function App() {
     if (pendingSessionId === sessionId) setPendingSessionId(null)
   }
 
+  function handleReorderSessions(newSessions) {
+    setProgram({ ...program, sessions: newSessions })
+  }
+
   function handleAddCustomExercise(exercise) {
     setCustomExercises((prev) => [...prev, exercise])
   }
@@ -248,6 +252,7 @@ function App() {
           onUpdateSession={handleUpdateSession}
           onAddSession={handleAddSession}
           onDeleteSession={handleDeleteSession}
+          onReorderSessions={handleReorderSessions}
           onSaveSettings={setSettings}
           onAddCustomExercise={handleAddCustomExercise}
           onImportProgram={handleImportProgram}

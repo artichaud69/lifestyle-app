@@ -173,6 +173,18 @@ export const TargetIcon = (props) => (
   </Icon>
 )
 
+export const ChevronUpIcon = (props) => (
+  <Icon {...props}>
+    <path d="M6 15l6-6 6 6" />
+  </Icon>
+)
+
+export const ChevronDownIcon = (props) => (
+  <Icon {...props}>
+    <path d="M6 9l6 6 6-6" />
+  </Icon>
+)
+
 export const BookIcon = (props) => (
   <Icon {...props}>
     <path d="M3.5 5.2c2.3-1 4.8-1 8 0v13.6c-3.2-1-5.7-1-8 0V5.2Z" />
