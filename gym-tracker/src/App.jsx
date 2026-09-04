@@ -27,6 +27,7 @@ import {
 import { generateProgram, nextSessionTemplate, suggestSessionTargets, analyzeWorkout } from './lib/coach.js'
 import { findExercise } from './lib/exercises.js'
 import { mergeEntriesByExercise } from './lib/workout.js'
+import { moveItemById } from './lib/reorder.js'
 import { genId } from './lib/id.js'
 import { todayISO, nowISO } from './lib/dates.js'
 
@@ -89,8 +90,8 @@ function App() {
     if (pendingSessionId === sessionId) setPendingSessionId(null)
   }
 
-  function handleReorderSessions(newSessions) {
-    setProgram({ ...program, sessions: newSessions })
+  function handleReorderSessions(sessionId, direction) {
+    setProgram((prev) => ({ ...prev, sessions: moveItemById(prev.sessions, sessionId, direction) }))
   }
 
   function handleAddCustomExercise(exercise) {

@@ -6,7 +6,7 @@ import { PlusIcon, XIcon } from '../lib/icons.jsx'
 import { primeAudio } from '../lib/sound.js'
 import { groupLabels, isLastInGroup } from '../lib/superset.js'
 import { suggestWarmupSets } from '../lib/warmup.js'
-import { moveItem } from '../lib/reorder.js'
+import { moveItemById } from '../lib/reorder.js'
 
 // Real rest happens only after the last exercise in a superset round; the
 // handoff between paired exercises just needs enough time to walk to the
@@ -32,7 +32,7 @@ function renderCard(entry, index, handlers) {
   const { logs, unit, customExercises, updateSet, toggleComplete, addSet, addWarmup, removeLastSet, removeExercise, moveExercise, entryCount } = handlers
   return (
     <ExerciseCard
-      key={entry.exerciseId + index}
+      key={entry.exerciseId}
       entry={entry}
       logs={logs}
       unit={unit}
@@ -43,8 +43,8 @@ function renderCard(entry, index, handlers) {
       onAddWarmup={(weightOverride) => addWarmup(index, weightOverride)}
       onRemoveLastSet={() => removeLastSet(index)}
       onRemoveExercise={() => removeExercise(index)}
-      onMoveUp={() => moveExercise(index, 'up')}
-      onMoveDown={() => moveExercise(index, 'down')}
+      onMoveUp={() => moveExercise(entry.exerciseId, 'up')}
+      onMoveDown={() => moveExercise(entry.exerciseId, 'down')}
       canMoveUp={index > 0}
       canMoveDown={index < entryCount - 1}
     />
@@ -104,50 +104,68 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
     }
   }, [])
 
-  function patchEntry(entryIndex, patch) {
-    const entries = draft.entries.map((entry, i) => (i === entryIndex ? { ...entry, ...patch } : entry))
-    onChangeDraft({ ...draft, entries })
+  // Every mutation below goes through onChangeDraft's *functional* setState
+  // form (prev => ...), never `{ ...draft, ... }` off the closed-over
+  // `draft` variable. Two taps landing in the same React batch (a laggy
+  // re-render tempting a real double-tap, or a touch device's occasional
+  // double-fire) would otherwise both compute their result from the same
+  // stale snapshot — the second call silently overwrites the first's
+  // effect instead of compounding it, which is exactly what a dropped or
+  // "reverted" reorder looks like.
+  function patchEntry(entryIndex, patchOrFn) {
+    onChangeDraft((prev) => ({
+      ...prev,
+      entries: prev.entries.map((entry, i) => {
+        if (i !== entryIndex) return entry
+        const patch = typeof patchOrFn === 'function' ? patchOrFn(entry) : patchOrFn
+        return { ...entry, ...patch }
+      }),
+    }))
   }
 
   function updateSet(entryIndex, setIndex, field, value) {
-    const entry = draft.entries[entryIndex]
-    const sets = entry.sets.map((set, i) => (i === setIndex ? { ...set, [field]: value } : set))
-    patchEntry(entryIndex, { sets })
+    patchEntry(entryIndex, (entry) => ({
+      sets: entry.sets.map((set, i) => (i === setIndex ? { ...set, [field]: value } : set)),
+    }))
   }
 
   function toggleComplete(entryIndex, setIndex) {
     primeAudio() // real click, the one chance to unlock audio before the rest-over chime needs to fire unattended
-    const entry = draft.entries[entryIndex]
-    const set = entry.sets[setIndex]
-    const willComplete = !set.completed
-    const sets = entry.sets.map((s, i) => (i === setIndex ? { ...s, completed: willComplete } : s))
-    const entries = draft.entries.map((e, i) => (i === entryIndex ? { ...e, sets } : e))
+    onChangeDraft((prev) => {
+      const entry = prev.entries[entryIndex]
+      const set = entry.sets[setIndex]
+      const willComplete = !set.completed
+      const sets = entry.sets.map((s, i) => (i === setIndex ? { ...s, completed: willComplete } : s))
+      const entries = prev.entries.map((e, i) => (i === entryIndex ? { ...e, sets } : e))
 
-    // Rest is a real end-timestamp on the persisted draft, not component
-    // state — it has to survive the app being backgrounded, the phone
-    // locked, or the tab fully reloaded, and still show the true remaining
-    // time (see RestTimer.jsx).
-    let rest = draft.rest
-    if (willComplete && !set.isWarmup) {
-      const last = isLastInGroup(draft.entries, entryIndex, getEntryGroup)
-      const restSeconds = last ? entry.planExercise?.restSeconds ?? settings.restSeconds : SUPERSET_TRANSITION_SECONDS
-      const now = Date.now()
-      rest = { startedAt: now, endsAt: now + restSeconds * 1000 }
-    } else if (!willComplete) {
-      rest = null
-    }
+      // Rest is a real end-timestamp on the persisted draft, not component
+      // state — it has to survive the app being backgrounded, the phone
+      // locked, or the tab fully reloaded, and still show the true remaining
+      // time (see RestTimer.jsx).
+      let rest = prev.rest
+      if (willComplete && !set.isWarmup) {
+        const last = isLastInGroup(prev.entries, entryIndex, getEntryGroup)
+        const restSeconds = last ? entry.planExercise?.restSeconds ?? settings.restSeconds : SUPERSET_TRANSITION_SECONDS
+        const now = Date.now()
+        rest = { startedAt: now, endsAt: now + restSeconds * 1000 }
+      } else if (!willComplete) {
+        rest = null
+      }
 
-    onChangeDraft({ ...draft, entries, rest })
+      return { ...prev, entries, rest }
+    })
   }
 
   function addSet(entryIndex, isWarmup) {
-    const entry = draft.entries[entryIndex]
-    const previous = entry.sets[entry.sets.length - 1]
-    const sets = [
-      ...entry.sets,
-      { weight: previous?.weight ?? '', reps: isWarmup ? '' : previous?.reps ?? '', rpe: '', completed: false, isWarmup },
-    ]
-    patchEntry(entryIndex, { sets })
+    patchEntry(entryIndex, (entry) => {
+      const previous = entry.sets[entry.sets.length - 1]
+      return {
+        sets: [
+          ...entry.sets,
+          { weight: previous?.weight ?? '', reps: isWarmup ? '' : previous?.reps ?? '', rpe: '', completed: false, isWarmup },
+        ],
+      }
+    })
   }
 
   // First tap with no warm-ups yet: fill in a full percentage-based ramp at
@@ -155,6 +173,10 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
   // "what are you working up to?" prompt (see ExerciseCard), a weight
   // already typed into a working set, or the coach's suggestion. Once
   // warm-ups exist, it falls back to just adding one blank warm-up set.
+  // The branch decision (ramp vs blank set) reads the current entry from
+  // `draft` directly, which is fine — it only picks which computation
+  // runs, and the actual write still goes through patchEntry's functional
+  // updater either way.
   function addWarmup(entryIndex, weightOverride) {
     const entry = draft.entries[entryIndex]
     const hasWarmup = entry.sets.some((set) => set.isWarmup)
@@ -163,7 +185,7 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
       const referenceWeight = Number(weightOverride) || Number(typedWeight) || Number(entry.planExercise?.targetWeight) || 0
       const ramp = suggestWarmupSets(referenceWeight, settings.unit)
       if (ramp.length > 0) {
-        patchEntry(entryIndex, { sets: [...ramp, ...entry.sets] })
+        patchEntry(entryIndex, (e) => ({ sets: [...ramp, ...e.sets] }))
         return
       }
     }
@@ -171,20 +193,25 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
   }
 
   function removeLastSet(entryIndex) {
-    const entry = draft.entries[entryIndex]
-    patchEntry(entryIndex, { sets: entry.sets.slice(0, -1) })
+    patchEntry(entryIndex, (entry) => ({ sets: entry.sets.slice(0, -1) }))
   }
 
   function removeExercise(entryIndex) {
-    onChangeDraft({ ...draft, entries: draft.entries.filter((_, i) => i !== entryIndex) })
+    onChangeDraft((prev) => ({ ...prev, entries: prev.entries.filter((_, i) => i !== entryIndex) }))
   }
 
   // Reordering only moves the exercise itself; a superset pairing that
   // becomes non-adjacent as a result loses its visual grouping box here
   // (see renderEntryBlocks) but rest-timing logic still tracks the real
   // last-in-group member correctly regardless of adjacency.
-  function moveExercise(entryIndex, direction) {
-    onChangeDraft({ ...draft, entries: moveItem(draft.entries, entryIndex, direction) })
+  // Keyed by exerciseId (unique per entry, guarded in addExercise below)
+  // rather than a numeric index — a card's onMoveUp/onMoveDown closure
+  // captures whatever index was true at the render that created it, and
+  // two taps landing before a re-render would both act on that same
+  // stale index, swapping the same two slots twice and canceling back to
+  // the start instead of compounding into a two-step move.
+  function moveExercise(exerciseId, direction) {
+    onChangeDraft((prev) => ({ ...prev, entries: moveItemById(prev.entries, exerciseId, direction, (e) => e.exerciseId) }))
   }
 
   function addExercise(exercise) {
@@ -203,7 +230,7 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
       planExercise: null,
       sets: [{ weight: '', reps: '', rpe: '', completed: false, isWarmup: false }],
     }
-    onChangeDraft({ ...draft, entries: [...draft.entries, newEntry] })
+    onChangeDraft((prev) => ({ ...prev, entries: [...prev.entries, newEntry] }))
     setShowPicker(false)
   }
 
@@ -265,7 +292,10 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
         <label>Notes (optional)</label>
         <textarea
           value={draft.notes}
-          onChange={(e) => onChangeDraft({ ...draft, notes: e.target.value })}
+          onChange={(e) => {
+            const notes = e.target.value
+            onChangeDraft((prev) => ({ ...prev, notes }))
+          }}
           placeholder="How did it feel? Anything to remember for next time?"
         />
       </div>
@@ -286,9 +316,9 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
       {draft.rest && (
         <RestTimer
           rest={draft.rest}
-          onDone={() => onChangeDraft({ ...draft, rest: null })}
-          onExtend={() => onChangeDraft({ ...draft, rest: { ...draft.rest, endsAt: draft.rest.endsAt + 30000 } })}
-          onSkip={() => onChangeDraft({ ...draft, rest: { ...draft.rest, endsAt: Date.now() } })}
+          onDone={() => onChangeDraft((prev) => ({ ...prev, rest: null }))}
+          onExtend={() => onChangeDraft((prev) => ({ ...prev, rest: { ...prev.rest, endsAt: prev.rest.endsAt + 30000 } }))}
+          onSkip={() => onChangeDraft((prev) => ({ ...prev, rest: { ...prev.rest, endsAt: Date.now() } }))}
         />
       )}
     </div>
