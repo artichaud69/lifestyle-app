@@ -3,9 +3,10 @@ import PageHeader from './PageHeader.jsx'
 import ProgramWizard from './ProgramWizard.jsx'
 import SessionEditSheet from './SessionEditSheet.jsx'
 import SettingsSheet from './SettingsSheet.jsx'
-import { CalendarIcon, SettingsIcon, EditIcon, PlusIcon } from '../lib/icons.jsx'
+import { CalendarIcon, SettingsIcon, EditIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon } from '../lib/icons.jsx'
 import { findExercise } from '../lib/exercises.js'
 import { groupLabels } from '../lib/superset.js'
+import { moveItem } from '../lib/reorder.js'
 import { genId } from '../lib/id.js'
 
 function PlanPage({
@@ -17,6 +18,7 @@ function PlanPage({
   onUpdateSession,
   onAddSession,
   onDeleteSession,
+  onReorderSessions,
   onSaveSettings,
   onAddCustomExercise,
   onImportProgram,
@@ -31,6 +33,10 @@ function PlanPage({
     const newSession = { id: genId(), name: 'New Session', finisherNote: null, exercises: [] }
     onAddSession(newSession)
     setEditingSessionId(newSession.id)
+  }
+
+  function moveSession(index, direction) {
+    onReorderSessions(moveItem(program.sessions, index, direction))
   }
 
   return (
@@ -56,13 +62,33 @@ function PlanPage({
             </button>
           </div>
 
-          {program.sessions.map((session) => (
+          {program.sessions.map((session, index) => (
             <div key={session.id} className="session-list-item">
               <div className="card-title-row">
                 <strong>{session.name}</strong>
-                <button type="button" className="icon-btn" onClick={() => setEditingSessionId(session.id)} aria-label="Edit session">
-                  <EditIcon size={15} />
-                </button>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    onClick={() => moveSession(index, 'up')}
+                    disabled={index === 0}
+                    aria-label="Move session up"
+                  >
+                    <ChevronUpIcon size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    onClick={() => moveSession(index, 'down')}
+                    disabled={index === program.sessions.length - 1}
+                    aria-label="Move session down"
+                  >
+                    <ChevronDownIcon size={15} />
+                  </button>
+                  <button type="button" className="icon-btn" onClick={() => setEditingSessionId(session.id)} aria-label="Edit session">
+                    <EditIcon size={15} />
+                  </button>
+                </div>
               </div>
               {(() => {
                 const labels = groupLabels(session.exercises)

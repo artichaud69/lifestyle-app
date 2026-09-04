@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { findLastEntry, formatSetsSummary } from '../lib/workout.js'
 import { MIN_WEIGHT_FOR_RAMP } from '../lib/warmup.js'
-import { CheckIcon, TrashIcon, TargetIcon } from '../lib/icons.jsx'
+import { CheckIcon, TrashIcon, TargetIcon, ChevronUpIcon, ChevronDownIcon } from '../lib/icons.jsx'
 import Sheet from './Sheet.jsx'
 import ExerciseLibrarySheet from './ExerciseLibrarySheet.jsx'
 
@@ -39,7 +39,22 @@ function RpeInfoSheet({ onClose }) {
   )
 }
 
-function ExerciseCard({ entry, logs, unit, customExercises, onUpdateSet, onToggleComplete, onAddSet, onAddWarmup, onRemoveLastSet, onRemoveExercise }) {
+function ExerciseCard({
+  entry,
+  logs,
+  unit,
+  customExercises,
+  onUpdateSet,
+  onToggleComplete,
+  onAddSet,
+  onAddWarmup,
+  onRemoveLastSet,
+  onRemoveExercise,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
+}) {
   const [showRpeInfo, setShowRpeInfo] = useState(false)
   const [showLibrary, setShowLibrary] = useState(false)
   const [showWarmupPrompt, setShowWarmupPrompt] = useState(false)
@@ -74,9 +89,17 @@ function ExerciseCard({ entry, logs, unit, customExercises, onUpdateSet, onToggl
     <div className="card exercise-card">
       <div className="card-title-row">
         <h3>{entry.exerciseName}</h3>
-        <button type="button" className="icon-btn" onClick={onRemoveExercise} aria-label="Remove exercise">
-          <TrashIcon size={16} />
-        </button>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button type="button" className="icon-btn" onClick={onMoveUp} disabled={!canMoveUp} aria-label="Move exercise up">
+            <ChevronUpIcon size={16} />
+          </button>
+          <button type="button" className="icon-btn" onClick={onMoveDown} disabled={!canMoveDown} aria-label="Move exercise down">
+            <ChevronDownIcon size={16} />
+          </button>
+          <button type="button" className="icon-btn" onClick={onRemoveExercise} aria-label="Remove exercise">
+            <TrashIcon size={16} />
+          </button>
+        </div>
       </div>
 
       {entry.planExercise && <div className="muted" style={{ marginBottom: 6 }}>{targetLabel(entry.planExercise)}</div>}

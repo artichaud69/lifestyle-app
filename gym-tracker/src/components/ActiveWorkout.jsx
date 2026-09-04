@@ -6,6 +6,7 @@ import { PlusIcon, XIcon } from '../lib/icons.jsx'
 import { primeAudio } from '../lib/sound.js'
 import { groupLabels, isLastInGroup } from '../lib/superset.js'
 import { suggestWarmupSets } from '../lib/warmup.js'
+import { moveItem } from '../lib/reorder.js'
 
 // Real rest happens only after the last exercise in a superset round; the
 // handoff between paired exercises just needs enough time to walk to the
@@ -28,7 +29,7 @@ function startedAtClock(startedAt) {
 }
 
 function renderCard(entry, index, handlers) {
-  const { logs, unit, customExercises, updateSet, toggleComplete, addSet, addWarmup, removeLastSet, removeExercise } = handlers
+  const { logs, unit, customExercises, updateSet, toggleComplete, addSet, addWarmup, removeLastSet, removeExercise, moveExercise, entryCount } = handlers
   return (
     <ExerciseCard
       key={entry.exerciseId + index}
@@ -42,6 +43,10 @@ function renderCard(entry, index, handlers) {
       onAddWarmup={(weightOverride) => addWarmup(index, weightOverride)}
       onRemoveLastSet={() => removeLastSet(index)}
       onRemoveExercise={() => removeExercise(index)}
+      onMoveUp={() => moveExercise(index, 'up')}
+      onMoveDown={() => moveExercise(index, 'down')}
+      canMoveUp={index > 0}
+      canMoveDown={index < entryCount - 1}
     />
   )
 }
@@ -174,6 +179,14 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
     onChangeDraft({ ...draft, entries: draft.entries.filter((_, i) => i !== entryIndex) })
   }
 
+  // Reordering only moves the exercise itself; a superset pairing that
+  // becomes non-adjacent as a result loses its visual grouping box here
+  // (see renderEntryBlocks) but rest-timing logic still tracks the real
+  // last-in-group member correctly regardless of adjacency.
+  function moveExercise(entryIndex, direction) {
+    onChangeDraft({ ...draft, entries: moveItem(draft.entries, entryIndex, direction) })
+  }
+
   function addExercise(exercise) {
     // Already logging this one this session — add another set to the
     // existing card instead of a second card, which used to split its sets
@@ -238,6 +251,8 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
         addSet,
         removeLastSet,
         removeExercise,
+        moveExercise,
+        entryCount: draft.entries.length,
       })}
 
       {draft.finisherNote && <div className="finisher-note">Optional finisher: {draft.finisherNote}</div>}

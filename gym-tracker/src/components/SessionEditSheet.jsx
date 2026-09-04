@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import Sheet from './Sheet.jsx'
 import ExercisePicker from './ExercisePicker.jsx'
-import { TrashIcon, PlusIcon, LinkIcon, UnlinkIcon } from '../lib/icons.jsx'
+import { TrashIcon, PlusIcon, LinkIcon, UnlinkIcon, ChevronUpIcon, ChevronDownIcon } from '../lib/icons.jsx'
 import { findExercise } from '../lib/exercises.js'
 import { genId } from '../lib/id.js'
 import { groupLabels, linkExercises, unlinkExercise } from '../lib/superset.js'
+import { moveItem } from '../lib/reorder.js'
 
 function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSave, onDelete, onClose }) {
   const [name, setName] = useState(session.name)
@@ -21,6 +22,10 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
     const id = exercises[index].id
     setExercises(unlinkExercise(exercises, id).filter((ex) => ex.id !== id))
     if (linkingId === id) setLinkingId(null)
+  }
+
+  function moveExercise(index, direction) {
+    setExercises(moveItem(exercises, index, direction))
   }
 
   function addExercise(exercise) {
@@ -102,6 +107,24 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
                 {ex.longOnly && <span className="badge">Full only</span>}
               </div>
               <div style={{ display: 'flex', gap: 4 }}>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => moveExercise(index, 'up')}
+                  disabled={index === 0}
+                  aria-label="Move exercise up"
+                >
+                  <ChevronUpIcon size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => moveExercise(index, 'down')}
+                  disabled={index === exercises.length - 1}
+                  aria-label="Move exercise down"
+                >
+                  <ChevronDownIcon size={16} />
+                </button>
                 <button
                   type="button"
                   className="icon-btn"
