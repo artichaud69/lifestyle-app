@@ -636,6 +636,14 @@ p {
   overflow-y: auto;
   padding: var(--space-4);
   padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+  transition: transform 0.2s ease;
+}
+
+.sheet-handle-grip {
+  padding: 10px 0 var(--space-4);
+  margin: -10px 0 0;
+  touch-action: none;
+  cursor: grab;
 }
 
 .sheet-handle {
@@ -643,7 +651,7 @@ p {
   height: 4px;
   background: var(--color-border);
   border-radius: 2px;
-  margin: 0 auto var(--space-4);
+  margin: 0 auto;
 }
 
 .sheet-header {
