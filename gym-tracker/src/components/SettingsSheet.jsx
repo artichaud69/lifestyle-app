@@ -18,6 +18,7 @@ function downloadProgram(program) {
 function SettingsSheet({ settings, program, onSave, onImportProgram, onClose }) {
   const [unit, setUnit] = useState(settings.unit)
   const [restSeconds, setRestSeconds] = useState(settings.restSeconds)
+  const [measurementUnit, setMeasurementUnit] = useState(settings.measurementUnit)
   const [importError, setImportError] = useState('')
   const fileInputRef = useRef(null)
 
@@ -64,7 +65,26 @@ function SettingsSheet({ settings, program, onSave, onImportProgram, onClose }) 
           ))}
         </div>
       </div>
-      <button type="button" className="btn btn-primary" onClick={() => onSave({ unit, restSeconds })}>
+      <div className="field">
+        <label>Measurement unit</label>
+        <div className="chip-row">
+          <button
+            type="button"
+            className={`chip${measurementUnit === 'cm' ? ' active' : ''}`}
+            onClick={() => setMeasurementUnit('cm')}
+          >
+            cm
+          </button>
+          <button
+            type="button"
+            className={`chip${measurementUnit === 'in' ? ' active' : ''}`}
+            onClick={() => setMeasurementUnit('in')}
+          >
+            in
+          </button>
+        </div>
+      </div>
+      <button type="button" className="btn btn-primary" onClick={() => onSave({ unit, restSeconds, measurementUnit })}>
         Save
       </button>
 

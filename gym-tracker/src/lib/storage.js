@@ -7,6 +7,7 @@ const KEYS = {
   goalSettings: 'gym-tracker.goalSettings',
   pendingSessionId: 'gym-tracker.pendingSessionId',
   bodyweightLogs: 'gym-tracker.bodyweightLogs',
+  measurementLogs: 'gym-tracker.measurementLogs',
 }
 
 function load(key, fallback) {
@@ -27,7 +28,7 @@ function save(key, value) {
   }
 }
 
-export const DEFAULT_SETTINGS = { unit: 'kg', restSeconds: 90 }
+export const DEFAULT_SETTINGS = { unit: 'kg', restSeconds: 90, measurementUnit: 'cm' }
 
 export function loadProgram() {
   return load(KEYS.program, null)
@@ -89,4 +90,11 @@ export function loadBodyweightLogs() {
 }
 export function saveBodyweightLogs(bodyweightLogs) {
   save(KEYS.bodyweightLogs, bodyweightLogs)
+}
+
+export function loadMeasurementLogs() {
+  return load(KEYS.measurementLogs, [])
+}
+export function saveMeasurementLogs(measurementLogs) {
+  save(KEYS.measurementLogs, measurementLogs)
 }

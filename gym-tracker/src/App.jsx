@@ -23,6 +23,8 @@ import {
   savePendingSessionId,
   loadBodyweightLogs,
   saveBodyweightLogs,
+  loadMeasurementLogs,
+  saveMeasurementLogs,
 } from './lib/storage.js'
 import { generateProgram, nextSessionTemplate, suggestSessionTargets, analyzeWorkout } from './lib/coach.js'
 import { findExercise } from './lib/exercises.js'
@@ -40,6 +42,7 @@ function App() {
   const [goalSettings, setGoalSettings] = useState(() => loadGoalSettings())
   const [pendingSessionId, setPendingSessionId] = useState(() => loadPendingSessionId())
   const [bodyweightLogs, setBodyweightLogs] = useState(() => loadBodyweightLogs())
+  const [measurementLogs, setMeasurementLogs] = useState(() => loadMeasurementLogs())
   const [view, setView] = useState('train')
   const [summary, setSummary] = useState(null)
 
@@ -51,6 +54,7 @@ function App() {
   useEffect(() => saveGoalSettings(goalSettings), [goalSettings])
   useEffect(() => savePendingSessionId(pendingSessionId), [pendingSessionId])
   useEffect(() => saveBodyweightLogs(bodyweightLogs), [bodyweightLogs])
+  useEffect(() => saveMeasurementLogs(measurementLogs), [measurementLogs])
 
   // "Choose a different session" only swaps what Train shows as up next; a
   // stale id (program regenerated/imported since) just falls back silently.
@@ -207,6 +211,14 @@ function App() {
     setBodyweightLogs((prev) => prev.filter((e) => e.id !== entryId))
   }
 
+  function addMeasurementEntry(entry) {
+    setMeasurementLogs((prev) => [...prev, entry])
+  }
+
+  function deleteMeasurementEntry(entryId) {
+    setMeasurementLogs((prev) => prev.filter((e) => e.id !== entryId))
+  }
+
   function renderPage() {
     if (view === 'train') {
       return (
@@ -239,6 +251,9 @@ function App() {
           bodyweightLogs={bodyweightLogs}
           onAddBodyweight={addBodyweightEntry}
           onDeleteBodyweight={deleteBodyweightEntry}
+          measurementLogs={measurementLogs}
+          onAddMeasurement={addMeasurementEntry}
+          onDeleteMeasurement={deleteMeasurementEntry}
         />
       )
     }
