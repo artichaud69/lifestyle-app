@@ -191,3 +191,17 @@ export const BookIcon = (props) => (
     <path d="M20.5 5.2c-2.3-1-4.8-1-8 0v13.6c3.2-1 5.7-1 8 0V5.2Z" />
   </Icon>
 )
+
+export const RulerIcon = (props) => (
+  <Icon {...props}>
+    <rect x="2.5" y="7" width="19" height="10" rx="2" transform="rotate(-45 12 12)" />
+    <path d="M9 8.5l1.5 1.5M12.5 5l1.5 1.5M6 11.5L7.5 13M15.5 2 17 3.5" />
+  </Icon>
+)
+
+export const CameraIcon = (props) => (
+  <Icon {...props}>
+    <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+    <circle cx="12" cy="13" r="3.5" />
+  </Icon>
+)

@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import PageHeader from './PageHeader.jsx'
 import LineChart from './LineChart.jsx'
 import BodyweightSection from './BodyweightSection.jsx'
+import MeasurementsSection from './MeasurementsSection.jsx'
+import ProgressPhotosSection from './ProgressPhotosSection.jsx'
 import { ChartIcon, AlertIcon, AwardIcon } from '../lib/icons.jsx'
 import { findEntryHistory, bestSet, estimateOneRepMax } from '../lib/workout.js'
 import { findExercise } from '../lib/exercises.js'
@@ -99,12 +101,45 @@ function ExerciseProgress({ logs, customExercises, settings }) {
   )
 }
 
-function ProgressPage({ logs, customExercises, settings, bodyweightLogs, onAddBodyweight, onDeleteBodyweight }) {
+function ProgressPage({
+  logs,
+  customExercises,
+  settings,
+  bodyweightLogs,
+  onAddBodyweight,
+  onDeleteBodyweight,
+  measurementLogs,
+  onAddMeasurement,
+  onDeleteMeasurement,
+}) {
+  const [tab, setTab] = useState('body')
+
   return (
     <div>
       <PageHeader title="Progress" />
-      <BodyweightSection entries={bodyweightLogs} unit={settings.unit} onAdd={onAddBodyweight} onDelete={onDeleteBodyweight} />
-      <ExerciseProgress logs={logs} customExercises={customExercises} settings={settings} />
+      <div className="chip-row" style={{ marginBottom: 'var(--space-3)' }}>
+        <button type="button" className={`chip${tab === 'body' ? ' active' : ''}`} onClick={() => setTab('body')}>
+          Body
+        </button>
+        <button type="button" className={`chip${tab === 'lifts' ? ' active' : ''}`} onClick={() => setTab('lifts')}>
+          Lifts
+        </button>
+      </div>
+
+      {tab === 'body' ? (
+        <>
+          <BodyweightSection entries={bodyweightLogs} unit={settings.unit} onAdd={onAddBodyweight} onDelete={onDeleteBodyweight} />
+          <MeasurementsSection
+            entries={measurementLogs}
+            unit={settings.measurementUnit}
+            onAdd={onAddMeasurement}
+            onDelete={onDeleteMeasurement}
+          />
+          <ProgressPhotosSection />
+        </>
+      ) : (
+        <ExerciseProgress logs={logs} customExercises={customExercises} settings={settings} />
+      )}
     </div>
   )
 }
