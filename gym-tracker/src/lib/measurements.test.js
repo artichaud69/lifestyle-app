@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { sortByDate, fieldHistory, latestValue, changeSincePrevious, fieldsWithData } from './measurements.js'
+import { MEASUREMENT_FIELDS, sortByDate, fieldHistory, latestValue, changeSincePrevious, fieldsWithData } from './measurements.js'
+
+describe('MEASUREMENT_FIELDS', () => {
+  it('gives every field a non-empty how-to-measure tip', () => {
+    for (const field of MEASUREMENT_FIELDS) {
+      expect(field.howTo).toBeTypeOf('string')
+      expect(field.howTo.length).toBeGreaterThan(10)
+    }
+  })
+})
 
 function entry(date, values) {
   return { id: date, date, values }

@@ -265,6 +265,35 @@ p {
   min-height: 70px;
 }
 
+.measurement-field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.measurement-field input[type='number'] {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-raised);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.icon-btn-small {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  padding: 0;
+}
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -707,6 +736,24 @@ p {
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   text-align: left;
+}
+
+.body-silhouette {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  margin: 0 auto var(--space-3);
+}
+
+.body-silhouette text {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--color-text);
+}
+
+.silhouette-tag {
+  cursor: pointer;
 }
 
 .search-input {
