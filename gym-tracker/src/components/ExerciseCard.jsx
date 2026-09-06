@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { findLastEntry, formatSetsSummary } from '../lib/workout.js'
 import { MIN_WEIGHT_FOR_RAMP } from '../lib/warmup.js'
-import { CheckIcon, TrashIcon, TargetIcon, ChevronUpIcon, ChevronDownIcon } from '../lib/icons.jsx'
+import { CheckIcon, TrashIcon, TargetIcon, ChevronUpIcon, ChevronDownIcon, SwapIcon } from '../lib/icons.jsx'
 import Sheet from './Sheet.jsx'
 import ExerciseLibrarySheet from './ExerciseLibrarySheet.jsx'
+import SwapExerciseSheet from './SwapExerciseSheet.jsx'
 
 function targetLabel(planExercise) {
   if (!planExercise) return null
@@ -54,9 +55,11 @@ function ExerciseCard({
   onMoveDown,
   canMoveUp,
   canMoveDown,
+  onSwapExercise,
 }) {
   const [showRpeInfo, setShowRpeInfo] = useState(false)
   const [showLibrary, setShowLibrary] = useState(false)
+  const [showSwap, setShowSwap] = useState(false)
   const [showWarmupPrompt, setShowWarmupPrompt] = useState(false)
   const [warmupWeightInput, setWarmupWeightInput] = useState('')
   const last = findLastEntry(logs, entry.exerciseId)
@@ -95,6 +98,9 @@ function ExerciseCard({
           </button>
           <button type="button" className="icon-btn" onClick={onMoveDown} disabled={!canMoveDown} aria-label="Move exercise down">
             <ChevronDownIcon size={16} />
+          </button>
+          <button type="button" className="icon-btn" onClick={() => setShowSwap(true)} aria-label="Swap exercise">
+            <SwapIcon size={16} />
           </button>
           <button type="button" className="icon-btn" onClick={onRemoveExercise} aria-label="Remove exercise">
             <TrashIcon size={16} />
@@ -216,6 +222,19 @@ function ExerciseCard({
           exerciseId={entry.exerciseId}
           customExercises={customExercises}
           onClose={() => setShowLibrary(false)}
+        />
+      )}
+      {showSwap && (
+        <SwapExerciseSheet
+          exerciseId={entry.exerciseId}
+          exerciseName={entry.exerciseName}
+          customExercises={customExercises}
+          hasCompletedSets={entry.sets.some((set) => set.completed)}
+          onPick={(exercise) => {
+            onSwapExercise(exercise)
+            setShowSwap(false)
+          }}
+          onClose={() => setShowSwap(false)}
         />
       )}
     </div>

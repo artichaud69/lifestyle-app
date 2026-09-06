@@ -7,6 +7,7 @@ import { primeAudio } from '../lib/sound.js'
 import { groupLabels, isLastInGroup } from '../lib/superset.js'
 import { suggestWarmupSets } from '../lib/warmup.js'
 import { moveItemById } from '../lib/reorder.js'
+import { suggestNextTarget } from '../lib/coach.js'
 
 // Real rest happens only after the last exercise in a superset round; the
 // handoff between paired exercises just needs enough time to walk to the
@@ -29,7 +30,7 @@ function startedAtClock(startedAt) {
 }
 
 function renderCard(entry, index, handlers) {
-  const { logs, unit, customExercises, updateSet, toggleComplete, addSet, addWarmup, removeLastSet, removeExercise, moveExercise, entryCount } = handlers
+  const { logs, unit, customExercises, updateSet, toggleComplete, addSet, addWarmup, removeLastSet, removeExercise, moveExercise, swapExercise, entryCount } = handlers
   return (
     <ExerciseCard
       key={entry.exerciseId}
@@ -47,6 +48,7 @@ function renderCard(entry, index, handlers) {
       onMoveDown={() => moveExercise(entry.exerciseId, 'down')}
       canMoveUp={index > 0}
       canMoveDown={index < entryCount - 1}
+      onSwapExercise={(newExercise) => swapExercise(index, newExercise)}
     />
   )
 }
@@ -214,6 +216,42 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
     onChangeDraft((prev) => ({ ...prev, entries: moveItemById(prev.entries, exerciseId, direction, (e) => e.exerciseId) }))
   }
 
+  // Swapping keeps the slot's target sets/rep range/superset pairing but
+  // treats the new exercise as its own thing for loading — its sets reset
+  // to fresh, unlogged rows using the coach's own suggestion for THIS
+  // exercise's history (which may be "first time logging this one" if it's
+  // never been done), rather than carrying over the old exercise's numbers,
+  // which wouldn't mean anything for a different movement.
+  function swapExercise(entryIndex, newExercise) {
+    const entry = draft.entries[entryIndex]
+    const basePlanExercise = entry.planExercise ?? {
+      targetSets: entry.sets.length || 3,
+      repsMin: 8,
+      repsMax: 12,
+      targetRPE: 7,
+      targetWeight: null,
+      progression: 'double',
+      restSeconds: settings.restSeconds,
+      supersetGroup: null,
+      longOnly: false,
+    }
+    const suggested = suggestNextTarget({ ...basePlanExercise, exerciseId: newExercise.id }, logs, settings.unit)
+    const startingReps = suggested.targetReps ?? suggested.repsMin
+    const sets = Array.from({ length: suggested.targetSets }, () => ({
+      weight: suggested.targetWeight ?? '',
+      reps: startingReps ?? '',
+      rpe: '',
+      completed: false,
+      isWarmup: false,
+    }))
+    patchEntry(entryIndex, {
+      exerciseId: newExercise.id,
+      exerciseName: newExercise.name,
+      planExercise: suggested,
+      sets,
+    })
+  }
+
   function addExercise(exercise) {
     // Already logging this one this session — add another set to the
     // existing card instead of a second card, which used to split its sets
@@ -279,6 +317,7 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
         removeLastSet,
         removeExercise,
         moveExercise,
+        swapExercise,
         entryCount: draft.entries.length,
       })}
 
