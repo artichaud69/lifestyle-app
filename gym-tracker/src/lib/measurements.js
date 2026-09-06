@@ -2,14 +2,46 @@
 // carries whichever fields were actually measured that day, so every
 // lookup here is per-field rather than assuming a fixed shape.
 export const MEASUREMENT_FIELDS = [
-  { key: 'neck', label: 'Neck' },
-  { key: 'shoulders', label: 'Shoulders' },
-  { key: 'chest', label: 'Chest' },
-  { key: 'waist', label: 'Waist' },
-  { key: 'hips', label: 'Hips' },
-  { key: 'biceps', label: 'Biceps' },
-  { key: 'thighs', label: 'Thighs' },
-  { key: 'calves', label: 'Calves' },
+  {
+    key: 'neck',
+    label: 'Neck',
+    howTo: 'Wrap the tape around the middle of your neck, just below the Adam\'s apple. Keep it level and snug, not tight.',
+  },
+  {
+    key: 'shoulders',
+    label: 'Shoulders',
+    howTo: 'Measure straight across the back from the outer tip of one shoulder to the outer tip of the other, arms relaxed at your sides.',
+  },
+  {
+    key: 'chest',
+    label: 'Chest',
+    howTo: 'Wrap the tape around your chest at nipple height, arms relaxed at your sides, keeping the tape level front and back.',
+  },
+  {
+    key: 'waist',
+    label: 'Waist',
+    howTo: 'Measure around the narrowest part of your torso, usually just above the belly button. Breathe normally — don\'t suck in.',
+  },
+  {
+    key: 'hips',
+    label: 'Hips',
+    howTo: 'Measure around the widest part of your hips and glutes, feet together.',
+  },
+  {
+    key: 'biceps',
+    label: 'Biceps',
+    howTo: 'Flex the arm and measure around the largest part of the upper arm. Use the same arm and flex state every time for consistency.',
+  },
+  {
+    key: 'thighs',
+    label: 'Thighs',
+    howTo: 'Measure around the largest part of one thigh, just below the glute crease, standing with weight even on both legs.',
+  },
+  {
+    key: 'calves',
+    label: 'Calves',
+    howTo: 'Measure around the widest part of your calf, standing with weight evenly distributed on both feet.',
+  },
 ]
 
 export function sortByDate(entries) {

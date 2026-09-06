@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import LineChart from './LineChart.jsx'
-import { PlusIcon, TrashIcon, RulerIcon } from '../lib/icons.jsx'
+import Sheet from './Sheet.jsx'
+import BodySilhouette from './BodySilhouette.jsx'
+import { PlusIcon, TrashIcon, RulerIcon, InfoIcon } from '../lib/icons.jsx'
 import { todayISO, formatDateShort } from '../lib/dates.js'
 import { MEASUREMENT_FIELDS, fieldHistory, latestValue, changeSincePrevious, fieldsWithData } from '../lib/measurements.js'
 import { genId } from '../lib/id.js'
@@ -26,6 +28,7 @@ function MeasurementsSection({ entries, unit, onAdd, onDelete }) {
   const [showForm, setShowForm] = useState(false)
   const [date, setDate] = useState(todayISO())
   const [formValues, setFormValues] = useState(emptyFormValues)
+  const [infoField, setInfoField] = useState(null)
   const available = fieldsWithData(entries)
   const [selectedField, setSelectedField] = useState(null)
   const activeField = available.some((f) => f.key === selectedField) ? selectedField : available[0]?.key ?? null
@@ -64,14 +67,27 @@ function MeasurementsSection({ entries, unit, onAdd, onDelete }) {
           {Array.from({ length: Math.ceil(MEASUREMENT_FIELDS.length / 2) }, (_, row) => (
             <div key={row} className="set-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
               {MEASUREMENT_FIELDS.slice(row * 2, row * 2 + 2).map((f) => (
-                <input
-                  key={f.key}
-                  type="number"
-                  inputMode="decimal"
-                  placeholder={`${f.label} (${unit})`}
-                  value={formValues[f.key]}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                />
+                <div key={f.key} className="measurement-field">
+                  <div className="measurement-field-label">
+                    <span>
+                      {f.label} ({unit})
+                    </span>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn-small"
+                      onClick={() => setInfoField(f.key)}
+                      aria-label={`How to measure ${f.label.toLowerCase()}`}
+                    >
+                      <InfoIcon size={14} />
+                    </button>
+                  </div>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={formValues[f.key]}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                  />
+                </div>
               ))}
             </div>
           ))}
@@ -91,6 +107,8 @@ function MeasurementsSection({ entries, unit, onAdd, onDelete }) {
         </div>
       ) : (
         <>
+          <BodySilhouette entries={entries} unit={unit} onSelectField={setSelectedField} />
+
           <div className="chip-row chip-row-scroll" style={{ marginBottom: 'var(--space-3)' }}>
             {available.map((f) => (
               <button
@@ -140,6 +158,12 @@ function MeasurementsSection({ entries, unit, onAdd, onDelete }) {
             </div>
           ))}
         </>
+      )}
+
+      {infoField && (
+        <Sheet title={`How to measure ${MEASUREMENT_FIELDS.find((f) => f.key === infoField).label.toLowerCase()}`} onClose={() => setInfoField(null)}>
+          <p>{MEASUREMENT_FIELDS.find((f) => f.key === infoField).howTo}</p>
+        </Sheet>
       )}
     </div>
   )
