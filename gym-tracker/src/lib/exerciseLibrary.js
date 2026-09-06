@@ -1,8 +1,7 @@
 // Extended per-exercise reference content: a longer written guide plus
 // start/end position photos, shown from the "+ More info" library sheet.
-// Sparse by design for photos — an entry can have a `guide` with no
-// `images` yet, and the sheet falls back to just the short cue when an
-// id has no entry at all here.
+// The sheet falls back to just the short cue when an id has no entry
+// at all here.
 
 function imagesFor(id) {
   const base = import.meta.env.BASE_URL
@@ -17,6 +16,7 @@ export const EXERCISE_LIBRARY = {
   // CHEST
   // ---------------------------------------------------------------------
   'barbell-bench-press': {
+    images: imagesFor('barbell-bench-press'),
     guide: {
       overview: 'The benchmark upper-body pressing movement — a flat barbell press that builds raw chest, shoulder, and triceps strength.',
       setup: [
@@ -37,6 +37,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'incline-barbell-bench-press': {
+    images: imagesFor('incline-barbell-bench-press'),
     guide: {
       overview: 'A bench press performed on an incline to shift more of the load onto the upper chest and front delts.',
       setup: [
@@ -57,6 +58,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'decline-barbell-bench-press': {
+    images: imagesFor('decline-barbell-bench-press'),
     guide: {
       overview: 'A bench press on a decline bench that shifts emphasis toward the lower chest.',
       setup: [
@@ -77,6 +79,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'close-grip-barbell-bench-press': {
+    images: imagesFor('close-grip-barbell-bench-press'),
     guide: {
       overview: 'A bench press with a narrower grip that shifts more of the work onto the triceps while still training the chest.',
       setup: [
@@ -97,6 +100,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'smith-machine-bench-press': {
+    images: imagesFor('smith-machine-bench-press'),
     guide: {
       overview: 'A bench press on a guided Smith machine bar, removing the balance demand of a free-weight press.',
       setup: [
@@ -117,6 +121,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dumbbell-bench-press': {
+    images: imagesFor('dumbbell-bench-press'),
     guide: {
       overview: 'A bench press with dumbbells instead of a barbell, allowing a deeper stretch and independent arm paths.',
       setup: [
@@ -137,6 +142,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'incline-dumbbell-press': {
+    images: imagesFor('incline-dumbbell-press'),
     guide: {
       overview: 'A dumbbell press on an incline bench, biasing the upper chest with the extra range dumbbells allow.',
       setup: [
@@ -157,6 +163,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'decline-dumbbell-press': {
+    images: imagesFor('decline-dumbbell-press'),
     guide: {
       overview: 'A dumbbell press on a decline bench, emphasizing the lower chest.',
       setup: [
@@ -177,6 +184,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dumbbell-fly': {
+    images: imagesFor('dumbbell-fly'),
     guide: {
       overview: 'A chest isolation move that stretches and squeezes the pecs through a wide arcing motion, with no elbow-extension component.',
       setup: [
@@ -197,6 +205,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'incline-dumbbell-fly': {
+    images: imagesFor('incline-dumbbell-fly'),
     guide: {
       overview: 'A dumbbell fly performed on an incline bench to bias the upper chest.',
       setup: [
@@ -216,6 +225,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-fly': {
+    images: imagesFor('cable-fly'),
     guide: {
       overview: 'A chest fly done on a cable crossover machine, keeping constant tension through the whole range unlike a dumbbell fly.',
       setup: [
@@ -236,6 +246,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'high-to-low-cable-fly': {
+    images: imagesFor('high-to-low-cable-fly'),
     guide: {
       overview: 'A cable fly from a high pulley position, pulling down and across to bias the lower chest.',
       setup: [
@@ -256,6 +267,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-crossover': {
+    images: imagesFor('cable-crossover'),
     guide: {
       overview: 'A standing cable fly variation performed low-to-high or across the midline, finishing with the hands crossing past the body\'s centerline for a full chest squeeze.',
       setup: [
@@ -275,6 +287,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'machine-chest-press': {
+    images: imagesFor('machine-chest-press'),
     guide: {
       overview: 'A chest press on a fixed-path machine — a reliable, joint-friendly way to load the chest without the stabilization demands of free weights.',
       setup: [
@@ -295,6 +308,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'incline-machine-press': {
+    images: imagesFor('incline-machine-press'),
     guide: {
       overview: 'A machine chest press set at an incline angle to bias the upper chest.',
       setup: [
@@ -314,6 +328,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'band-chest-fly': {
+    images: imagesFor('band-chest-fly'),
     guide: {
       overview: 'A chest fly using a resistance band anchored behind the body — a portable, joint-friendly alternative to cables.',
       setup: [
@@ -334,6 +349,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'pec-deck': {
+    images: imagesFor('pec-deck'),
     guide: {
       overview: 'A seated machine fly that isolates the chest through a fixed arcing path.',
       setup: [
@@ -353,6 +369,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'push-up': {
+    images: imagesFor('push-up'),
     guide: {
       overview: 'The classic bodyweight chest press — trains the chest, shoulders, and triceps with no equipment needed.',
       setup: [
@@ -372,6 +389,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'incline-push-up': {
+    images: imagesFor('incline-push-up'),
     guide: {
       overview: 'A push-up with the hands elevated on a bench or box, reducing the bodyweight load — a good regression for building toward a standard push-up.',
       setup: [
@@ -391,6 +409,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'decline-push-up': {
+    images: imagesFor('decline-push-up'),
     guide: {
       overview: 'A push-up with the feet elevated, increasing the bodyweight load and biasing the upper chest.',
       setup: [
@@ -410,6 +429,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'diamond-push-up': {
+    images: imagesFor('diamond-push-up'),
     guide: {
       overview: 'A push-up with the hands close together under the chest, shifting most of the work onto the triceps.',
       setup: [
@@ -429,6 +449,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'chest-dip': {
+    images: imagesFor('chest-dip'),
     guide: {
       overview: 'A dip performed leaning forward to bias the chest over the triceps — a demanding bodyweight (or weighted) chest builder.',
       setup: [
@@ -448,6 +469,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'landmine-press': {
+    images: imagesFor('landmine-press'),
     guide: {
       overview: 'A single-arm press using a barbell anchored in a landmine attachment, pressing along a natural diagonal arc that\'s gentle on the shoulders.',
       setup: [
@@ -468,6 +490,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'svend-press': {
+    images: imagesFor('svend-press'),
     guide: {
       overview: 'A chest-squeeze isolation exercise pressing two plates together in front of the body — light weight, high chest activation.',
       setup: [
@@ -491,6 +514,7 @@ export const EXERCISE_LIBRARY = {
   // BACK
   // ---------------------------------------------------------------------
   deadlift: {
+    images: imagesFor('deadlift'),
     guide: {
       overview: 'The full-body hinge movement — pulling a loaded barbell off the floor to hip level. One of the best overall strength builders there is.',
       setup: [
@@ -511,6 +535,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'sumo-deadlift': {
+    images: imagesFor('sumo-deadlift'),
     guide: {
       overview: 'A deadlift variation with a wide stance and hands inside the knees, shifting emphasis toward the quads and inner thighs with a more upright torso.',
       setup: [
@@ -531,6 +556,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'rack-pull': {
+    images: imagesFor('rack-pull'),
     guide: {
       overview: 'A partial deadlift starting from pins set at knee height or above, overloading the top portion of the pull with heavier weight than a full deadlift.',
       setup: [
@@ -551,6 +577,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'deficit-deadlift': {
+    images: imagesFor('deficit-deadlift'),
     guide: {
       overview: 'A deadlift performed standing on a small platform, increasing the range of motion off the floor.',
       setup: [
@@ -571,6 +598,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'good-morning': {
+    images: imagesFor('good-morning'),
     guide: {
       overview: 'A barbell hip hinge with the bar on the back, loading the hamstrings and lower back through a bent-over position.',
       setup: [
@@ -590,6 +618,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'barbell-row': {
+    images: imagesFor('barbell-row'),
     guide: {
       overview: 'A bent-over barbell row that builds overall back thickness by pulling the bar to the torso from a hinged position.',
       setup: [
@@ -609,6 +638,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'pendlay-row': {
+    images: imagesFor('pendlay-row'),
     guide: {
       overview: 'A strict barbell row where each rep starts from a dead stop on the floor, removing momentum and demanding an explosive pull.',
       setup: [
@@ -628,6 +658,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   't-bar-row': {
+    images: imagesFor('t-bar-row'),
     guide: {
       overview: 'A chest-supported or hinged row using a landmine-style bar, allowing heavy loading with a neutral grip.',
       setup: [
@@ -647,6 +678,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'chest-supported-row': {
+    images: imagesFor('chest-supported-row'),
     guide: {
       overview: 'A row performed with the chest braced against a pad, removing lower-back involvement and isolating the pulling muscles.',
       setup: [
@@ -666,6 +698,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'meadows-row': {
+    images: imagesFor('meadows-row'),
     guide: {
       overview: 'A single-arm landmine row performed from a split stance, letting the shoulder blade drive a long range of motion.',
       setup: [
@@ -685,6 +718,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'one-arm-dumbbell-row': {
+    images: imagesFor('one-arm-dumbbell-row'),
     guide: {
       overview: 'A single-arm row bracing on a bench, allowing a long stretch and a strong contraction with less lower-back demand than a bent-over barbell row.',
       setup: [
@@ -704,6 +738,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'kettlebell-row': {
+    images: imagesFor('kettlebell-row'),
     guide: {
       overview: 'A single-arm row with a kettlebell, using the same hinge-and-pull pattern as a dumbbell row.',
       setup: [
@@ -723,6 +758,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'seated-cable-row': {
+    images: imagesFor('seated-cable-row'),
     guide: {
       overview: 'A cable row performed seated, building back thickness with constant tension through the whole range.',
       setup: [
@@ -742,6 +778,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'wide-grip-cable-row': {
+    images: imagesFor('wide-grip-cable-row'),
     guide: {
       overview: 'A seated cable row with a wide grip and flared elbows, shifting emphasis toward the upper back and rear delts.',
       setup: [
@@ -761,6 +798,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'machine-row': {
+    images: imagesFor('machine-row'),
     guide: {
       overview: 'A row on a fixed-path machine, usually chest-supported, for building back thickness with minimal technique demands.',
       setup: [
@@ -780,6 +818,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'inverted-row': {
+    images: imagesFor('inverted-row'),
     guide: {
       overview: 'A bodyweight row pulling the chest up to a bar set at hip height while the body hangs at an angle — a great bodyweight back builder.',
       setup: [
@@ -799,6 +838,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'lat-pulldown': {
+    images: imagesFor('lat-pulldown'),
     guide: {
       overview: 'A cable pulldown that trains the same pulling pattern as a pull-up, with adjustable resistance for building toward one.',
       setup: [
@@ -818,6 +858,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'wide-grip-lat-pulldown': {
+    images: imagesFor('wide-grip-lat-pulldown'),
     guide: {
       overview: 'A lat pulldown with a wider grip, emphasizing the outer lats.',
       setup: [
@@ -837,6 +878,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'close-grip-lat-pulldown': {
+    images: imagesFor('close-grip-lat-pulldown'),
     guide: {
       overview: 'A lat pulldown with a close, often neutral, grip that allows a longer range of motion and more biceps involvement.',
       setup: [
@@ -856,6 +898,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'single-arm-lat-pulldown': {
+    images: imagesFor('single-arm-lat-pulldown'),
     guide: {
       overview: 'A lat pulldown performed one arm at a time, letting each side work through its full, unassisted range.',
       setup: [
@@ -875,6 +918,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'straight-arm-pulldown': {
+    images: imagesFor('straight-arm-pulldown'),
     guide: {
       overview: 'A lat isolation move pulling a bar down with straight arms, removing the biceps from the movement almost entirely.',
       setup: [
@@ -894,6 +938,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'pull-up': {
+    images: imagesFor('pull-up'),
     guide: {
       overview: 'The classic bodyweight vertical pull — one of the best overall back and grip builders there is.',
       setup: [
@@ -913,6 +958,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'weighted-pull-up': {
+    images: imagesFor('weighted-pull-up'),
     guide: {
       overview: 'A pull-up performed with additional weight (belt, vest, or dumbbell) once bodyweight reps are no longer challenging.',
       setup: [
@@ -932,6 +978,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'chin-up': {
+    images: imagesFor('chin-up'),
     guide: {
       overview: 'A pull-up performed with an underhand grip, shifting more of the work onto the biceps.',
       setup: [
@@ -951,6 +998,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'neutral-grip-pull-up': {
+    images: imagesFor('neutral-grip-pull-up'),
     guide: {
       overview: 'A pull-up using parallel handles, a grip position that\'s often more comfortable on the shoulders and wrists.',
       setup: [
@@ -970,6 +1018,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'assisted-pull-up': {
+    images: imagesFor('assisted-pull-up'),
     guide: {
       overview: 'A pull-up performed on a machine that counterbalances part of the bodyweight, useful for building toward an unassisted rep.',
       setup: [
@@ -989,6 +1038,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'face-pull': {
+    images: imagesFor('face-pull'),
     guide: {
       overview: 'A cable pull to face level that targets the rear delts and upper back — a staple for shoulder health and posture.',
       setup: [
@@ -1008,6 +1058,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'band-face-pull': {
+    images: imagesFor('band-face-pull'),
     guide: {
       overview: 'A face pull performed with a resistance band — a portable version of the same rear-delt and upper-back exercise.',
       setup: [
@@ -1027,6 +1078,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'band-pulldown': {
+    images: imagesFor('band-pulldown'),
     guide: {
       overview: 'A lat pulldown pattern using a band anchored overhead — a portable substitute for a cable machine.',
       setup: [
@@ -1046,6 +1098,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'back-extension': {
+    images: imagesFor('back-extension'),
     guide: {
       overview: 'A hip-hinge exercise on a bench or GHD that trains the lower back and glutes through a controlled range of motion.',
       setup: [
@@ -1065,6 +1118,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'weighted-back-extension': {
+    images: imagesFor('weighted-back-extension'),
     guide: {
       overview: 'A back extension performed holding extra weight (a plate or dumbbell) once bodyweight reps are no longer challenging.',
       setup: [
@@ -1088,6 +1142,7 @@ export const EXERCISE_LIBRARY = {
   // SHOULDERS
   // ---------------------------------------------------------------------
   'overhead-press': {
+    images: imagesFor('overhead-press'),
     guide: {
       overview: 'A standing barbell press overhead — a core strength movement for the shoulders and triceps.',
       setup: [
@@ -1108,6 +1163,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'seated-barbell-overhead-press': {
+    images: imagesFor('seated-barbell-overhead-press'),
     guide: {
       overview: 'An overhead press performed seated with back support, removing leg drive and isolating the shoulders and triceps.',
       setup: [
@@ -1127,6 +1183,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'push-press': {
+    images: imagesFor('push-press'),
     guide: {
       overview: 'An overhead press that uses a small leg drive to help move heavier weight than a strict press allows.',
       setup: [
@@ -1146,6 +1203,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'smith-machine-shoulder-press': {
+    images: imagesFor('smith-machine-shoulder-press'),
     guide: {
       overview: 'An overhead press on a guided Smith machine bar, removing the balance demand of a free-weight press.',
       setup: [
@@ -1165,6 +1223,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dumbbell-shoulder-press': {
+    images: imagesFor('dumbbell-shoulder-press'),
     guide: {
       overview: 'An overhead press with dumbbells, allowing a more natural pressing arc and independent arm paths than a barbell.',
       setup: [
@@ -1184,6 +1243,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'seated-dumbbell-shoulder-press': {
+    images: imagesFor('seated-dumbbell-shoulder-press'),
     guide: {
       overview: 'A dumbbell shoulder press performed seated with back support, removing leg drive and lower-back compensation.',
       setup: [
@@ -1203,6 +1263,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'arnold-press': {
+    images: imagesFor('arnold-press'),
     guide: {
       overview: 'A dumbbell shoulder press that adds a rotation through the bottom portion, engaging the shoulder through a fuller range.',
       setup: [
@@ -1222,6 +1283,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'machine-shoulder-press': {
+    images: imagesFor('machine-shoulder-press'),
     guide: {
       overview: 'An overhead press on a fixed-path machine, useful for isolating the shoulders without stabilization demands.',
       setup: [
@@ -1241,6 +1303,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'landmine-shoulder-press': {
+    images: imagesFor('landmine-shoulder-press'),
     guide: {
       overview: 'A single-arm overhead press using a landmine-anchored barbell, pressing along a shoulder-friendly diagonal path.',
       setup: [
@@ -1260,6 +1323,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'lateral-raise': {
+    images: imagesFor('lateral-raise'),
     guide: {
       overview: 'The classic dumbbell side-delt isolation move — raising the arms out to the sides to build shoulder width.',
       setup: [
@@ -1279,6 +1343,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'leaning-cable-lateral-raise': {
+    images: imagesFor('leaning-cable-lateral-raise'),
     guide: {
       overview: 'A cable lateral raise performed leaning away from the machine, loading the side delt through its full range including the bottom of the movement.',
       setup: [
@@ -1298,6 +1363,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'machine-lateral-raise': {
+    images: imagesFor('machine-lateral-raise'),
     guide: {
       overview: 'A side-delt raise on a fixed-path machine, useful for isolating the movement without needing to stabilize free weight.',
       setup: [
@@ -1317,6 +1383,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'band-lateral-raise': {
+    images: imagesFor('band-lateral-raise'),
     guide: {
       overview: 'A lateral raise using a resistance band anchored underfoot — a portable version of the classic dumbbell exercise.',
       setup: [
@@ -1336,6 +1403,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'front-raise': {
+    images: imagesFor('front-raise'),
     guide: {
       overview: 'A dumbbell isolation move raising the arms in front of the body to target the front delts.',
       setup: [
@@ -1355,6 +1423,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-front-raise': {
+    images: imagesFor('cable-front-raise'),
     guide: {
       overview: 'A front raise on a low cable pulley, keeping constant tension on the front delt through the whole range.',
       setup: [
@@ -1374,6 +1443,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'rear-delt-fly': {
+    images: imagesFor('rear-delt-fly'),
     guide: {
       overview: 'A bent-over dumbbell raise targeting the rear delts — a key exercise for shoulder balance and posture.',
       setup: [
@@ -1393,6 +1463,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'band-rear-delt-fly': {
+    images: imagesFor('band-rear-delt-fly'),
     guide: {
       overview: 'A rear delt fly using a resistance band, hinged forward like the dumbbell version.',
       setup: [
@@ -1412,6 +1483,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'upright-row': {
+    images: imagesFor('upright-row'),
     guide: {
       overview: 'A vertical pull of a barbell from the thighs to chest height, targeting the side delts and traps.',
       setup: [
@@ -1431,6 +1503,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-upright-row': {
+    images: imagesFor('cable-upright-row'),
     guide: {
       overview: 'An upright row on a low cable pulley, keeping constant tension through the pull.',
       setup: [
@@ -1450,6 +1523,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'barbell-shrug': {
+    images: imagesFor('barbell-shrug'),
     guide: {
       overview: 'A straight-up shrug with a barbell to build the trapezius muscles.',
       setup: [
@@ -1469,6 +1543,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dumbbell-shrug': {
+    images: imagesFor('dumbbell-shrug'),
     guide: {
       overview: 'A straight-up shrug with dumbbells at the sides.',
       setup: [
@@ -1488,6 +1563,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-shrug': {
+    images: imagesFor('cable-shrug'),
     guide: {
       overview: 'A shrug performed on a low cable pulley, keeping constant tension on the traps.',
       setup: [
@@ -1507,6 +1583,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-rear-delt-fly': {
+    images: imagesFor('cable-rear-delt-fly'),
     guide: {
       overview: 'A rear delt fly performed on crossed cables, keeping constant tension on the rear delts through the full range.',
       setup: [
@@ -1531,6 +1608,7 @@ export const EXERCISE_LIBRARY = {
   // LEGS
   // ---------------------------------------------------------------------
   'back-squat': {
+    images: imagesFor('back-squat'),
     guide: {
       overview: 'The foundational lower-body strength movement — a barbell squat with the bar across the upper back.',
       setup: [
@@ -1551,6 +1629,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'front-squat': {
+    images: imagesFor('front-squat'),
     guide: {
       overview: 'A squat with the bar racked across the front delts, demanding a more upright torso and biasing the quads.',
       setup: [
@@ -1570,6 +1649,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'safety-bar-squat': {
+    images: imagesFor('safety-bar-squat'),
     guide: {
       overview: 'A squat using a specialty bar with shoulder-level handles, letting the torso sit more upright than a standard back squat.',
       setup: [
@@ -1589,6 +1669,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'box-squat': {
+    images: imagesFor('box-squat'),
     guide: {
       overview: 'A squat performed sitting back to a box, useful for training the hip hinge pattern and pausing under control at depth.',
       setup: [
@@ -1608,6 +1689,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'zercher-squat': {
+    images: imagesFor('zercher-squat'),
     guide: {
       overview: 'A squat holding the bar in the crooks of the elbows, demanding heavy core bracing and an upright torso.',
       setup: [
@@ -1627,6 +1709,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'hack-squat': {
+    images: imagesFor('hack-squat'),
     guide: {
       overview: 'A squat on an angled machine that supports the back, allowing heavy quad-focused loading with less balance demand.',
       setup: [
@@ -1646,6 +1729,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'smith-machine-squat': {
+    images: imagesFor('smith-machine-squat'),
     guide: {
       overview: 'A squat on a guided Smith machine bar, useful for isolating the leg drive without the balance demand of a free-weight squat.',
       setup: [
@@ -1665,6 +1749,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'belt-squat': {
+    images: imagesFor('belt-squat'),
     guide: {
       overview: 'A squat where the load hangs from a belt at the hips rather than on the back, letting the spine stay unloaded.',
       setup: [
@@ -1684,6 +1769,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'goblet-squat': {
+    images: imagesFor('goblet-squat'),
     guide: {
       overview: 'A squat holding a single dumbbell or kettlebell at the chest — a great teaching tool for the squat pattern.',
       setup: [
@@ -1703,6 +1789,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'kettlebell-goblet-squat': {
+    images: imagesFor('kettlebell-goblet-squat'),
     guide: {
       overview: 'A goblet squat holding a kettlebell by the horns — the same pattern with a kettlebell\'s grip.',
       setup: [
@@ -1722,6 +1809,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'sissy-squat': {
+    images: imagesFor('sissy-squat'),
     guide: {
       overview: 'A bodyweight quad-isolation squat where the knees travel far forward and the torso leans back, putting intense stretch and tension on the quads.',
       setup: [
@@ -1741,6 +1829,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'bulgarian-split-squat': {
+    images: imagesFor('bulgarian-split-squat'),
     guide: {
       overview: 'A single-leg squat with the rear foot elevated on a bench, demanding balance and heavily loading the front leg.',
       setup: [
@@ -1760,6 +1849,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'walking-lunge': {
+    images: imagesFor('walking-lunge'),
     guide: {
       overview: 'A lunge performed stepping continuously forward, combining strength and a balance/coordination demand.',
       setup: [
@@ -1779,6 +1869,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'reverse-lunge': {
+    images: imagesFor('reverse-lunge'),
     guide: {
       overview: 'A lunge stepping backward instead of forward, generally easier on the knees than a forward or walking lunge.',
       setup: [
@@ -1798,6 +1889,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'lateral-lunge': {
+    images: imagesFor('lateral-lunge'),
     guide: {
       overview: 'A lunge stepping out to the side, training the legs and hips through the frontal plane.',
       setup: [
@@ -1817,6 +1909,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'step-up': {
+    images: imagesFor('step-up'),
     guide: {
       overview: 'A single-leg movement stepping up onto an elevated platform, building unilateral leg strength.',
       setup: [
@@ -1836,6 +1929,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'leg-press': {
+    images: imagesFor('leg-press'),
     guide: {
       overview: 'A machine squat pattern pressing a weighted platform with the legs, allowing heavy loading with the back supported.',
       setup: [
@@ -1855,6 +1949,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'romanian-deadlift': {
+    images: imagesFor('romanian-deadlift'),
     guide: {
       overview: 'A hip-hinge movement lowering a barbell down the legs, one of the best hamstring and glute builders there is.',
       setup: [
@@ -1874,6 +1969,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dumbbell-romanian-deadlift': {
+    images: imagesFor('dumbbell-romanian-deadlift'),
     guide: {
       overview: 'A Romanian deadlift performed with dumbbells, using the same hip-hinge pattern.',
       setup: [
@@ -1893,6 +1989,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'stiff-leg-deadlift': {
+    images: imagesFor('stiff-leg-deadlift'),
     guide: {
       overview: 'A hip hinge with straighter legs than a Romanian deadlift, placing even more emphasis on the hamstrings and lower back.',
       setup: [
@@ -1912,6 +2009,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'kettlebell-deadlift': {
+    images: imagesFor('kettlebell-deadlift'),
     guide: {
       overview: 'A hip hinge lifting a kettlebell from the floor — a simple, joint-friendly entry point to the deadlift pattern.',
       setup: [
@@ -1931,6 +2029,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'kettlebell-swing': {
+    images: imagesFor('kettlebell-swing'),
     guide: {
       overview: 'An explosive hip-hinge movement that snaps a kettlebell forward using the hips, not the arms or a squat.',
       setup: [
@@ -1950,6 +2049,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'glute-ham-raise': {
+    images: imagesFor('glute-ham-raise'),
     guide: {
       overview: 'A hamstring-focused bodyweight exercise on a GHD machine, curling the body up from a face-down position using the hamstrings.',
       setup: [
@@ -1969,6 +2069,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'nordic-curl': {
+    images: imagesFor('nordic-curl'),
     guide: {
       overview: 'An intense bodyweight hamstring exercise lowering the torso forward from a kneeling, feet-anchored position.',
       setup: [
@@ -1988,6 +2089,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'hip-thrust': {
+    images: imagesFor('hip-thrust'),
     guide: {
       overview: 'A glute-focused hip extension with the upper back braced on a bench and a barbell across the hips — one of the best direct glute builders.',
       setup: [
@@ -2007,6 +2109,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'barbell-glute-bridge': {
+    images: imagesFor('barbell-glute-bridge'),
     guide: {
       overview: 'The same glute-focused hip extension as a hip thrust, performed from the floor instead of with the back braced on a bench.',
       setup: [
@@ -2026,6 +2129,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-pull-through': {
+    images: imagesFor('cable-pull-through'),
     guide: {
       overview: 'A hip-hinge exercise pulling a cable from between the legs, teaching the hip hinge with constant tension and less spinal loading than a deadlift.',
       setup: [
@@ -2045,6 +2149,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-kickback': {
+    images: imagesFor('cable-kickback'),
     guide: {
       overview: 'A single-leg glute isolation move kicking a cable back and up behind the body.',
       setup: [
@@ -2064,6 +2169,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'leg-extension': {
+    images: imagesFor('leg-extension'),
     guide: {
       overview: 'A machine quad isolation exercise extending the knees against resistance.',
       setup: [
@@ -2083,6 +2189,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'leg-curl': {
+    images: imagesFor('leg-curl'),
     guide: {
       overview: 'A machine hamstring isolation exercise curling the lower legs against resistance, usually lying face down.',
       setup: [
@@ -2102,6 +2209,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'seated-leg-curl': {
+    images: imagesFor('seated-leg-curl'),
     guide: {
       overview: 'A hamstring curl performed seated rather than face-down, often allowing a better stretch at the bottom.',
       setup: [
@@ -2121,6 +2229,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'standing-calf-raise': {
+    images: imagesFor('standing-calf-raise'),
     guide: {
       overview: 'A standing calf isolation exercise, usually on a machine, that trains the gastrocnemius through a full range.',
       setup: [
@@ -2140,6 +2249,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'seated-calf-raise': {
+    images: imagesFor('seated-calf-raise'),
     guide: {
       overview: 'A calf raise performed seated with the knees bent, which biases the soleus muscle underneath the gastrocnemius.',
       setup: [
@@ -2158,6 +2268,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'calf-raise': {
+    images: imagesFor('calf-raise'),
     guide: {
       overview: 'A general calf raise — standing, on a machine, or with a barbell/dumbbells — training the calves through a full range of motion.',
       setup: [
@@ -2177,6 +2288,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'donkey-calf-raise': {
+    images: imagesFor('donkey-calf-raise'),
     guide: {
       overview: 'A calf raise performed hinged forward at the hips, which changes the loading angle on the calves compared to a standing raise.',
       setup: [
@@ -2196,6 +2308,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'adductor-machine': {
+    images: imagesFor('adductor-machine'),
     guide: {
       overview: 'A machine exercise squeezing the legs together against resistance, isolating the inner thighs.',
       setup: [
@@ -2215,6 +2328,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'abductor-machine': {
+    images: imagesFor('abductor-machine'),
     guide: {
       overview: 'A machine exercise pushing the legs apart against resistance, isolating the outer hip muscles.',
       setup: [
@@ -2238,6 +2352,7 @@ export const EXERCISE_LIBRARY = {
   // ARMS
   // ---------------------------------------------------------------------
   'barbell-curl': {
+    images: imagesFor('barbell-curl'),
     guide: {
       overview: 'The classic bicep-building exercise, curling a barbell with a shoulder-width grip.',
       setup: [
@@ -2257,6 +2372,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'ez-bar-curl': {
+    images: imagesFor('ez-bar-curl'),
     guide: {
       overview: 'A barbell curl using an angled EZ-bar, often more comfortable on the wrists than a straight bar.',
       setup: [
@@ -2276,6 +2392,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dumbbell-curl': {
+    images: imagesFor('dumbbell-curl'),
     guide: {
       overview: 'A bicep curl with dumbbells, allowing independent arm paths and a full range of motion.',
       setup: [
@@ -2295,6 +2412,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'alternating-dumbbell-curl': {
+    images: imagesFor('alternating-dumbbell-curl'),
     guide: {
       overview: 'A dumbbell curl performed one arm at a time, alternating sides each rep.',
       setup: [
@@ -2314,6 +2432,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'incline-dumbbell-curl': {
+    images: imagesFor('incline-dumbbell-curl'),
     guide: {
       overview: 'A dumbbell curl performed lying back on an incline bench, which increases the stretch on the biceps at the bottom.',
       setup: [
@@ -2333,6 +2452,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'hammer-curl': {
+    images: imagesFor('hammer-curl'),
     guide: {
       overview: 'A dumbbell curl with a neutral (palms-facing-in) grip throughout, emphasizing the brachialis and forearms alongside the biceps.',
       setup: [
@@ -2352,6 +2472,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cross-body-hammer-curl': {
+    images: imagesFor('cross-body-hammer-curl'),
     guide: {
       overview: 'A hammer curl bringing the dumbbell across the body toward the opposite shoulder instead of straight up.',
       setup: [
@@ -2371,6 +2492,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'concentration-curl': {
+    images: imagesFor('concentration-curl'),
     guide: {
       overview: 'A seated single-arm curl bracing the elbow against the inner thigh, isolating the bicep with no momentum available.',
       setup: [
@@ -2390,6 +2512,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'preacher-curl': {
+    images: imagesFor('preacher-curl'),
     guide: {
       overview: 'A curl performed with the arm braced against an angled pad, removing shoulder movement and isolating the biceps.',
       setup: [
@@ -2409,6 +2532,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dumbbell-preacher-curl': {
+    images: imagesFor('dumbbell-preacher-curl'),
     guide: {
       overview: 'A preacher curl using a single dumbbell, following the same braced-arm pattern.',
       setup: [
@@ -2428,6 +2552,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'spider-curl': {
+    images: imagesFor('spider-curl'),
     guide: {
       overview: 'A curl performed leaning chest-first against an incline bench, which removes momentum even more strictly than a preacher curl.',
       setup: [
@@ -2447,6 +2572,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'drag-curl': {
+    images: imagesFor('drag-curl'),
     guide: {
       overview: 'A curl variation dragging the bar up close to the torso, keeping the elbows traveling back rather than forward, which increases biceps tension.',
       setup: [
@@ -2466,6 +2592,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'zottman-curl': {
+    images: imagesFor('zottman-curl'),
     guide: {
       overview: 'A curl that goes up with palms facing up like a normal curl, then rotates to palms-down for the lowering portion, adding forearm work to the descent.',
       setup: [
@@ -2485,6 +2612,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-curl': {
+    images: imagesFor('cable-curl'),
     guide: {
       overview: 'A bicep curl on a low cable pulley, keeping constant tension through the whole range unlike a free-weight curl.',
       setup: [
@@ -2504,6 +2632,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-hammer-curl': {
+    images: imagesFor('cable-hammer-curl'),
     guide: {
       overview: 'A hammer curl performed on a cable with a rope attachment, keeping a neutral grip and constant tension.',
       setup: [
@@ -2523,6 +2652,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'kettlebell-curl': {
+    images: imagesFor('kettlebell-curl'),
     guide: {
       overview: 'A bicep curl using kettlebells, following the same pattern as a dumbbell curl.',
       setup: [
@@ -2542,6 +2672,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'bayesian-curl': {
+    images: imagesFor('bayesian-curl'),
     guide: {
       overview: 'A cable curl performed facing away from the machine with the cable behind the body, which biases a deep stretch at the bottom of the curl.',
       setup: [
@@ -2561,6 +2692,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'band-curl': {
+    images: imagesFor('band-curl'),
     guide: {
       overview: 'A bicep curl using a resistance band anchored underfoot, a portable substitute for a barbell or cable curl.',
       setup: [
@@ -2580,6 +2712,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'close-grip-bench-press': {
+    images: imagesFor('close-grip-bench-press'),
     guide: {
       overview: 'A bench press variant with a narrow grip, biasing the triceps while still hitting the chest and shoulders.',
       setup: [
@@ -2599,6 +2732,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'skull-crusher': {
+    images: imagesFor('skull-crusher'),
     guide: {
       overview: 'A lying triceps extension lowering a barbell toward the forehead — a classic triceps mass builder.',
       setup: [
@@ -2618,6 +2752,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dumbbell-skull-crusher': {
+    images: imagesFor('dumbbell-skull-crusher'),
     guide: {
       overview: 'A skull crusher performed with dumbbells, allowing a slightly more natural wrist path than a barbell.',
       setup: [
@@ -2637,6 +2772,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'overhead-triceps-extension': {
+    images: imagesFor('overhead-triceps-extension'),
     guide: {
       overview: 'A triceps isolation move extending a weight overhead, loading the long head of the triceps through a deep stretch.',
       setup: [
@@ -2656,6 +2792,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-overhead-triceps-extension': {
+    images: imagesFor('cable-overhead-triceps-extension'),
     guide: {
       overview: 'An overhead triceps extension using a cable, keeping constant tension through the movement.',
       setup: [
@@ -2675,6 +2812,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'triceps-pushdown': {
+    images: imagesFor('triceps-pushdown'),
     guide: {
       overview: 'A cable triceps isolation move pushing a bar or attachment straight down — a gym staple for building the triceps.',
       setup: [
@@ -2694,6 +2832,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'rope-triceps-pushdown': {
+    images: imagesFor('rope-triceps-pushdown'),
     guide: {
       overview: 'A triceps pushdown using a rope attachment, allowing the hands to spread apart at the bottom for a fuller squeeze.',
       setup: [
@@ -2713,6 +2852,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'single-arm-triceps-pushdown': {
+    images: imagesFor('single-arm-triceps-pushdown'),
     guide: {
       overview: 'A triceps pushdown performed one arm at a time, letting each side work through its own full range.',
       setup: [
@@ -2732,6 +2872,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'triceps-kickback': {
+    images: imagesFor('triceps-kickback'),
     guide: {
       overview: 'A triceps isolation move extending a dumbbell backward from a hinged position.',
       setup: [
@@ -2751,6 +2892,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'band-triceps-extension': {
+    images: imagesFor('band-triceps-extension'),
     guide: {
       overview: 'A triceps pushdown pattern using a resistance band anchored overhead — a portable substitute for a cable pushdown.',
       setup: [
@@ -2770,6 +2912,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   dip: {
+    images: imagesFor('dip'),
     guide: {
       overview: 'A bodyweight (or weighted) pressing exercise on parallel bars, hitting the chest and triceps depending on body lean.',
       setup: [
@@ -2789,6 +2932,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'bench-dip': {
+    images: imagesFor('bench-dip'),
     guide: {
       overview: 'A dip performed with the hands on a bench behind the body, a more accessible variation than parallel bar dips.',
       setup: [
@@ -2808,6 +2952,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'wrist-curl': {
+    images: imagesFor('wrist-curl'),
     guide: {
       overview: 'A forearm isolation exercise curling the wrist upward against resistance.',
       setup: [
@@ -2827,6 +2972,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'reverse-wrist-curl': {
+    images: imagesFor('reverse-wrist-curl'),
     guide: {
       overview: 'A forearm isolation exercise extending the wrist upward with the palms facing down.',
       setup: [
@@ -2846,6 +2992,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'reverse-curl': {
+    images: imagesFor('reverse-curl'),
     guide: {
       overview: 'A curl performed with an overhand grip, shifting emphasis from the biceps toward the forearms and brachialis.',
       setup: [
@@ -2869,6 +3016,7 @@ export const EXERCISE_LIBRARY = {
   // CORE
   // ---------------------------------------------------------------------
   plank: {
+    images: imagesFor('plank'),
     guide: {
       overview: 'An isometric core hold on the forearms and toes — builds core bracing endurance with no movement required.',
       setup: [
@@ -2888,6 +3036,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'side-plank': {
+    images: imagesFor('side-plank'),
     guide: {
       overview: 'An isometric core hold on one forearm and the side of the foot, targeting the obliques.',
       setup: [
@@ -2907,6 +3056,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'hanging-leg-raise': {
+    images: imagesFor('hanging-leg-raise'),
     guide: {
       overview: 'A hanging core exercise raising the straight legs up, a demanding abdominal and hip flexor movement.',
       setup: [
@@ -2926,6 +3076,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'hanging-knee-raise': {
+    images: imagesFor('hanging-knee-raise'),
     guide: {
       overview: 'A hanging core exercise raising the knees toward the chest, an easier regression of the hanging leg raise.',
       setup: [
@@ -2945,6 +3096,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'toes-to-bar': {
+    images: imagesFor('toes-to-bar'),
     guide: {
       overview: 'An advanced hanging core exercise bringing the toes all the way up to touch the bar.',
       setup: [
@@ -2964,6 +3116,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-crunch': {
+    images: imagesFor('cable-crunch'),
     guide: {
       overview: 'A kneeling cable crunch loading the abs with external resistance through a spinal-flexion movement.',
       setup: [
@@ -2983,6 +3136,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'machine-crunch': {
+    images: imagesFor('machine-crunch'),
     guide: {
       overview: 'A crunch performed on a fixed-path machine, loading the abs with adjustable resistance.',
       setup: [
@@ -3002,6 +3156,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'ab-wheel-rollout': {
+    images: imagesFor('ab-wheel-rollout'),
     guide: {
       overview: 'A demanding core exercise rolling a wheel out from a kneeling position and pulling it back — a serious anti-extension core challenge.',
       setup: [
@@ -3021,6 +3176,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'sit-up': {
+    images: imagesFor('sit-up'),
     guide: {
       overview: 'A classic core exercise curling the entire torso up from the floor to a seated position.',
       setup: [
@@ -3040,6 +3196,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'weighted-sit-up': {
+    images: imagesFor('weighted-sit-up'),
     guide: {
       overview: 'A sit-up performed holding extra weight at the chest, once bodyweight reps are no longer challenging.',
       setup: [
@@ -3059,6 +3216,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   crunch: {
+    images: imagesFor('crunch'),
     guide: {
       overview: 'A short-range core exercise lifting just the shoulder blades off the floor, isolating the upper abs without the hip-flexor involvement of a full sit-up.',
       setup: [
@@ -3078,6 +3236,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'bicycle-crunch': {
+    images: imagesFor('bicycle-crunch'),
     guide: {
       overview: 'A rotational core exercise bringing the elbow toward the opposite knee in an alternating cycling motion.',
       setup: [
@@ -3097,6 +3256,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'reverse-crunch': {
+    images: imagesFor('reverse-crunch'),
     guide: {
       overview: 'A core exercise curling the hips up toward the ribs, targeting the lower portion of the abs.',
       setup: [
@@ -3116,6 +3276,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'decline-sit-up': {
+    images: imagesFor('decline-sit-up'),
     guide: {
       overview: 'A sit-up performed on a decline bench, increasing the range of motion and difficulty compared to a flat sit-up.',
       setup: [
@@ -3135,6 +3296,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'v-up': {
+    images: imagesFor('v-up'),
     guide: {
       overview: 'A core exercise folding the body into a V shape, lifting both the torso and legs simultaneously.',
       setup: [
@@ -3154,6 +3316,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'russian-twist': {
+    images: imagesFor('russian-twist'),
     guide: {
       overview: 'A rotational core exercise twisting a weight side to side from a seated, torso-leaned-back position.',
       setup: [
@@ -3173,6 +3336,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'dead-bug': {
+    images: imagesFor('dead-bug'),
     guide: {
       overview: 'A core stability exercise moving opposite arm and leg while keeping the lower back pressed to the floor — great for teaching core bracing.',
       setup: [
@@ -3192,6 +3356,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'mountain-climber': {
+    images: imagesFor('mountain-climber'),
     guide: {
       overview: 'A dynamic core exercise driving the knees in toward the chest from a plank position, often used for conditioning too.',
       setup: [
@@ -3211,6 +3376,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'cable-woodchopper': {
+    images: imagesFor('cable-woodchopper'),
     guide: {
       overview: 'A rotational core exercise pulling a cable diagonally across the body, training rotational power and control.',
       setup: [
@@ -3230,6 +3396,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'pallof-press': {
+    images: imagesFor('pallof-press'),
     guide: {
       overview: 'An anti-rotation core exercise pressing a cable straight out from the chest while resisting its pull to rotate the body.',
       setup: [
@@ -3249,6 +3416,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'band-pallof-press': {
+    images: imagesFor('band-pallof-press'),
     guide: {
       overview: 'A Pallof press using a resistance band instead of a cable, the same anti-rotation core exercise.',
       setup: [
@@ -3267,6 +3435,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'kettlebell-turkish-get-up': {
+    images: imagesFor('kettlebell-turkish-get-up'),
     guide: {
       overview: 'A complex, full-body movement standing up from the floor while holding a kettlebell locked out overhead — builds core stability and shoulder control simultaneously.',
       setup: [
@@ -3290,6 +3459,7 @@ export const EXERCISE_LIBRARY = {
   // NECK
   // ---------------------------------------------------------------------
   'neck-flexion': {
+    images: imagesFor('neck-flexion'),
     guide: {
       overview: 'A neck-strengthening exercise curling the head forward against light resistance (a plate, harness, or manual hand pressure).',
       setup: [
@@ -3309,6 +3479,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'neck-extension': {
+    images: imagesFor('neck-extension'),
     guide: {
       overview: 'A neck-strengthening exercise extending the head backward against light resistance.',
       setup: [
@@ -3328,6 +3499,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'neck-lateral-flexion': {
+    images: imagesFor('neck-lateral-flexion'),
     guide: {
       overview: 'A neck-strengthening exercise tilting the head sideways against light resistance, trained evenly on both sides.',
       setup: [
@@ -3351,6 +3523,7 @@ export const EXERCISE_LIBRARY = {
   // CARDIO
   // ---------------------------------------------------------------------
   'treadmill-run': {
+    images: imagesFor('treadmill-run'),
     guide: {
       overview: 'Steady-state or interval running on a treadmill — a controlled way to build cardiovascular fitness.',
       setup: [
@@ -3370,6 +3543,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'treadmill-incline-walk': {
+    images: imagesFor('treadmill-incline-walk'),
     guide: {
       overview: 'Walking on a treadmill at a steep incline — a lower-impact way to raise heart rate and heavily engage the glutes and calves.',
       setup: [
@@ -3389,6 +3563,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'outdoor-run': {
+    images: imagesFor('outdoor-run'),
     guide: {
       overview: 'Running outdoors — the same cardiovascular benefits as a treadmill with variable terrain and no belt to dictate pace.',
       setup: [
@@ -3408,6 +3583,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'rowing-machine': {
+    images: imagesFor('rowing-machine'),
     guide: {
       overview: 'A full-body cardio machine mimicking the rowing stroke — trains the legs, back, and cardiovascular system together.',
       setup: [
@@ -3427,6 +3603,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'stationary-bike': {
+    images: imagesFor('stationary-bike'),
     guide: {
       overview: 'A low-impact cardio machine pedaling against adjustable resistance.',
       setup: [
@@ -3446,6 +3623,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'assault-bike': {
+    images: imagesFor('assault-bike'),
     guide: {
       overview: 'A fan bike using both arms and legs, popular for high-intensity interval conditioning since resistance scales with effort.',
       setup: [
@@ -3465,6 +3643,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   elliptical: {
+    images: imagesFor('elliptical'),
     guide: {
       overview: 'A low-impact cardio machine combining a striding motion for the legs with moving handles for the arms.',
       setup: [
@@ -3484,6 +3663,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'stair-climber': {
+    images: imagesFor('stair-climber'),
     guide: {
       overview: 'A cardio machine simulating continuous stair climbing — heavily engages the glutes and quads.',
       setup: [
@@ -3503,6 +3683,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'jump-rope': {
+    images: imagesFor('jump-rope'),
     guide: {
       overview: 'A classic cardio and coordination exercise jumping over a rotating rope.',
       setup: [
@@ -3522,6 +3703,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'sled-push': {
+    images: imagesFor('sled-push'),
     guide: {
       overview: 'A conditioning and leg-strength exercise pushing a weighted sled across the floor.',
       setup: [
@@ -3541,6 +3723,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'sled-pull': {
+    images: imagesFor('sled-pull'),
     guide: {
       overview: 'A conditioning exercise pulling a weighted sled using a rope or harness, often walking backward or forward.',
       setup: [
@@ -3560,6 +3743,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   'battle-ropes': {
+    images: imagesFor('battle-ropes'),
     guide: {
       overview: 'A high-intensity conditioning exercise generating waves through heavy ropes anchored at one end.',
       setup: [
@@ -3579,6 +3763,7 @@ export const EXERCISE_LIBRARY = {
     },
   },
   swimming: {
+    images: imagesFor('swimming'),
     guide: {
       overview: 'Full-body, low-impact cardiovascular exercise in water — easy on the joints while building endurance and upper-body strength.',
       setup: [
@@ -3599,7 +3784,7 @@ export const EXERCISE_LIBRARY = {
   },
 
   // ---------------------------------------------------------------------
-  // Already-shipped prototype entries with real photos
+  // CHEST (added after the initial category pass above)
   // ---------------------------------------------------------------------
   'incline-smith-machine-bench-press': {
     images: imagesFor('incline-smith-machine-bench-press'),
