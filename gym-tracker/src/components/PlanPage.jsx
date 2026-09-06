@@ -3,7 +3,7 @@ import PageHeader from './PageHeader.jsx'
 import ProgramWizard from './ProgramWizard.jsx'
 import SessionEditSheet from './SessionEditSheet.jsx'
 import SettingsSheet from './SettingsSheet.jsx'
-import { CalendarIcon, SettingsIcon, EditIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon } from '../lib/icons.jsx'
+import { CalendarIcon, SettingsIcon, EditIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, TrashIcon } from '../lib/icons.jsx'
 import { findExercise } from '../lib/exercises.js'
 import { groupLabels } from '../lib/superset.js'
 import { genId } from '../lib/id.js'
@@ -25,6 +25,7 @@ function PlanPage({
   const [showWizard, setShowWizard] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [editingSessionId, setEditingSessionId] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   const editingSession = program?.sessions.find((s) => s.id === editingSessionId)
 
@@ -42,6 +43,11 @@ function PlanPage({
   // two slots twice and canceling back to the start.
   function moveSession(sessionId, direction) {
     onReorderSessions(sessionId, direction)
+  }
+
+  function confirmDelete(sessionId) {
+    onDeleteSession(sessionId)
+    setConfirmDeleteId(null)
   }
 
   return (
@@ -93,8 +99,31 @@ function PlanPage({
                   <button type="button" className="icon-btn" onClick={() => setEditingSessionId(session.id)} aria-label="Edit session">
                     <EditIcon size={15} />
                   </button>
+                  {program.sessions.length > 1 && (
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={() => setConfirmDeleteId(session.id)}
+                      aria-label="Delete session"
+                    >
+                      <TrashIcon size={15} />
+                    </button>
+                  )}
                 </div>
               </div>
+              {confirmDeleteId === session.id && (
+                <div className="card card-tight" style={{ borderColor: 'var(--color-danger)', marginBottom: 'var(--space-3)' }}>
+                  <p style={{ marginTop: 0 }}>Delete "{session.name}"? This can't be undone.</p>
+                  <div className="btn-block-row">
+                    <button type="button" className="btn btn-ghost" onClick={() => setConfirmDeleteId(null)}>
+                      Cancel
+                    </button>
+                    <button type="button" className="btn btn-danger" onClick={() => confirmDelete(session.id)}>
+                      Confirm Delete
+                    </button>
+                  </div>
+                </div>
+              )}
               {(() => {
                 const labels = groupLabels(session.exercises)
                 return session.exercises.map((ex) => {
