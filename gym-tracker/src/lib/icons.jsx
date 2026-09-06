@@ -212,3 +212,9 @@ export const InfoIcon = (props) => (
     <path d="M12 11v5.5M12 7.5v.01" />
   </Icon>
 )
+
+export const SwapIcon = (props) => (
+  <Icon {...props}>
+    <path d="M4 8h13l-3-3M20 16H7l3 3" />
+  </Icon>
+)
