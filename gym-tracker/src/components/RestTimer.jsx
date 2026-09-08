@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { playRestOverChime, vibrate } from '../lib/sound.js'
+import { startLockScreenTimer, updateLockScreenTimer, stopLockScreenTimer } from '../lib/lockScreenTimer.js'
 
 function formatClock(seconds) {
   const m = Math.floor(seconds / 60)
@@ -39,11 +40,19 @@ function RestTimer({ rest, onDone, onExtend, onSkip }) {
   useEffect(() => {
     setPhase('resting')
     announcedRef.current = false
+    startLockScreenTimer(`Rest — ${formatClock(remainingFrom(rest.endsAt))}`)
   }, [rest.startedAt])
+
+  // Best-effort: shows the same countdown on the phone's lock-screen media
+  // widget where the Media Session API is supported (see lockScreenTimer.js)
+  // — a plain web page has no other way to draw anything while locked.
+  useEffect(() => () => stopLockScreenTimer(), [])
 
   useEffect(() => {
     function recompute() {
-      setRemaining(remainingFrom(rest.endsAt))
+      const value = remainingFrom(rest.endsAt)
+      setRemaining(value)
+      updateLockScreenTimer(`Rest — ${formatClock(value)}`)
     }
     recompute()
     const id = setInterval(recompute, 1000)
@@ -63,6 +72,7 @@ function RestTimer({ rest, onDone, onExtend, onSkip }) {
       playRestOverChime()
       vibrate([120, 80, 120])
       setPhase('go')
+      updateLockScreenTimer('Rest over — go!')
     }
     const id = setTimeout(() => onDoneRef.current?.(), 2500)
     return () => clearTimeout(id)

@@ -140,6 +140,9 @@ function PlanPage({
                         </span>
                         <span className="muted">{ex.targetSets} × {reps}</span>
                       </div>
+                      <div className="ex-meta">
+                        RPE {ex.targetRPE} · Rest {ex.restSeconds}s
+                      </div>
                       {ex.notes && <div className="exercise-note">{ex.notes}</div>}
                     </Fragment>
                   )
