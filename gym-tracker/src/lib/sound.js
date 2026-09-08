@@ -6,7 +6,7 @@
 // workout (e.g. the first "complete set" tap) rather than from a timer.
 let audioCtx = null
 
-function getAudioContext() {
+export function getAudioContext() {
   if (typeof window === 'undefined') return null
   const Ctor = window.AudioContext || window.webkitAudioContext
   if (!Ctor) return null

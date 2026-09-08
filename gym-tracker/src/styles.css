@@ -983,6 +983,12 @@ p {
   padding: 0 0 6px;
 }
 
+.ex-meta {
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  padding: 0 0 4px;
+}
+
 .history-log-item {
   display: flex;
   justify-content: space-between;

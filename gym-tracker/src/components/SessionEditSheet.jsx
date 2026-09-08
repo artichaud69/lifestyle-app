@@ -153,6 +153,26 @@ function SessionEditSheet({ session, customExercises, onAddCustomExercise, onSav
               <input type="number" value={ex.repsMin} onChange={(e) => updateField(index, 'repsMin', Number(e.target.value))} />
               <input type="number" value={ex.repsMax} onChange={(e) => updateField(index, 'repsMax', Number(e.target.value))} />
             </div>
+            <div className="set-table-head" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              <span>Rest (sec)</span>
+              <span>Target RPE</span>
+            </div>
+            <div className="set-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              <input
+                type="number"
+                step="15"
+                value={ex.restSeconds}
+                onChange={(e) => updateField(index, 'restSeconds', Number(e.target.value))}
+              />
+              <input
+                type="number"
+                step="0.5"
+                min="1"
+                max="10"
+                value={ex.targetRPE}
+                onChange={(e) => updateField(index, 'targetRPE', Number(e.target.value))}
+              />
+            </div>
             <label className="checkbox-row">
               <input
                 type="checkbox"
