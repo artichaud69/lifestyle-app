@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import Sheet from './Sheet.jsx'
+import { getLockScreenStatus } from '../lib/lockScreenTimer.js'
 
 function slugify(text) {
   return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -20,6 +21,7 @@ function SettingsSheet({ settings, program, onSave, onImportProgram, onClose }) 
   const [restSeconds, setRestSeconds] = useState(settings.restSeconds)
   const [measurementUnit, setMeasurementUnit] = useState(settings.measurementUnit)
   const [importError, setImportError] = useState('')
+  const [lockScreenStatus, setLockScreenStatus] = useState(null)
   const fileInputRef = useRef(null)
 
   function handleFile(e) {
@@ -104,6 +106,50 @@ function SettingsSheet({ settings, program, onSave, onImportProgram, onClose }) 
         </div>
         <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFile} style={{ display: 'none' }} />
         {importError && <div className="feedback-card warning" style={{ marginTop: 'var(--space-2)' }}><p>{importError}</p></div>}
+      </div>
+
+      <div className="field" style={{ marginTop: 'var(--space-5)' }}>
+        <label>Lock-screen rest timer</label>
+        <p style={{ marginTop: 0 }}>
+          Whether your phone shows the rest countdown on its lock screen is up to the phone — the app is never told
+          either way. Run a rest, then check this to see how far it got.
+        </p>
+        <button type="button" className="btn btn-secondary" onClick={() => setLockScreenStatus(getLockScreenStatus())}>
+          Check Status
+        </button>
+        {lockScreenStatus && (
+          <div className="card card-tight" style={{ marginTop: 'var(--space-2)' }}>
+            {[
+              ['Media Session support', lockScreenStatus.mediaSession ? 'yes' : 'no'],
+              ['Position state support', lockScreenStatus.positionState ? 'yes' : 'no'],
+              ['Session state', lockScreenStatus.playbackState ?? '—'],
+              ['Rests started', String(lockScreenStatus.starts)],
+              ['Audio track created', lockScreenStatus.audioCreated ? 'yes' : 'no'],
+              ['Audio playing', lockScreenStatus.audioPlaying === null ? '—' : lockScreenStatus.audioPlaying ? 'yes' : 'no'],
+              ['Audio length', lockScreenStatus.audioSeconds === null ? '—' : `${lockScreenStatus.audioSeconds}s`],
+              ['Audio load state', lockScreenStatus.audioReady === null ? '—' : `${lockScreenStatus.audioReady}/4`],
+              ['Audio error', lockScreenStatus.audioErrorCode === null ? 'none' : `code ${lockScreenStatus.audioErrorCode}`],
+              ['Last play error', lockScreenStatus.lastPlayError ?? 'none'],
+            ].map(([label, value]) => (
+              <div key={label} className="ex-name">
+                <span>{label}</span>
+                <span className="muted">{value}</span>
+              </div>
+            ))}
+            {lockScreenStatus.events.length > 0 && (
+              <>
+                <div className="ex-name">
+                  <span>Recent activity</span>
+                </div>
+                {lockScreenStatus.events.map((event, i) => (
+                  <div key={i} className="ex-meta">
+                    {event}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </Sheet>
   )

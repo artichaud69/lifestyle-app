@@ -21,7 +21,16 @@
 // detected and safe to call anywhere; the in-app pill and the completion
 // chime never depend on any of this.
 const SAMPLE_RATE = 8000
-const LOOP_SECONDS = 0.5
+// Has to stay comfortably above the ~5s below which browsers write the audio
+// off as a UI sound effect and never create a media notification at all —
+// that's the whole reason a lock-screen card appears or doesn't. (The first
+// pass here used a 0.5s clip and nothing showed up anywhere.)
+const LOOP_SECONDS = 30
+const TONE_HZ = 30
+// ~-42 dBFS. Not digital silence, which browsers' "is this page actually
+// making noise" checks can discard, but 30Hz at this level is below what a
+// phone speaker can physically reproduce.
+const AMPLITUDE = 256
 
 let audioEl = null
 let loopUrl = null
@@ -31,36 +40,51 @@ let retryOnGesture = null
 // after the real start and silently stops the loop that had just begun,
 // which takes the whole lock-screen session down with it.
 let wantPlaying = false
+let lastPlayError = null
+let startCount = 0
+// Reaching the Settings readout means leaving the Train tab, which unmounts
+// the rest timer and tears the session down — so live state is always "none"
+// by the time anyone reads it. This log is what actually survives to be
+// reported back.
+const events = []
+
+function note(text) {
+  const at = new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  events.push(`${at} — ${text}`)
+  if (events.length > 8) events.shift()
+}
 
 function isSupported() {
   return typeof navigator !== 'undefined' && 'mediaSession' in navigator && typeof MediaMetadata !== 'undefined'
 }
 
-// 8-bit mono PCM alternating between 128 and 129 every 40 samples: a 100Hz
-// square wave one LSB tall (~-42dBFS), inaudible in practice but loud
-// enough to count as real audio to the browser.
+// 16-bit mono PCM — the format every decoder handles. (8-bit WAV is a real
+// decoding risk on iOS, which is not a place to be clever.)
 function nearSilentLoopUrl() {
   if (loopUrl) return loopUrl
   const frames = Math.round(SAMPLE_RATE * LOOP_SECONDS)
-  const buffer = new ArrayBuffer(44 + frames)
+  const dataBytes = frames * 2
+  const buffer = new ArrayBuffer(44 + dataBytes)
   const view = new DataView(buffer)
   const writeText = (offset, text) => {
     for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i))
   }
   writeText(0, 'RIFF')
-  view.setUint32(4, 36 + frames, true)
+  view.setUint32(4, 36 + dataBytes, true)
   writeText(8, 'WAVE')
   writeText(12, 'fmt ')
   view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true)
-  view.setUint16(22, 1, true)
+  view.setUint16(20, 1, true) // PCM
+  view.setUint16(22, 1, true) // mono
   view.setUint32(24, SAMPLE_RATE, true)
-  view.setUint32(28, SAMPLE_RATE, true)
-  view.setUint16(32, 1, true)
-  view.setUint16(34, 8, true)
+  view.setUint32(28, SAMPLE_RATE * 2, true) // byte rate
+  view.setUint16(32, 2, true) // block align
+  view.setUint16(34, 16, true) // bits per sample
   writeText(36, 'data')
-  view.setUint32(40, frames, true)
-  for (let i = 0; i < frames; i++) view.setUint8(44 + i, 128 + (Math.floor(i / 40) % 2))
+  view.setUint32(40, dataBytes, true)
+  for (let i = 0; i < frames; i++) {
+    view.setInt16(44 + i * 2, Math.round(AMPLITUDE * Math.sin((2 * Math.PI * TONE_HZ * i) / SAMPLE_RATE)), true)
+  }
   loopUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }))
   return loopUrl
 }
@@ -77,7 +101,38 @@ function ensureAudioElement() {
 
 function play(el) {
   const started = el.play()
-  if (started?.catch) started.catch(() => armGestureRetry(el))
+  if (!started?.catch) return
+  started
+    .then(() => {
+      lastPlayError = null
+      note(`audio playing (${Number.isFinite(el.duration) ? Math.round(el.duration) : '?'}s track)`)
+    })
+    .catch((error) => {
+      lastPlayError = `${error?.name ?? 'Error'}: ${error?.message ?? ''}`.slice(0, 140)
+      note(`play rejected — ${error?.name ?? 'Error'}`)
+      armGestureRetry(el)
+    })
+}
+
+// Whether a phone actually surfaces any of this is decided by the browser and
+// the OS, silently — setting metadata always "succeeds" from JS even when
+// nothing is shown. So the app can't detect it; this is what the Settings
+// readout prints so a real device can be diagnosed from the outside.
+export function getLockScreenStatus() {
+  const hasSession = typeof navigator !== 'undefined' && 'mediaSession' in navigator
+  return {
+    mediaSession: hasSession,
+    positionState: hasSession && typeof navigator.mediaSession.setPositionState === 'function',
+    playbackState: hasSession ? navigator.mediaSession.playbackState : null,
+    audioCreated: !!audioEl,
+    audioPlaying: audioEl ? !audioEl.paused : null,
+    audioSeconds: audioEl && Number.isFinite(audioEl.duration) ? Math.round(audioEl.duration) : null,
+    audioReady: audioEl ? audioEl.readyState : null,
+    audioErrorCode: audioEl?.error ? audioEl.error.code : null,
+    starts: startCount,
+    lastPlayError,
+    events: [...events].reverse(),
+  }
 }
 
 // A play() that lands outside the user-activation window is rejected, and
@@ -121,6 +176,8 @@ export function startLockScreenTimer(label, totalSeconds, remainingSeconds) {
     const el = ensureAudioElement()
     if (!el) return
     wantPlaying = true
+    startCount += 1
+    note(`rest started (${totalSeconds}s)`)
     play(el)
     navigator.mediaSession.metadata = new MediaMetadata({ title: label, artist: 'Gym Tracker', album: 'Rest Timer' })
     navigator.mediaSession.playbackState = 'playing'
@@ -166,6 +223,7 @@ export function updateLockScreenLabel(label) {
 
 export function stopLockScreenTimer() {
   try {
+    if (wantPlaying) note('session stopped')
     wantPlaying = false
     if (retryOnGesture && typeof document !== 'undefined') {
       document.removeEventListener('pointerdown', retryOnGesture)
