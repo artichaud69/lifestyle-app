@@ -5,6 +5,7 @@ import {
   updateLockScreenPosition,
   updateLockScreenLabel,
   stopLockScreenTimer,
+  getLockScreenStatus,
 } from './lockScreenTimer.js'
 
 // jsdom (the test environment) implements neither the Media Session API nor
@@ -32,6 +33,12 @@ describe('lockScreenTimer on an unsupported platform', () => {
 
   it('stopLockScreenTimer does not throw', () => {
     expect(() => stopLockScreenTimer()).not.toThrow()
+  })
+
+  it('getLockScreenStatus reports the platform as unsupported instead of throwing', () => {
+    const status = getLockScreenStatus()
+    expect(status.mediaSession).toBe(false)
+    expect(status.positionState).toBe(false)
   })
 
   it('a full prime/start/update/stop sequence does not throw', () => {
