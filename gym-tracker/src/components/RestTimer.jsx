@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { playRestOverChime, vibrate } from '../lib/sound.js'
-import { startLockScreenTimer, updateLockScreenTimer, stopLockScreenTimer } from '../lib/lockScreenTimer.js'
+import {
+  startLockScreenTimer,
+  updateLockScreenPosition,
+  updateLockScreenLabel,
+  stopLockScreenTimer,
+} from '../lib/lockScreenTimer.js'
 
 function formatClock(seconds) {
   const m = Math.floor(seconds / 60)
@@ -10,6 +15,10 @@ function formatClock(seconds) {
 
 function remainingFrom(endsAt) {
   return Math.max(0, Math.ceil((endsAt - Date.now()) / 1000))
+}
+
+function totalSecondsOf(rest) {
+  return Math.max(1, Math.round((rest.endsAt - rest.startedAt) / 1000))
 }
 
 // Rest has two distinct, unmistakable phases: counting down ("resting"),
@@ -40,19 +49,26 @@ function RestTimer({ rest, onDone, onExtend, onSkip }) {
   useEffect(() => {
     setPhase('resting')
     announcedRef.current = false
-    startLockScreenTimer(`Rest — ${formatClock(remainingFrom(rest.endsAt))}`)
   }, [rest.startedAt])
 
-  // Best-effort: shows the same countdown on the phone's lock-screen media
+  // Best-effort: mirrors the countdown onto the phone's lock-screen media
   // widget where the Media Session API is supported (see lockScreenTimer.js)
-  // — a plain web page has no other way to draw anything while locked.
+  // — a plain web page has no other way to draw anything while locked. The
+  // title carries the total and stays put; the live seconds ride on position
+  // state, which the OS advances itself. Re-runs on endsAt too, so "+30s"
+  // stretches the lock-screen duration to match.
+  useEffect(() => {
+    const total = totalSecondsOf(rest)
+    startLockScreenTimer(`Rest — ${formatClock(total)}`, total, remainingFrom(rest.endsAt))
+  }, [rest.startedAt, rest.endsAt])
+
   useEffect(() => () => stopLockScreenTimer(), [])
 
   useEffect(() => {
     function recompute() {
       const value = remainingFrom(rest.endsAt)
       setRemaining(value)
-      updateLockScreenTimer(`Rest — ${formatClock(value)}`)
+      updateLockScreenPosition(totalSecondsOf(rest), value)
     }
     recompute()
     const id = setInterval(recompute, 1000)
@@ -72,14 +88,13 @@ function RestTimer({ rest, onDone, onExtend, onSkip }) {
       playRestOverChime()
       vibrate([120, 80, 120])
       setPhase('go')
-      updateLockScreenTimer('Rest over — go!')
+      updateLockScreenLabel('Rest over — go!')
     }
     const id = setTimeout(() => onDoneRef.current?.(), 2500)
     return () => clearTimeout(id)
   }, [remaining])
 
-  const totalSeconds = Math.max(1, Math.round((rest.endsAt - rest.startedAt) / 1000))
-  const progress = Math.max(0, Math.min(1, 1 - remaining / totalSeconds))
+  const progress = Math.max(0, Math.min(1, 1 - remaining / totalSecondsOf(rest)))
 
   return (
     <div className="rest-timer-bar">

@@ -4,6 +4,7 @@ import ExercisePicker from './ExercisePicker.jsx'
 import RestTimer from './RestTimer.jsx'
 import { PlusIcon, XIcon } from '../lib/icons.jsx'
 import { primeAudio } from '../lib/sound.js'
+import { primeLockScreenTimer } from '../lib/lockScreenTimer.js'
 import { groupLabels, isLastInGroup } from '../lib/superset.js'
 import { suggestWarmupSets } from '../lib/warmup.js'
 import { moveItemById } from '../lib/reorder.js'
@@ -132,7 +133,12 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
   }
 
   function toggleComplete(entryIndex, setIndex) {
-    primeAudio() // real click, the one chance to unlock audio before the rest-over chime needs to fire unattended
+    // Real click — the one chance to unlock audio before the rest-over chime
+    // and the lock-screen media session both need it, unattended, moments
+    // from now. An element's first play() has to come from a gesture, so
+    // priming here is what lets the timer reach the lock screen at all.
+    primeAudio()
+    primeLockScreenTimer()
     onChangeDraft((prev) => {
       const entry = prev.entries[entryIndex]
       const set = entry.sets[setIndex]
