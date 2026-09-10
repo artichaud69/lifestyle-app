@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import Sheet from './Sheet.jsx'
 import { runPushCheck } from '../lib/pushCheck.js'
+import { startLockedAlertTest, getLockedAlertResults, clearLockedAlertTest } from '../lib/alertTest.js'
 
 function slugify(text) {
   return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -23,7 +24,21 @@ function SettingsSheet({ settings, program, onSave, onImportProgram, onClose }) 
   const [importError, setImportError] = useState('')
   const [pushSteps, setPushSteps] = useState(null)
   const [pushChecking, setPushChecking] = useState(false)
+  const [alertResults, setAlertResults] = useState(() => getLockedAlertResults())
   const fileInputRef = useRef(null)
+
+  function startAlertTest() {
+    // Permission has to be asked for inside the tap, same iOS rule as the
+    // push check above.
+    const ask = typeof Notification !== 'undefined' && Notification.permission === 'default'
+      ? Notification.requestPermission()
+      : Promise.resolve(typeof Notification === 'undefined' ? 'unavailable' : Notification.permission)
+    ask.then(() => {
+      clearLockedAlertTest()
+      startLockedAlertTest()
+      setAlertResults(getLockedAlertResults())
+    })
+  }
 
   function checkPush() {
     setPushChecking(true)
@@ -117,6 +132,41 @@ function SettingsSheet({ settings, program, onSave, onImportProgram, onClose }) 
         </div>
         <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFile} style={{ display: 'none' }} />
         {importError && <div className="feedback-card warning" style={{ marginTop: 'var(--space-2)' }}><p>{importError}</p></div>}
+      </div>
+
+      <div className="field" style={{ marginTop: 'var(--space-5)' }}>
+        <label>Do alerts survive locking the phone?</label>
+        <p style={{ marginTop: 0 }}>
+          Start this, then <strong>lock your phone immediately</strong> and leave it for about two and a half minutes.
+          It schedules alerts at 5s, 30s, 60s and 120s. Come back and press Show Results — whether the later ones
+          arrived <em>on time</em> decides whether rest alerts need a server at all.
+        </p>
+        <div className="btn-block-row">
+          <button type="button" className="btn btn-secondary" onClick={startAlertTest}>
+            Start &amp; Lock Phone
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={() => setAlertResults(getLockedAlertResults())}>
+            Show Results
+          </button>
+        </div>
+        {alertResults && (
+          <div className="card card-tight" style={{ marginTop: 'var(--space-2)' }}>
+            {alertResults.entries.map((entry) => (
+              <div key={entry.seconds} className="ex-name">
+                <span>After {entry.seconds}s</span>
+                <span className="muted">
+                  {!entry.fired
+                    ? entry.stillPending
+                      ? 'not due yet'
+                      : 'never fired'
+                    : entry.onTime
+                      ? 'on time'
+                      : `late by ${Math.round(entry.lateBy / 1000)}s`}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="field" style={{ marginTop: 'var(--space-5)' }}>
