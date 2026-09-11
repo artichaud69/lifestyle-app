@@ -46,7 +46,7 @@ whole setup.
 ## How the coach works
 
 All of it lives in `src/lib/coach.js` and is pure, tested logic (`coach.test.js`,
-`workout.test.js`):
+`trainingIntent.test.js`, `workout.test.js`):
 
 - `generateProgram()` builds a program from a goal + experience + training
   frequency, using standard, well-established programming patterns (linear
@@ -56,6 +56,16 @@ All of it lives in `src/lib/coach.js` and is pure, tested logic (`coach.test.js`
 - `analyzeWorkout()` runs right after you finish a session and produces the
   feedback cards (PR, stall, missed target, volume trend) shown in the
   workout summary.
+
+Progression is tracked **per rep scheme, not per exercise**. The same lift
+programmed as heavy fives on one day and sets of 10-15 on another carries two
+separate working weights, and each progresses off its own history — so a
+strength session never hands its weight to a hypertrophy session, and the
+coach never asks you to add to it. `src/lib/trainingIntent.js` decides when
+two prescriptions count as the same kind of work (rep ranges within a rep of
+each other). The first time a lift is planned at a rep range it has no history
+at, the weight is converted across through the estimated 1RM rather than
+copied, and the rationale says so.
 
 Because it's just arithmetic over your own logged data, there's nothing to
 sign up for and nothing that can rate-limit or charge you.

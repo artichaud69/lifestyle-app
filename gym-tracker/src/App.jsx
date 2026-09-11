@@ -147,6 +147,17 @@ function App() {
       .map((entry) => ({
         exerciseId: entry.exerciseId,
         exerciseName: entry.exerciseName,
+        // What the session asked for, kept with the log so the coach can
+        // tell a strength session from a hypertrophy one on the same lift
+        // later, instead of guessing from the reps that came out.
+        scheme: entry.planExercise
+          ? {
+              repsMin: entry.planExercise.repsMin ?? null,
+              repsMax: entry.planExercise.repsMax ?? null,
+              progression: entry.planExercise.progression ?? null,
+              targetSets: entry.planExercise.targetSets ?? null,
+            }
+          : null,
         sets: entry.sets
           .filter((set) => set.completed)
           .map((set) => ({
