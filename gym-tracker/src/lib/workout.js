@@ -9,8 +9,33 @@ export function estimateOneRepMax(weight, reps) {
   return weight * (1 + reps / 30)
 }
 
+// Inverse of the Epley estimate above: the weight you would expect to move
+// for `reps` reps, given an estimated one-rep max. Lets a working weight be
+// carried across rep ranges — a 5-rep strength load is not a 12-rep
+// hypertrophy load, but both can be read off the same 1RM estimate.
+export function estimateWeightForReps(oneRepMax, reps) {
+  if (!oneRepMax || !reps) return 0
+  if (reps === 1) return oneRepMax
+  return oneRepMax / (1 + reps / 30)
+}
+
 export function workingSets(sets) {
   return (sets ?? []).filter((set) => set.completed && !set.isWarmup)
+}
+
+// Ramping/ascending-set schemes (e.g. "3 heavy sets" where earlier sets are
+// lighter warm-ups-that-count-as-working-sets) log several weights inside
+// one entry. Success/failure should be judged on the sets actually taken at
+// the heaviest weight worked that session, not on every working set — a
+// lighter ramp-up set landing below the rep target shouldn't count as a
+// miss, and it also shouldn't be treated as "the" weight for next time. For
+// ordinary straight sets (all working sets share one weight) this returns
+// the same array workingSets() would.
+export function topWorkingSets(sets) {
+  const working = workingSets(sets)
+  if (working.length === 0) return working
+  const maxWeight = Math.max(...working.map((set) => set.weight))
+  return working.filter((set) => Math.round(set.weight * 100) === Math.round(maxWeight * 100))
 }
 
 export function bestSet(sets) {
@@ -34,12 +59,13 @@ export function averageRPE(sets) {
 }
 
 // Finds, for a given exercise, the most recent logged entry across all past
-// workouts — the coach's only source of "what happened last time".
-export function findLastEntry(logs, exerciseId) {
+// workouts — the app's source of "what happened last time". Pass `filter` to
+// restrict it to entries worth comparing against (see findEntryHistory).
+export function findLastEntry(logs, exerciseId, filter = null) {
   const sorted = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date))
   for (const log of sorted) {
     const entry = log.entries.find((e) => e.exerciseId === exerciseId)
-    if (entry && workingSets(entry.sets).length > 0) return { log, entry }
+    if (entry && workingSets(entry.sets).length > 0 && (!filter || filter(entry))) return { log, entry }
   }
   return null
 }
@@ -113,12 +139,15 @@ export function mergeEntriesByExercise(entries) {
   return order.map((exerciseId) => byExerciseId.get(exerciseId))
 }
 
-export function findEntryHistory(logs, exerciseId, limit = 10) {
+// `filter` narrows which past entries count — the coach uses it to keep a
+// lift's strength history and its hypertrophy history apart. It is applied
+// before `limit`, so filtering never costs you matching sessions.
+export function findEntryHistory(logs, exerciseId, limit = 10, filter = null) {
   const sorted = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date))
   const history = []
   for (const log of sorted) {
     const entry = log.entries.find((e) => e.exerciseId === exerciseId)
-    if (entry && workingSets(entry.sets).length > 0) {
+    if (entry && workingSets(entry.sets).length > 0 && (!filter || filter(entry))) {
       history.push({ date: log.date, entry })
       if (history.length >= limit) break
     }

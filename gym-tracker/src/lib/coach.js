@@ -3,9 +3,30 @@
 // and autoregulation logic a good coach would — double progression for
 // hypertrophy/general work, linear load progression with deload detection
 // for strength compounds — entirely from data already sitting in localStorage.
+//
+// Progression is tracked per rep scheme, not per exercise: the same lift
+// trained as heavy fives one day and sets of twelve another has two separate
+// working weights, and each one progresses off its own history. See
+// trainingIntent.js for where that line gets drawn.
 import { genId } from './id.js'
 import { findExercise } from './exercises.js'
-import { estimateOneRepMax, workingSets, bestSet, totalVolume, findEntryHistory } from './workout.js'
+import {
+  estimateOneRepMax,
+  estimateWeightForReps,
+  workingSets,
+  topWorkingSets,
+  bestSet,
+  totalVolume,
+  findEntryHistory,
+} from './workout.js'
+import { planScheme, entryScheme, schemesAlign, describeScheme } from './trainingIntent.js'
+
+// When a lift has no history at the rep range being planned — the first
+// hypertrophy session for something previously trained as heavy fives, say —
+// the working weight is converted through the shared 1RM estimate rather
+// than copied across. That estimate describes a single all-out rep, so hold
+// a little back before asking for several sets at the converted load.
+const CROSS_SCHEME_RESERVE = 0.9
 
 const GOAL_LABELS = {
   strength: 'Strength',
@@ -137,19 +158,38 @@ function roundToStep(value, step) {
   return Math.round(value / step) * step
 }
 
-// Ramping/ascending-set schemes (e.g. "3 heavy sets" where earlier sets are
-// lighter warm-ups-that-count-as-working-sets) log several weights inside
-// one entry. Success/failure should be judged on the sets actually taken at
-// the heaviest weight worked that session, not on every working set — a
-// lighter ramp-up set landing below the rep target shouldn't count as a
-// miss, and it also shouldn't be treated as "the" weight for next time. For
-// ordinary straight sets (all working sets share one weight) this returns
-// the same array workingSets() would, so behavior there is unchanged.
-function topWorkingSets(sets) {
-  const working = workingSets(sets)
-  if (working.length === 0) return working
-  const maxWeight = Math.max(...working.map((set) => set.weight))
-  return working.filter((set) => Math.round(set.weight * 100) === Math.round(maxWeight * 100))
+function floorToStep(value, step) {
+  return Math.floor(value / step + 1e-9) * step
+}
+
+// Last resort when a lift is planned at a rep range it has no history at:
+// read the most recent session of any rep range, turn its best set into a
+// 1RM estimate, and solve that back down to the reps now being asked for.
+// Returns null when there is nothing to convert from (no history at all, or
+// unweighted work like bodyweight sets), leaving the first-time advice.
+function crossSchemeTarget(planExercise, logs, { increment, step, unit }) {
+  const recent = findEntryHistory(logs, planExercise.exerciseId, 1)
+  if (recent.length === 0) return null
+
+  const entry = recent[0].entry
+  const reference = bestSet(entry.sets)
+  if (!reference || !(reference.weight > 0) || !(reference.reps > 0)) return null
+
+  const targetReps = planExercise.repsMin
+  if (!(targetReps > 0)) return null
+
+  const oneRepMax = estimateOneRepMax(reference.weight, reference.reps)
+  const converted = estimateWeightForReps(oneRepMax, targetReps) * CROSS_SCHEME_RESERVE
+  // Round down onto the exercise's own loading grid: the first session at a
+  // new rep range should err light, and it's the reps that are the target.
+  const targetWeight = roundToStep(Math.max(floorToStep(converted, increment), increment), step)
+
+  return {
+    ...planExercise,
+    targetWeight,
+    targetReps,
+    rationale: `No history yet at ${describeScheme(planScheme(planExercise))} reps — your last session was ${reference.weight}${unit}×${reference.reps}, which works out to about ${targetWeight}${unit} for sets of ${targetReps}. Adjust on the first set if it reads wrong.`,
+  }
 }
 
 function isSuccessful(planExercise, sets) {
@@ -192,15 +232,25 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg') {
   // noise, a 10% deload), not the jump size itself — that's `increment`,
   // which already matches how the exercise is normally loaded.
   const step = unit === 'kg' ? 0.5 : 1
-  const history = findEntryHistory(logs, planExercise.exerciseId, 6)
   const exercise = findExercise(planExercise.exerciseId)
   const increment = exercise?.increment ?? (unit === 'kg' ? 2.5 : 5)
 
+  // Only sessions trained at a comparable rep range are "last time" for this
+  // prescription. Without this, a set of five for strength would hand its
+  // weight straight to a set of twelve for hypertrophy, and the coach would
+  // then ask you to add to it.
+  const scheme = planScheme(planExercise)
+  const history = findEntryHistory(logs, planExercise.exerciseId, 6, (entry) =>
+    schemesAlign(entryScheme(entry), scheme),
+  )
+
   if (history.length === 0) {
-    return {
-      ...planExercise,
-      rationale: 'First time logging this one — pick a weight that leaves 2-3 reps in reserve on your last set.',
-    }
+    return (
+      crossSchemeTarget(planExercise, logs, { increment, step, unit }) ?? {
+        ...planExercise,
+        rationale: 'First time logging this one — pick a weight that leaves 2-3 reps in reserve on your last set.',
+      }
+    )
   }
 
   const last = history[history.length - 1]
@@ -304,7 +354,14 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}) {
     const working = workingSets(entry.sets)
     if (working.length === 0) continue
 
+    // Two histories: personal bests are measured off the 1RM estimate, which
+    // is comparable across rep ranges, but "up from last time" and plateau
+    // calls only mean something against sessions of the same kind of work.
     const history = findEntryHistory(priorLogs, entry.exerciseId, 6)
+    const scheme = entryScheme(entry)
+    const schemeHistory = findEntryHistory(priorLogs, entry.exerciseId, 6, (past) =>
+      schemesAlign(entryScheme(past), scheme),
+    )
     const currentBestSet = bestSet(entry.sets)
     const currentBest1RM = currentBestSet ? estimateOneRepMax(currentBestSet.weight, currentBestSet.reps) : 0
     const priorBest1RM = allTimeBestOneRM(history)
@@ -330,8 +387,8 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}) {
           exerciseName: entry.exerciseName,
           message: `Missed the target on ${entry.exerciseName} — that happens, the coach will hold the weight next time.`,
         })
-      } else if (success && history.length >= 3) {
-        const recentBests = [...history.slice(-3).map(({ entry: e }) => {
+      } else if (success && schemeHistory.length >= 3) {
+        const recentBests = [...schemeHistory.slice(-3).map(({ entry: e }) => {
           const s = bestSet(e.sets)
           return s ? estimateOneRepMax(s.weight, s.reps) : 0
         }), currentBest1RM]
@@ -347,8 +404,8 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}) {
       }
     }
 
-    if (history.length > 0) {
-      const previousEntry = history[history.length - 1].entry
+    if (schemeHistory.length > 0) {
+      const previousEntry = schemeHistory[schemeHistory.length - 1].entry
       const prevVolume = totalVolume(previousEntry.sets)
       const currentVolume = totalVolume(entry.sets)
       if (prevVolume > 0 && currentVolume > prevVolume * 1.02) {

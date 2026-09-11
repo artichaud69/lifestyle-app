@@ -5,12 +5,12 @@ function setsOf(weight, reps, count, overrides = {}) {
   return Array.from({ length: count }, () => ({ weight, reps, completed: true, isWarmup: false, ...overrides }))
 }
 
-function makeLog(id, date, sessionTemplateId, exerciseId, sets, exerciseName = 'Test Exercise') {
+function makeLog(id, date, sessionTemplateId, exerciseId, sets, exerciseName = 'Test Exercise', scheme = null) {
   return {
     id,
     date,
     sessionTemplateId,
-    entries: [{ exerciseId, exerciseName, sets }],
+    entries: [{ exerciseId, exerciseName, sets, scheme }],
   }
 }
 
@@ -189,6 +189,77 @@ describe('suggestNextTarget - double progression', () => {
   })
 })
 
+describe('suggestNextTarget - separate rep schemes for the same lift', () => {
+  const strengthPlan = { exerciseId: 'back-squat', targetSets: 3, repsMin: 5, repsMax: 5, progression: 'linear', targetWeight: 100 }
+  const hypertrophyPlan = { exerciseId: 'back-squat', targetSets: 3, repsMin: 10, repsMax: 15, progression: 'double', targetWeight: null }
+
+  it('does not carry a strength weight into a hypertrophy prescription', () => {
+    const logs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3), 'Back Squat', { repsMin: 5, repsMax: 5 })]
+    const result = suggestNextTarget(hypertrophyPlan, logs, 'kg')
+    // est. 1RM 116.7 -> ~87.5 for 10 reps, held back to ~78.8, floored onto
+    // the back squat's 5kg grid.
+    expect(result.targetWeight).toBe(75)
+    expect(result.targetReps).toBe(10)
+    expect(result.rationale).toMatch(/no history yet at 10-15 reps/i)
+  })
+
+  it('does not carry a hypertrophy weight into a strength prescription either', () => {
+    const logs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(80, 12, 3), 'Back Squat', { repsMin: 10, repsMax: 15 })]
+    const result = suggestNextTarget(strengthPlan, logs, 'kg')
+    expect(result.targetWeight).toBeGreaterThan(80)
+    expect(result.targetWeight).toBeLessThan(112)
+    expect(result.targetReps).toBe(5)
+  })
+
+  it('progresses each rep scheme off its own history once both exist', () => {
+    const logs = [
+      makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(75, 15, 3), 'Back Squat', { repsMin: 10, repsMax: 15 }),
+      makeLog('l2', '2026-01-04', 's2', 'back-squat', setsOf(100, 5, 3), 'Back Squat', { repsMin: 5, repsMax: 5 }),
+    ]
+    expect(suggestNextTarget(strengthPlan, logs, 'kg').targetWeight).toBe(105)
+    expect(suggestNextTarget(hypertrophyPlan, logs, 'kg').targetWeight).toBe(80)
+  })
+
+  it('still progresses normally when the most recent session is the other scheme', () => {
+    const logs = [
+      makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3), 'Back Squat', { repsMin: 5, repsMax: 5 }),
+      makeLog('l2', '2026-01-04', 's2', 'back-squat', setsOf(75, 12, 3), 'Back Squat', { repsMin: 10, repsMax: 15 }),
+    ]
+    const result = suggestNextTarget(strengthPlan, logs, 'kg')
+    expect(result.targetWeight).toBe(105)
+    expect(result.rationale).toMatch(/add 5kg/)
+  })
+
+  it('reads the scheme off logged reps for entries saved before schemes were recorded', () => {
+    const logs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3), 'Back Squat')]
+    expect(suggestNextTarget(hypertrophyPlan, logs, 'kg').targetWeight).toBe(75)
+    expect(suggestNextTarget(strengthPlan, logs, 'kg').targetWeight).toBe(105)
+  })
+
+  it('keeps a deload stall count within one rep scheme', () => {
+    const missed = [...setsOf(100, 5, 2), { weight: 100, reps: 3, completed: true, isWarmup: false }]
+    const logs = [
+      makeLog('l1', '2026-01-01', 's1', 'back-squat', missed, 'Back Squat', { repsMin: 5, repsMax: 5 }),
+      makeLog('l2', '2026-01-03', 's2', 'back-squat', setsOf(70, 15, 3), 'Back Squat', { repsMin: 10, repsMax: 15 }),
+      makeLog('l3', '2026-01-08', 's1', 'back-squat', missed, 'Back Squat', { repsMin: 5, repsMax: 5 }),
+      makeLog('l4', '2026-01-10', 's2', 'back-squat', setsOf(70, 15, 3), 'Back Squat', { repsMin: 10, repsMax: 15 }),
+      makeLog('l5', '2026-01-15', 's1', 'back-squat', missed, 'Back Squat', { repsMin: 5, repsMax: 5 }),
+    ]
+    // The hypertrophy sessions in between neither break nor pad the streak.
+    const result = suggestNextTarget(strengthPlan, logs, 'kg')
+    expect(result.targetWeight).toBe(90)
+    expect(result.rationale).toMatch(/deload/i)
+  })
+
+  it('leaves bodyweight work on the first-time advice rather than converting from zero', () => {
+    const plan = { exerciseId: 'push-up', targetSets: 3, repsMin: 12, repsMax: 20, progression: 'double', targetWeight: null }
+    const logs = [makeLog('l1', '2026-01-01', 's1', 'push-up', setsOf(0, 5, 3), 'Push-Up', { repsMin: 5, repsMax: 5 })]
+    const result = suggestNextTarget(plan, logs, 'kg')
+    expect(result.targetWeight).toBeNull()
+    expect(result.rationale).toMatch(/first time/i)
+  })
+})
+
 describe('analyzeWorkout', () => {
   it('flags a personal record when the estimated 1RM improves', () => {
     const priorLogs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3), 'Back Squat')]
@@ -235,6 +306,15 @@ describe('analyzeWorkout', () => {
     const currentLog = makeLog('l1', '2026-01-08', 's1', 'safety-bar-squat', sets, 'Safety Bar Squat')
     const result = analyzeWorkout(currentLog, [currentLog], { 'safety-bar-squat': plan })
     expect(result.cards.some((c) => c.type === 'warning')).toBe(false)
+  })
+
+  it('does not call a volume increase when the previous session was a different rep scheme', () => {
+    const priorLogs = [
+      makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3), 'Back Squat', { repsMin: 5, repsMax: 5 }),
+    ]
+    const currentLog = makeLog('l2', '2026-01-04', 's2', 'back-squat', setsOf(75, 12, 3), 'Back Squat', { repsMin: 10, repsMax: 15 })
+    const result = analyzeWorkout(currentLog, [...priorLogs, currentLog], {})
+    expect(result.cards.some((c) => c.type === 'progress')).toBe(false)
   })
 
   it('has an encouraging default message when nothing notable happened', () => {

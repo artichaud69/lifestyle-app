@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { findLastEntry, formatSetsSummary } from '../lib/workout.js'
+import { planScheme, entryScheme, schemesAlign } from '../lib/trainingIntent.js'
 import { MIN_WEIGHT_FOR_RAMP } from '../lib/warmup.js'
 import { CheckIcon, TrashIcon, TargetIcon, ChevronUpIcon, ChevronDownIcon, SwapIcon } from '../lib/icons.jsx'
 import Sheet from './Sheet.jsx'
@@ -62,8 +63,15 @@ function ExerciseCard({
   const [showSwap, setShowSwap] = useState(false)
   const [showWarmupPrompt, setShowWarmupPrompt] = useState(false)
   const [warmupWeightInput, setWarmupWeightInput] = useState('')
-  const last = findLastEntry(logs, entry.exerciseId)
+  // "Last time" has to mean last time at this rep range: showing a heavy
+  // set of five above a 10-15 rep target reads as a weight to match, and
+  // it isn't one. Fall back to the most recent session of any kind, clearly
+  // labelled, when this rep range has no history yet.
+  const scheme = planScheme(entry.planExercise)
+  const lastAtScheme = findLastEntry(logs, entry.exerciseId, (past) => schemesAlign(entryScheme(past), scheme))
+  const last = lastAtScheme ?? findLastEntry(logs, entry.exerciseId)
   const lastSummary = last ? formatSetsSummary(last.entry.sets, unit) : null
+  const lastLabel = lastAtScheme ? 'Last time' : 'Last time (different rep range)'
 
   const hasWarmupAlready = entry.sets.some((set) => set.isWarmup)
   const typedWeight = entry.sets.find((set) => !set.isWarmup && Number(set.weight) > 0)?.weight
@@ -114,7 +122,7 @@ function ExerciseCard({
         <span>+ More info</span>
       </button>
       {entry.planExercise?.notes && <div className="exercise-note">{entry.planExercise.notes}</div>}
-      {lastSummary && <div className="last-time">Last time: {lastSummary}</div>}
+      {lastSummary && <div className="last-time">{lastLabel}: {lastSummary}</div>}
       {entry.planExercise?.rationale && <div className="rationale">{entry.planExercise.rationale}</div>}
 
       <div className="set-table-head">
