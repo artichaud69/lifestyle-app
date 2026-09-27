@@ -1,22 +1,14 @@
 // The same lift can be programmed for completely different purposes: heavy
 // fives for strength on one day, sets of 10-15 for hypertrophy on another.
 // Those working weights are not interchangeable, so "what did I lift last
-// time" is not one number per exercise — it is one number per rep scheme.
-// This module decides when two prescriptions count as the same kind of work,
-// so the coach can progress each one off its own history instead of asking
-// for hypertrophy sets at a strength weight.
+// time" is not one number per exercise — it is one progression track per
+// prescribed rep range. This module decides which past sessions belong to the
+// track being planned, so progression.js can fold each track's own history.
+//
+// The prescribed range is the track's identity, exactly as written: 5-8 and
+// 4-7 are different tracks. Editing a session's rep range therefore starts a
+// new track rather than reinterpreting the old one's history.
 import { topWorkingSets } from './workout.js'
-
-// How far apart two rep ranges may sit and still count as the same kind of
-// work, measured as the gap between the ranges in reps. One rep of slack
-// keeps neighbouring prescriptions together (5×5 and 6-8 are the same
-// intent) while keeping fives and tens apart, which is the case that
-// actually goes wrong.
-const EXPLICIT_TOLERANCE = 1
-// Schemes inferred from logged reps (older logs, freeform work) get more
-// slack: a session where the reps were missed reads lighter than it was
-// programmed, and shouldn't be mistaken for a different training intent.
-const INFERRED_TOLERANCE = 2
 
 function makeScheme(repsMin, repsMax, inferred) {
   const min = Number(repsMin)
@@ -52,21 +44,28 @@ export function entryScheme(entry) {
   return recorded ?? inferSchemeFromSets(entry.sets)
 }
 
-// Reps between two ranges; 0 when they overlap.
-export function schemeGap(a, b) {
-  if (a.repsMax < b.repsMin) return b.repsMin - a.repsMax
-  if (b.repsMax < a.repsMin) return a.repsMin - b.repsMax
-  return 0
-}
+// A session whose range had to be inferred (logged before ranges were
+// recorded, or freeform) is judged on its best set. Landing above the
+// prescribed ceiling means it was a different, higher-rep prescription;
+// landing a little under the floor just means reps were missed, which is
+// ordinary inside this track — so the floor gets a couple of reps of slack.
+const INFERRED_FLOOR_SLACK = 2
 
-// Whether two rep schemes are close enough that a working weight logged
-// under one is a sensible starting point for the other. An unknown scheme
-// aligns with everything — with nothing to tell them apart, throwing the
-// history away would be worse than using it.
-export function schemesAlign(a, b) {
-  if (!a || !b) return true
-  const tolerance = a.inferred || b.inferred ? INFERRED_TOLERANCE : EXPLICIT_TOLERANCE
-  return schemeGap(a, b) <= tolerance
+// Whether a past session belongs to the track a prescription describes.
+//
+// Recorded ranges must match exactly — the prescribed range *is* the track
+// identity, so re-prescribing 5-8 as 4-7 starts a new track. Inferred ranges
+// can only be tested for plausibility (see above); discarding them instead
+// would restart every lift logged before ranges were recorded.
+export function sameTrack(scheme, trackScheme) {
+  if (!scheme || !trackScheme) return true
+  if (scheme.inferred === trackScheme.inferred) {
+    return scheme.repsMin === trackScheme.repsMin && scheme.repsMax === trackScheme.repsMax
+  }
+  const [prescribed, observed] = scheme.inferred ? [trackScheme, scheme] : [scheme, trackScheme]
+  return (
+    observed.repsMax <= prescribed.repsMax && observed.repsMax >= prescribed.repsMin - INFERRED_FLOOR_SLACK
+  )
 }
 
 export function describeScheme(scheme) {

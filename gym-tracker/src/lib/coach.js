@@ -4,22 +4,32 @@
 // hypertrophy/general work, linear load progression with deload detection
 // for strength compounds — entirely from data already sitting in localStorage.
 //
-// Progression is tracked per rep scheme, not per exercise: the same lift
-// trained as heavy fives one day and sets of twelve another has two separate
-// working weights, and each one progresses off its own history. See
-// trainingIntent.js for where that line gets drawn.
+// Progression is tracked per exercise AND per prescribed rep range: the same
+// lift trained as heavy fives one day and sets of 10-15 another has two
+// separate tracks that never touch. trainingIntent.js decides which past
+// sessions belong to a track; progression.js folds a track's history into a
+// state and prescribes the next step. This file wires those to the program and
+// the post-workout report.
 import { genId } from './id.js'
 import { findExercise } from './exercises.js'
 import {
   estimateOneRepMax,
   estimateWeightForReps,
   workingSets,
-  topWorkingSets,
   bestSet,
   totalVolume,
   findEntryHistory,
 } from './workout.js'
-import { planScheme, entryScheme, schemesAlign, describeScheme } from './trainingIntent.js'
+import { planScheme, entryScheme, sameTrack, describeScheme } from './trainingIntent.js'
+import {
+  OUTCOME,
+  NO_PROGRESS_LIMIT,
+  sessionAchievement,
+  applySession,
+  trackState,
+  nextPrescription,
+  formatRepsPerSet,
+} from './progression.js'
 
 // When a lift has no history at the rep range being planned — the first
 // hypertrophy session for something previously trained as heavy fives, say —
@@ -28,12 +38,21 @@ import { planScheme, entryScheme, schemesAlign, describeScheme } from './trainin
 // a little back before asking for several sets at the converted load.
 const CROSS_SCHEME_RESERVE = 0.9
 
+// How far back the progression fold reads. The state is a running maximum of
+// what's been demonstrated, so a longer window is strictly better information;
+// this only bounds the work per render.
+const TRACK_HISTORY_LIMIT = 20
+
 const GOAL_LABELS = {
   strength: 'Strength',
   hypertrophy: 'Hypertrophy',
   general: 'General Fitness',
 }
 
+// `progression` no longer selects a progression rule — the rep ladder covers
+// both, since a range whose min equals its max (5×5) has a single rung and so
+// advances the load every time it is completed. It survives as the label for
+// how a plan was built, and it still picks the default rest time.
 function mkPlanExercise(exerciseId, { sets, repsMin, repsMax, rpe, progression }) {
   return {
     id: genId(),
@@ -188,142 +207,91 @@ function crossSchemeTarget(planExercise, logs, { increment, step, unit }) {
     ...planExercise,
     targetWeight,
     targetReps,
+    targetRepsPerSet: Array.from({ length: Math.max(1, Number(planExercise.targetSets) || 1) }, () => targetReps),
     rationale: `No history yet at ${describeScheme(planScheme(planExercise))} reps — your last session was ${reference.weight}${unit}×${reference.reps}, which works out to about ${targetWeight}${unit} for sets of ${targetReps}. Adjust on the first set if it reads wrong.`,
   }
 }
 
-function isSuccessful(planExercise, sets) {
-  const working = workingSets(sets)
-  if (working.length < planExercise.targetSets) return false
-  const top = topWorkingSets(sets)
-  const target = planExercise.progression === 'linear' ? planExercise.repsMin : planExercise.repsMax
-  return top.every((set) => set.reps >= target)
-}
-
-function metFloor(planExercise, sets) {
-  const working = workingSets(sets)
-  if (working.length < planExercise.targetSets) return false
-  const top = topWorkingSets(sets)
-  return top.every((set) => set.reps >= planExercise.repsMin)
-}
-
-// Walks backwards through history to count how many sessions in a row have
-// failed at the *current* working weight, so a genuine plateau (not just an
-// off day) is what triggers a deload suggestion.
-function failStreakAtWeight(history, planExercise, weight) {
-  let streak = 0
-  for (let i = history.length - 1; i >= 0; i--) {
-    const { entry } = history[i]
-    const top = topWorkingSets(entry.sets)
-    if (top.length === 0) break
-    const sampleWeight = top[0].weight
-    if (Math.round(sampleWeight * 100) !== Math.round(weight * 100)) break
-    if (isSuccessful(planExercise, entry.sets)) break
-    streak++
+// The loading grid and rep range one planned exercise progresses on. `step`
+// only cleans up arithmetic (floating-point noise, a 10% deload); `increment`
+// is the jump size, and already matches how the exercise is normally loaded.
+export function trackConfig(planExercise, unit = 'kg') {
+  const exercise = findExercise(planExercise.exerciseId)
+  const repsMin = Math.max(1, Number(planExercise.repsMin) || 1)
+  const repsMax = Math.max(repsMin, Number(planExercise.repsMax) || repsMin)
+  return {
+    targetSets: Math.max(1, Number(planExercise.targetSets) || 1),
+    repsMin,
+    repsMax,
+    increment: exercise?.increment ?? (unit === 'kg' ? 2.5 : 5),
+    step: unit === 'kg' ? 0.5 : 1,
   }
-  return streak
+}
+
+// The past sessions belonging to this prescription's track, oldest first.
+export function trackHistory(planExercise, logs) {
+  const scheme = planScheme(planExercise)
+  return findEntryHistory(logs, planExercise.exerciseId, TRACK_HISTORY_LIMIT, (entry) =>
+    sameTrack(entryScheme(entry), scheme),
+  )
+}
+
+function rationaleFor(next, state, config, unit) {
+  const target = formatRepsPerSet(next.repsPerSet)
+  const range = `${config.repsMin}-${config.repsMax}`
+
+  if (state.deloadedFrom) {
+    return `${NO_PROGRESS_LIMIT} sessions without progress at ${state.deloadedFrom}${unit} — drop to ${next.load}${unit} and build back up to ${target}.`
+  }
+  if (next.needsProgressionOverload) {
+    return `Every set at ${config.repsMax} reps — this one has no weight to add, so make it harder (slower, harder variation) or add reps beyond the range.`
+  }
+  if (next.levelCompleted) {
+    return `Every set at ${config.repsMax} reps at ${next.previousLoad}${unit} — up to ${next.load}${unit}, back to ${config.repsMin}s.`
+  }
+  if (next.consolidating) {
+    return `Build up to ${target} at ${next.load}${unit} before adding weight.`
+  }
+  const streak = state.noProgressStreak
+  const streakNote =
+    streak > 0
+      ? ` ${streak} session${streak === 1 ? '' : 's'} without new ground — ${NO_PROGRESS_LIMIT - streak} more and the coach will unload.`
+      : ''
+  return `You've shown ${formatRepsPerSet(next.demonstrated)} at ${next.load}${unit} — next step is ${target}. One set at a time, anywhere in ${range}.${streakNote}`
 }
 
 // Suggests the next weight/rep target for one planned exercise, given all
 // prior logs for that exercise. Returns the same shape as a session-template
 // exercise, plus a one-line `rationale` explaining the call.
 export function suggestNextTarget(planExercise, logs, unit = 'kg') {
-  // Rounding granularity for cleaning up arithmetic (e.g. floating point
-  // noise, a 10% deload), not the jump size itself — that's `increment`,
-  // which already matches how the exercise is normally loaded.
-  const step = unit === 'kg' ? 0.5 : 1
-  const exercise = findExercise(planExercise.exerciseId)
-  const increment = exercise?.increment ?? (unit === 'kg' ? 2.5 : 5)
+  const config = trackConfig(planExercise, unit)
+  const { increment, step } = config
+  const history = trackHistory(planExercise, logs)
 
-  // Only sessions trained at a comparable rep range are "last time" for this
-  // prescription. Without this, a set of five for strength would hand its
-  // weight straight to a set of twelve for hypertrophy, and the coach would
-  // then ask you to add to it.
-  const scheme = planScheme(planExercise)
-  const history = findEntryHistory(logs, planExercise.exerciseId, 6, (entry) =>
-    schemesAlign(entryScheme(entry), scheme),
-  )
-
-  if (history.length === 0) {
-    return (
-      crossSchemeTarget(planExercise, logs, { increment, step, unit }) ?? {
-        ...planExercise,
-        rationale: 'First time logging this one — pick a weight that leaves 2-3 reps in reserve on your last set.',
-      }
-    )
-  }
-
-  const last = history[history.length - 1]
-  const lastTop = topWorkingSets(last.entry.sets)
-  const lastWeight = lastTop[0]?.weight ?? planExercise.targetWeight ?? 0
-  // The weakest of the top sets, not the best — next session's rep target
-  // has to be something every set can actually reach, not just the best one.
-  const lastReps = lastTop.length > 0 ? Math.min(...lastTop.map((set) => set.reps)) : planExercise.repsMin
-  const success = isSuccessful(planExercise, last.entry.sets)
-  const metMinimum = metFloor(planExercise, last.entry.sets)
-
-  if (planExercise.progression === 'linear') {
-    if (success) {
-      const newWeight = roundToStep(lastWeight + increment, step)
-      return {
-        ...planExercise,
-        targetWeight: newWeight,
-        targetReps: planExercise.repsMin,
-        rationale: `Hit all sets of ${planExercise.repsMin} last time — add ${increment}${unit}.`,
-      }
-    }
-    const streak = failStreakAtWeight(history, planExercise, lastWeight)
-    if (streak >= 3) {
-      const deload = roundToStep(lastWeight * 0.9, step)
-      return {
-        ...planExercise,
-        targetWeight: deload,
-        targetReps: planExercise.repsMin,
-        rationale: `Stalled at ${lastWeight}${unit} for 3 sessions in a row — deload to ${deload}${unit} and build back up.`,
-      }
-    }
-    return {
+  const withoutHistory = () =>
+    crossSchemeTarget(planExercise, logs, { increment, step, unit }) ?? {
       ...planExercise,
-      targetWeight: lastWeight,
-      targetReps: planExercise.repsMin,
-      rationale: `Missed a rep last time — repeat ${lastWeight}${unit} and aim to hit them all.`,
+      targetRepsPerSet: null,
+      rationale: 'First time logging this one — pick a weight that leaves 2-3 reps in reserve on your last set.',
     }
-  }
 
-  // double progression
-  if (success) {
-    const newWeight = roundToStep(lastWeight + increment, step)
-    return {
-      ...planExercise,
-      targetWeight: newWeight,
-      targetReps: planExercise.repsMin,
-      rationale: `Hit the top of your rep range (${planExercise.repsMax}) on every set — up to ${newWeight}${unit}, back to ${planExercise.repsMin} reps.`,
-    }
-  }
-  if (metMinimum) {
-    const nextReps = Math.min(lastReps + 1, planExercise.repsMax)
-    return {
-      ...planExercise,
-      targetWeight: lastWeight,
-      targetReps: nextReps,
-      rationale: `In range but not maxed out yet — stay at ${lastWeight}${unit} and aim for ${nextReps} reps across all sets (last time: ${lastReps}).`,
-    }
-  }
-  const streak = failStreakAtWeight(history, planExercise, lastWeight)
-  if (streak >= 3) {
-    const deload = roundToStep(lastWeight * 0.9, step)
-    return {
-      ...planExercise,
-      targetWeight: deload,
-      targetReps: planExercise.repsMin,
-      rationale: `Missed the rep range 3 sessions running at ${lastWeight}${unit} — drop to ${deload}${unit}.`,
-    }
-  }
+  if (history.length === 0) return withoutHistory()
+
+  const state = trackState(history, config)
+  const next = nextPrescription(state, config)
+  // Aligned history exists but nothing usable in it (every set unweighted and
+  // short of the floor) — fall back to the cross-range estimate.
+  if (!next) return withoutHistory()
+
   return {
     ...planExercise,
-    targetWeight: lastWeight,
-    targetReps: planExercise.repsMin,
-    rationale: `Missed the rep range last time — repeat ${lastWeight}${unit} before adding weight.`,
+    targetWeight: next.load,
+    // Per-set targets: the ladder is climbed one set at a time, so the sets
+    // are not all asking for the same number of reps.
+    targetRepsPerSet: next.repsPerSet,
+    // Kept for callers that only understand a single number (the heaviest set).
+    targetReps: next.repsPerSet[0],
+    rationale: rationaleFor(next, state, config, unit),
   }
 }
 
@@ -345,23 +313,19 @@ function allTimeBestOneRM(history) {
 
 // Produces the post-workout feedback cards: PRs, volume trend, missed
 // targets, and plateau alerts. Pure function of the logs already saved.
-export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}) {
+export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, unit = 'kg') {
   const priorLogs = allLogs.filter((l) => l.id !== log.id)
   const cards = []
   let prCount = 0
+  let levelCount = 0
 
   for (const entry of log.entries) {
     const working = workingSets(entry.sets)
     if (working.length === 0) continue
 
-    // Two histories: personal bests are measured off the 1RM estimate, which
-    // is comparable across rep ranges, but "up from last time" and plateau
-    // calls only mean something against sessions of the same kind of work.
+    // Personal bests are measured off the 1RM estimate, which is comparable
+    // across rep ranges, so they read all of the exercise's history.
     const history = findEntryHistory(priorLogs, entry.exerciseId, 6)
-    const scheme = entryScheme(entry)
-    const schemeHistory = findEntryHistory(priorLogs, entry.exerciseId, 6, (past) =>
-      schemesAlign(entryScheme(past), scheme),
-    )
     const currentBestSet = bestSet(entry.sets)
     const currentBest1RM = currentBestSet ? estimateOneRepMax(currentBestSet.weight, currentBestSet.reps) : 0
     const priorBest1RM = allTimeBestOneRM(history)
@@ -376,45 +340,66 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}) {
       prCount++
     }
 
+    // What this session was worth on its own progression track: replay the
+    // track's prior sessions, then fold this one in and report the outcome.
+    // Nothing here grades the workout against the prescription.
     const planExercise = planExercisesByExerciseId[entry.exerciseId]
+    let outcome = null
     if (planExercise) {
-      const success = isSuccessful(planExercise, entry.sets)
-      const metMinimum = metFloor(planExercise, entry.sets)
-      if (!metMinimum) {
-        cards.push({
-          type: 'warning',
-          exerciseId: entry.exerciseId,
-          exerciseName: entry.exerciseName,
-          message: `Missed the target on ${entry.exerciseName} — that happens, the coach will hold the weight next time.`,
-        })
-      } else if (success && schemeHistory.length >= 3) {
-        const recentBests = [...schemeHistory.slice(-3).map(({ entry: e }) => {
-          const s = bestSet(e.sets)
-          return s ? estimateOneRepMax(s.weight, s.reps) : 0
-        }), currentBest1RM]
-        const flat = Math.max(...recentBests) - Math.min(...recentBests) <= Math.max(...recentBests) * 0.02
-        if (flat && currentBest1RM <= priorBest1RM * 1.001) {
-          cards.push({
-            type: 'stall',
-            exerciseId: entry.exerciseId,
-            exerciseName: entry.exerciseName,
-            message: `${entry.exerciseName} has been flat for a few sessions — consider a deload or swapping in a variation.`,
-          })
-        }
-      }
-    }
+      const config = trackConfig(planExercise, unit)
+      const before = trackState(trackHistory(planExercise, priorLogs), config)
+      const result = applySession(before, sessionAchievement(entry.sets, config), config)
+      outcome = result.outcome
 
-    if (schemeHistory.length > 0) {
-      const previousEntry = schemeHistory[schemeHistory.length - 1].entry
-      const prevVolume = totalVolume(previousEntry.sets)
-      const currentVolume = totalVolume(entry.sets)
-      if (prevVolume > 0 && currentVolume > prevVolume * 1.02) {
+      if (outcome === OUTCOME.levelCompleted) {
         cards.push({
           type: 'progress',
           exerciseId: entry.exerciseId,
           exerciseName: entry.exerciseName,
-          message: `Volume on ${entry.exerciseName} is up from last time (${Math.round(prevVolume)} → ${Math.round(currentVolume)}).`,
+          message: `${entry.exerciseName} is done at this weight — every set at ${config.repsMax} reps. The load goes up next session.`,
         })
+        levelCount++
+      } else if (outcome === OUTCOME.progress) {
+        cards.push({
+          type: 'progress',
+          exerciseId: entry.exerciseId,
+          exerciseName: entry.exerciseName,
+          message: `${entry.exerciseName} moved forward: ${formatRepsPerSet(result.state.reps)} at ${result.state.load}${unit} is the best you've shown at this weight.`,
+        })
+      } else if (outcome === OUTCOME.noProgress) {
+        const deloaded = result.deloadedFrom
+        cards.push({
+          type: deloaded ? 'stall' : 'info',
+          exerciseId: entry.exerciseId,
+          exerciseName: entry.exerciseName,
+          message: deloaded
+            ? `${entry.exerciseName} has held at ${deloaded}${unit} for ${NO_PROGRESS_LIMIT} sessions — dropping to ${result.state.load}${unit} next time to build back up.`
+            : `No new ground on ${entry.exerciseName} today — the weight and targets stay put next session.`,
+        })
+      }
+      // OUTCOME.incomplete says nothing either way, so it gets no card.
+    }
+
+    // Volume trend, for exercises with no track of their own (freeform work)
+    // or a session that didn't move the track. With an outcome card already
+    // posted, this would just be a second opinion on the same session.
+    if (!outcome || outcome === OUTCOME.incomplete) {
+      const scheme = entryScheme(entry)
+      const schemeHistory = findEntryHistory(priorLogs, entry.exerciseId, 6, (past) =>
+        sameTrack(entryScheme(past), scheme),
+      )
+      if (schemeHistory.length > 0) {
+        const previousEntry = schemeHistory[schemeHistory.length - 1].entry
+        const prevVolume = totalVolume(previousEntry.sets)
+        const currentVolume = totalVolume(entry.sets)
+        if (prevVolume > 0 && currentVolume > prevVolume * 1.02) {
+          cards.push({
+            type: 'progress',
+            exerciseId: entry.exerciseId,
+            exerciseName: entry.exerciseName,
+            message: `Volume on ${entry.exerciseName} is up from last time (${Math.round(prevVolume)} → ${Math.round(currentVolume)}).`,
+          })
+        }
       }
     }
   }
@@ -425,11 +410,16 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}) {
   let overallMessage
   if (prCount > 0) {
     overallMessage = prCount === 1 ? 'New personal best this session.' : `${prCount} personal bests this session.`
+  } else if (levelCount > 0) {
+    overallMessage =
+      levelCount === 1 ? 'One lift finished its current weight — it goes up next time.' : `${levelCount} lifts finished their current weight.`
   } else if (cards.some((c) => c.type === 'stall')) {
-    overallMessage = 'Solid session — a couple of lifts are plateauing, see below.'
+    overallMessage = 'Session logged — a lift is being unloaded, see below.'
+  } else if (cards.some((c) => c.type === 'progress')) {
+    overallMessage = 'Session logged — you moved forward today.'
   } else {
     overallMessage = 'Session logged — keep it up.'
   }
 
-  return { cards, overallMessage, prCount }
+  return { cards, overallMessage, prCount, levelCount }
 }

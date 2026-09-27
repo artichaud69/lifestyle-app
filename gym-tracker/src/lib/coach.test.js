@@ -77,31 +77,35 @@ describe('suggestNextTarget - no history', () => {
 describe('suggestNextTarget - linear progression', () => {
   const plan = { exerciseId: 'back-squat', targetSets: 3, repsMin: 5, repsMax: 5, progression: 'linear', targetWeight: 100 }
 
-  it('adds the exercise increment after a fully successful session', () => {
+  it('adds the exercise increment once every set is at the rep target', () => {
     const logs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3))]
     const result = suggestNextTarget(plan, logs, 'kg')
     expect(result.targetWeight).toBe(105) // back-squat increment is 5kg
-    expect(result.rationale).toMatch(/add 5kg/)
+    expect(result.targetRepsPerSet).toEqual([5, 5, 5])
+    expect(result.rationale).toMatch(/up to 105kg/)
   })
 
-  it('repeats the same weight after a single missed rep', () => {
+  it('holds the weight and asks for the missing set again after a missed rep', () => {
     const sets = [...setsOf(100, 5, 2), { weight: 100, reps: 4, completed: true, isWarmup: false }]
     const logs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', sets)]
     const result = suggestNextTarget(plan, logs, 'kg')
     expect(result.targetWeight).toBe(100)
-    expect(result.rationale).toMatch(/missed a rep/i)
+    expect(result.targetRepsPerSet).toEqual([5, 5, 5])
   })
 
-  it('suggests a 10% deload after three straight failures at the same weight', () => {
+  it('suggests a 10% deload after three consecutive sessions without progress', () => {
+    // The first session establishes the baseline — there is nothing yet for it
+    // to have failed against — so three no-progress sessions means four logs.
     const failedSets = [...setsOf(100, 5, 2), { weight: 100, reps: 3, completed: true, isWarmup: false }]
     const logs = [
       makeLog('l1', '2026-01-01', 's1', 'back-squat', failedSets),
       makeLog('l2', '2026-01-08', 's1', 'back-squat', failedSets),
       makeLog('l3', '2026-01-15', 's1', 'back-squat', failedSets),
+      makeLog('l4', '2026-01-22', 's1', 'back-squat', failedSets),
     ]
     const result = suggestNextTarget(plan, logs, 'kg')
     expect(result.targetWeight).toBe(90)
-    expect(result.rationale).toMatch(/deload/i)
+    expect(result.rationale).toMatch(/without progress/i)
   })
 
   it('ignores RPE entirely — the jump size is always the flat increment', () => {
@@ -115,9 +119,11 @@ describe('suggestNextTarget - linear progression', () => {
 describe('suggestNextTarget - ramping/ascending sets', () => {
   const plan = { exerciseId: 'safety-bar-squat', targetSets: 3, repsMin: 5, repsMax: 5, progression: 'linear', targetWeight: 100 }
 
-  it('bases the next weight on the heaviest working set, not the first', () => {
+  it('takes the heaviest set as the working load, not the first', () => {
     // Ramping scheme: lighter set first, then two heavy top sets — a common
     // "3 heavy sets" protocol where the first set is not the target weight.
+    // The ramp-up set is not a set at the top weight, so the load holds until
+    // all three are taken there.
     const sets = [
       { weight: 90, reps: 5, completed: true, isWarmup: false },
       { weight: 100, reps: 5, completed: true, isWarmup: false },
@@ -125,11 +131,23 @@ describe('suggestNextTarget - ramping/ascending sets', () => {
     ]
     const logs = [makeLog('l1', '2026-01-01', 's1', 'safety-bar-squat', sets)]
     const result = suggestNextTarget(plan, logs, 'kg')
-    expect(result.targetWeight).toBe(105)
-    expect(result.rationale).toMatch(/add 5kg/)
+    expect(result.targetWeight).toBe(100)
+    expect(result.targetRepsPerSet).toEqual([5, 5, 5])
   })
 
-  it('judges success only on the top sets, ignoring a lighter ramp-up set that misses the rep target', () => {
+  it('adds weight once all three sets are taken at the top weight', () => {
+    const logs = [
+      makeLog('l1', '2026-01-01', 's1', 'safety-bar-squat', [
+        { weight: 90, reps: 5, completed: true, isWarmup: false },
+        { weight: 100, reps: 5, completed: true, isWarmup: false },
+        { weight: 100, reps: 5, completed: true, isWarmup: false },
+      ]),
+      makeLog('l2', '2026-01-08', 's1', 'safety-bar-squat', setsOf(100, 5, 3)),
+    ]
+    expect(suggestNextTarget(plan, logs, 'kg').targetWeight).toBe(105)
+  })
+
+  it('ignores a lighter ramp-up set that falls short of the rep floor', () => {
     const sets = [
       { weight: 90, reps: 3, completed: true, isWarmup: false },
       { weight: 100, reps: 5, completed: true, isWarmup: false },
@@ -137,10 +155,11 @@ describe('suggestNextTarget - ramping/ascending sets', () => {
     ]
     const logs = [makeLog('l1', '2026-01-01', 's1', 'safety-bar-squat', sets)]
     const result = suggestNextTarget(plan, logs, 'kg')
-    expect(result.targetWeight).toBe(105)
+    expect(result.targetWeight).toBe(100)
+    expect(result.targetRepsPerSet).toEqual([5, 5, 5])
   })
 
-  it('still counts a genuine miss on the top set as a miss', () => {
+  it('does not credit a top set that fell short of the rep floor', () => {
     const sets = [
       { weight: 90, reps: 5, completed: true, isWarmup: false },
       { weight: 100, reps: 5, completed: true, isWarmup: false },
@@ -149,7 +168,6 @@ describe('suggestNextTarget - ramping/ascending sets', () => {
     const logs = [makeLog('l1', '2026-01-01', 's1', 'safety-bar-squat', sets)]
     const result = suggestNextTarget(plan, logs, 'kg')
     expect(result.targetWeight).toBe(100)
-    expect(result.rationale).toMatch(/missed a rep/i)
   })
 })
 
@@ -160,32 +178,33 @@ describe('suggestNextTarget - double progression', () => {
     const logs = [makeLog('l1', '2026-01-01', 's1', 'dumbbell-curl', setsOf(20, 15, 3))]
     const result = suggestNextTarget(plan, logs, 'kg')
     expect(result.targetWeight).toBe(21) // dumbbell-curl increment is 1kg
-    expect(result.rationale).toMatch(/back to 10 reps/)
+    expect(result.targetRepsPerSet).toEqual([10, 10, 10])
+    expect(result.rationale).toMatch(/back to 10s/)
   })
 
-  it('holds weight when in range but not yet at the ceiling, and proposes one more rep than last time', () => {
+  it('holds weight when in range but not yet at the ceiling, and adds a rep to one set', () => {
     const logs = [makeLog('l1', '2026-01-01', 's1', 'dumbbell-curl', setsOf(20, 12, 3))]
     const result = suggestNextTarget(plan, logs, 'kg')
     expect(result.targetWeight).toBe(20)
-    expect(result.targetReps).toBe(13)
-    expect(result.rationale).toMatch(/aim for 13 reps/i)
+    expect(result.targetRepsPerSet).toEqual([13, 12, 12])
+    expect(result.rationale).toMatch(/next step is 13\/12\/12/i)
   })
 
-  it('proposes the weakest top set plus one, not the strongest', () => {
+  it('adds the rep to the weakest set, leaving the stronger sets where they were', () => {
     const logs = [makeLog('l1', '2026-01-01', 's1', 'dumbbell-curl', [
       { weight: 20, reps: 14, completed: true, isWarmup: false },
       { weight: 20, reps: 14, completed: true, isWarmup: false },
       { weight: 20, reps: 10, completed: true, isWarmup: false },
     ])]
     const result = suggestNextTarget(plan, logs, 'kg')
-    expect(result.targetReps).toBe(11)
+    expect(result.targetRepsPerSet).toEqual([14, 14, 11])
   })
 
-  it('holds weight after missing the bottom of the range', () => {
+  it('holds weight and targets the bottom of the range after missing it entirely', () => {
     const logs = [makeLog('l1', '2026-01-01', 's1', 'dumbbell-curl', setsOf(20, 8, 3))]
     const result = suggestNextTarget(plan, logs, 'kg')
     expect(result.targetWeight).toBe(20)
-    expect(result.rationale).toMatch(/missed the rep range/i)
+    expect(result.targetRepsPerSet).toEqual([10, 10, 10])
   })
 })
 
@@ -227,7 +246,7 @@ describe('suggestNextTarget - separate rep schemes for the same lift', () => {
     ]
     const result = suggestNextTarget(strengthPlan, logs, 'kg')
     expect(result.targetWeight).toBe(105)
-    expect(result.rationale).toMatch(/add 5kg/)
+    expect(result.rationale).toMatch(/up to 105kg/)
   })
 
   it('reads the scheme off logged reps for entries saved before schemes were recorded', () => {
@@ -236,19 +255,24 @@ describe('suggestNextTarget - separate rep schemes for the same lift', () => {
     expect(suggestNextTarget(strengthPlan, logs, 'kg').targetWeight).toBe(105)
   })
 
-  it('keeps a deload stall count within one rep scheme', () => {
+  it('keeps the no-progress streak within one rep range', () => {
     const missed = [...setsOf(100, 5, 2), { weight: 100, reps: 3, completed: true, isWarmup: false }]
+    const strength = (id, date) => makeLog(id, date, 's1', 'back-squat', missed, 'Back Squat', { repsMin: 5, repsMax: 5 })
+    const hypertrophy = (id, date) =>
+      makeLog(id, date, 's2', 'back-squat', setsOf(70, 15, 3), 'Back Squat', { repsMin: 10, repsMax: 15 })
     const logs = [
-      makeLog('l1', '2026-01-01', 's1', 'back-squat', missed, 'Back Squat', { repsMin: 5, repsMax: 5 }),
-      makeLog('l2', '2026-01-03', 's2', 'back-squat', setsOf(70, 15, 3), 'Back Squat', { repsMin: 10, repsMax: 15 }),
-      makeLog('l3', '2026-01-08', 's1', 'back-squat', missed, 'Back Squat', { repsMin: 5, repsMax: 5 }),
-      makeLog('l4', '2026-01-10', 's2', 'back-squat', setsOf(70, 15, 3), 'Back Squat', { repsMin: 10, repsMax: 15 }),
-      makeLog('l5', '2026-01-15', 's1', 'back-squat', missed, 'Back Squat', { repsMin: 5, repsMax: 5 }),
+      strength('l1', '2026-01-01'),
+      hypertrophy('l2', '2026-01-03'),
+      strength('l3', '2026-01-08'),
+      hypertrophy('l4', '2026-01-10'),
+      strength('l5', '2026-01-15'),
+      hypertrophy('l6', '2026-01-17'),
+      strength('l7', '2026-01-22'),
     ]
     // The hypertrophy sessions in between neither break nor pad the streak.
     const result = suggestNextTarget(strengthPlan, logs, 'kg')
     expect(result.targetWeight).toBe(90)
-    expect(result.rationale).toMatch(/deload/i)
+    expect(result.rationale).toMatch(/without progress/i)
   })
 
   it('leaves bodyweight work on the first-time advice rather than converting from zero', () => {
@@ -269,31 +293,71 @@ describe('analyzeWorkout', () => {
     expect(result.cards[0].type).toBe('pr')
   })
 
-  it('flags a missed target against the session plan', () => {
-    const plan = { exerciseId: 'back-squat', targetSets: 3, repsMin: 5, repsMax: 5, progression: 'linear' }
+  it('reports no progress without calling the session a failure', () => {
+    const plan = { exerciseId: 'back-squat', targetSets: 3, repsMin: 5, repsMax: 8, progression: 'double' }
+    const scheme = { repsMin: 5, repsMax: 8 }
+    const flat = [...setsOf(100, 7, 1), ...setsOf(100, 6, 2)]
+    const priorLog = makeLog('l1', '2026-01-01', 's1', 'back-squat', flat, 'Back Squat', scheme)
+    const currentLog = makeLog('l2', '2026-01-08', 's1', 'back-squat', flat, 'Back Squat', scheme)
+    const result = analyzeWorkout(currentLog, [priorLog, currentLog], { 'back-squat': plan })
+    expect(result.cards.some((c) => c.type === 'warning')).toBe(false)
+    const card = result.cards.find((c) => c.type === 'info')
+    expect(card.message).toMatch(/no new ground/i)
+  })
+
+  it('calls a partial set-level improvement progress', () => {
+    const plan = { exerciseId: 'back-squat', targetSets: 3, repsMin: 5, repsMax: 8, progression: 'double' }
+    const scheme = { repsMin: 5, repsMax: 8 }
+    const priorLog = makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3), 'Back Squat', scheme)
     const currentLog = makeLog(
-      'l1',
+      'l2',
       '2026-01-08',
       's1',
       'back-squat',
-      [...setsOf(100, 5, 2), { weight: 100, reps: 3, completed: true, isWarmup: false }],
+      [...setsOf(100, 6, 1), ...setsOf(100, 5, 2)],
       'Back Squat',
+      scheme,
     )
-    const result = analyzeWorkout(currentLog, [currentLog], { 'back-squat': plan })
-    expect(result.cards.some((c) => c.type === 'warning')).toBe(true)
+    const result = analyzeWorkout(currentLog, [priorLog, currentLog], { 'back-squat': plan })
+    expect(result.cards.some((c) => c.type === 'warning')).toBe(false)
+    expect(result.cards.some((c) => c.type === 'progress')).toBe(true)
   })
 
-  it('detects a stall when the estimated 1RM has been flat for several sessions', () => {
-    const plan = { exerciseId: 'bench', targetSets: 3, repsMin: 5, repsMax: 5, progression: 'linear' }
-    const flatSets = setsOf(100, 5, 3)
+  it('announces that the load goes up when the rep range is topped out', () => {
+    const plan = { exerciseId: 'back-squat', targetSets: 3, repsMin: 5, repsMax: 8, progression: 'double' }
+    const scheme = { repsMin: 5, repsMax: 8 }
+    const priorLog = makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 7, 3), 'Back Squat', scheme)
+    const currentLog = makeLog('l2', '2026-01-08', 's1', 'back-squat', setsOf(100, 8, 3), 'Back Squat', scheme)
+    const result = analyzeWorkout(currentLog, [priorLog, currentLog], { 'back-squat': plan })
+    expect(result.levelCount).toBe(1)
+    expect(result.cards.some((c) => /goes up next session/.test(c.message))).toBe(true)
+  })
+
+  it('says nothing either way about a session that was cut short', () => {
+    const plan = { exerciseId: 'back-squat', targetSets: 3, repsMin: 5, repsMax: 8, progression: 'double' }
+    const scheme = { repsMin: 5, repsMax: 8 }
+    const priorLog = makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 6, 3), 'Back Squat', scheme)
+    const currentLog = makeLog('l2', '2026-01-08', 's1', 'back-squat', setsOf(100, 6, 2), 'Back Squat', scheme)
+    const result = analyzeWorkout(currentLog, [priorLog, currentLog], { 'back-squat': plan })
+    expect(result.cards.some((c) => c.type === 'warning' || c.type === 'info')).toBe(false)
+  })
+
+  it('announces the unload on the third consecutive session without progress', () => {
+    const plan = { exerciseId: 'bench', targetSets: 3, repsMin: 5, repsMax: 8, progression: 'double' }
+    const scheme = { repsMin: 5, repsMax: 8 }
+    const flatSets = [...setsOf(100, 7, 1), ...setsOf(100, 6, 2)]
     const logs = [
-      makeLog('l1', '2026-01-01', 's1', 'bench', flatSets, 'Bench'),
-      makeLog('l2', '2026-01-08', 's1', 'bench', flatSets, 'Bench'),
-      makeLog('l3', '2026-01-15', 's1', 'bench', flatSets, 'Bench'),
-      makeLog('l4', '2026-01-22', 's1', 'bench', flatSets, 'Bench'),
+      makeLog('l1', '2026-01-01', 's1', 'bench', flatSets, 'Bench', scheme),
+      makeLog('l2', '2026-01-08', 's1', 'bench', flatSets, 'Bench', scheme),
+      makeLog('l3', '2026-01-15', 's1', 'bench', flatSets, 'Bench', scheme),
+      makeLog('l4', '2026-01-22', 's1', 'bench', flatSets, 'Bench', scheme),
     ]
+    // The first three hold the line without a card; only the fourth session,
+    // which is the third with no new ground, unloads.
+    expect(analyzeWorkout(logs[2], logs.slice(0, 3), { bench: plan }).cards.some((c) => c.type === 'stall')).toBe(false)
     const result = analyzeWorkout(logs[3], logs, { bench: plan })
-    expect(result.cards.some((c) => c.type === 'stall')).toBe(true)
+    const card = result.cards.find((c) => c.type === 'stall')
+    expect(card.message).toMatch(/dropping to 90kg/)
   })
 
   it('does not flag a missed target when only a lighter ramp-up set falls short of the rep goal', () => {

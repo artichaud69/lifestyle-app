@@ -75,7 +75,11 @@ function TrainPage({
           </div>
           {suggested.exercises.map((ex) => {
             const info = findExercise(ex.exerciseId, customExercises)
-            const reps = ex.repsMin === ex.repsMax ? `${ex.repsMin}` : `${ex.repsMin}-${ex.repsMax}`
+            const perSet = ex.targetRepsPerSet
+            const uniform = perSet?.length ? perSet.every((value) => value === perSet[0]) : true
+            const reps = perSet?.length
+              ? (uniform ? `${perSet.length} × ${perSet[0]}` : perSet.join('/'))
+              : `${ex.targetSets} × ${ex.repsMin === ex.repsMax ? ex.repsMin : `${ex.repsMin}-${ex.repsMax}`}`
             return (
               <div key={ex.id} className="ex-name">
                 <span>
@@ -83,7 +87,7 @@ function TrainPage({
                   {info?.name ?? ex.exerciseId}
                 </span>
                 <span className="muted">
-                  {ex.targetSets} × {reps}
+                  {reps}
                   {ex.targetWeight ? ` @ ${ex.targetWeight}${settings.unit}` : ''}
                 </span>
               </div>
