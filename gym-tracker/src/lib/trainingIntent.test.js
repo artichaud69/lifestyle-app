@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { planScheme, entryScheme, inferSchemeFromSets, schemeGap, schemesAlign } from './trainingIntent.js'
+import { planScheme, entryScheme, inferSchemeFromSets, sameTrack } from './trainingIntent.js'
 
 const set = (weight, reps) => ({ weight, reps, completed: true, isWarmup: false })
 
@@ -52,29 +52,43 @@ describe('entryScheme', () => {
   })
 })
 
-describe('schemesAlign', () => {
+describe('sameTrack', () => {
   const strength = planScheme({ repsMin: 5, repsMax: 5 })
   const hypertrophy = planScheme({ repsMin: 10, repsMax: 15 })
 
-  it('keeps a 5-rep strength scheme and a 10-15 hypertrophy scheme apart', () => {
-    expect(schemeGap(strength, hypertrophy)).toBe(5)
-    expect(schemesAlign(strength, hypertrophy)).toBe(false)
+  it('keeps a 5-rep strength prescription and a 10-15 hypertrophy one apart', () => {
+    expect(sameTrack(strength, hypertrophy)).toBe(false)
   })
 
-  it('treats overlapping ranges as the same work', () => {
-    expect(schemesAlign(hypertrophy, planScheme({ repsMin: 8, repsMax: 12 }))).toBe(true)
+  it('treats the prescribed range as the track identity, so 5-8 and 4-7 differ', () => {
+    expect(sameTrack(planScheme({ repsMin: 5, repsMax: 8 }), planScheme({ repsMin: 4, repsMax: 7 }))).toBe(false)
   })
 
-  it('allows one rep of slack between neighbouring prescriptions', () => {
-    expect(schemesAlign(strength, planScheme({ repsMin: 6, repsMax: 8 }))).toBe(true)
-    expect(schemesAlign(strength, planScheme({ repsMin: 7, repsMax: 9 }))).toBe(false)
+  it('does not merely overlapping ranges into one track', () => {
+    expect(sameTrack(hypertrophy, planScheme({ repsMin: 8, repsMax: 12 }))).toBe(false)
   })
 
-  it('gives inferred schemes more slack, so a missed rep is not a different intent', () => {
-    expect(schemesAlign(strength, inferSchemeFromSets([set(100, 3)]))).toBe(true)
+  it('matches an identical prescribed range', () => {
+    expect(sameTrack(planScheme({ repsMin: 5, repsMax: 8 }), planScheme({ repsMin: 5, repsMax: 8 }))).toBe(true)
   })
 
-  it('aligns with anything when one side has no known scheme', () => {
-    expect(schemesAlign(strength, null)).toBe(true)
+  it('adopts a pre-scheme log whose reps fit the prescription', () => {
+    expect(sameTrack(planScheme({ repsMin: 5, repsMax: 8 }), inferSchemeFromSets([set(100, 6), set(100, 5)]))).toBe(true)
+  })
+
+  it('adopts a pre-scheme log that missed a rep below the floor', () => {
+    expect(sameTrack(strength, inferSchemeFromSets([set(100, 5), set(100, 3)]))).toBe(true)
+  })
+
+  it('rejects a pre-scheme log whose reps belong to a higher-rep prescription', () => {
+    expect(sameTrack(strength, inferSchemeFromSets([set(60, 12), set(60, 12)]))).toBe(false)
+  })
+
+  it('rejects a pre-scheme log far below a high-rep prescription', () => {
+    expect(sameTrack(hypertrophy, inferSchemeFromSets([set(100, 5), set(100, 5)]))).toBe(false)
+  })
+
+  it('matches anything when one side has no known scheme', () => {
+    expect(sameTrack(strength, null)).toBe(true)
   })
 })

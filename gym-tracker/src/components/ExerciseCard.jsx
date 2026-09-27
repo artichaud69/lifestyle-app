@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { findLastEntry, formatSetsSummary } from '../lib/workout.js'
-import { planScheme, entryScheme, schemesAlign } from '../lib/trainingIntent.js'
+import { planScheme, entryScheme, sameTrack } from '../lib/trainingIntent.js'
 import { MIN_WEIGHT_FOR_RAMP } from '../lib/warmup.js'
 import { CheckIcon, TrashIcon, TargetIcon, ChevronUpIcon, ChevronDownIcon, SwapIcon } from '../lib/icons.jsx'
 import Sheet from './Sheet.jsx'
@@ -9,9 +9,18 @@ import SwapExerciseSheet from './SwapExerciseSheet.jsx'
 
 function targetLabel(planExercise) {
   if (!planExercise) return null
-  const reps = planExercise.repsMin === planExercise.repsMax ? `${planExercise.repsMin}` : `${planExercise.repsMin}-${planExercise.repsMax}`
+  const range = planExercise.repsMin === planExercise.repsMax ? `${planExercise.repsMin}` : `${planExercise.repsMin}-${planExercise.repsMax}`
   const rpe = planExercise.targetRPE ? ` @ RPE ${planExercise.targetRPE}` : ''
-  return `Target: ${planExercise.targetSets} × ${reps}${rpe}`
+  // Per-set targets differ while laddering up a rep range (6/6/5), so show
+  // them set by set rather than as one number that no set is actually asked
+  // for. The range stays visible as the context the ladder runs inside.
+  const perSet = planExercise.targetRepsPerSet
+  if (perSet?.length) {
+    const uniform = perSet.every((value) => value === perSet[0])
+    const shape = uniform ? `${perSet.length} × ${perSet[0]}` : perSet.join(' / ')
+    return `Target: ${shape} (range ${range})${rpe}`
+  }
+  return `Target: ${planExercise.targetSets} × ${range}${rpe}`
 }
 
 const RPE_SCALE = [
@@ -63,12 +72,12 @@ function ExerciseCard({
   const [showSwap, setShowSwap] = useState(false)
   const [showWarmupPrompt, setShowWarmupPrompt] = useState(false)
   const [warmupWeightInput, setWarmupWeightInput] = useState('')
-  // "Last time" has to mean last time at this rep range: showing a heavy
-  // set of five above a 10-15 rep target reads as a weight to match, and
-  // it isn't one. Fall back to the most recent session of any kind, clearly
-  // labelled, when this rep range has no history yet.
+  // "Last time" has to mean last time on this progression track: showing a
+  // heavy set of five above a 10-15 rep target reads as a weight to match,
+  // and it isn't one. Fall back to the most recent session of any kind,
+  // clearly labelled, when this track has no history yet.
   const scheme = planScheme(entry.planExercise)
-  const lastAtScheme = findLastEntry(logs, entry.exerciseId, (past) => schemesAlign(entryScheme(past), scheme))
+  const lastAtScheme = findLastEntry(logs, entry.exerciseId, (past) => sameTrack(entryScheme(past), scheme))
   const last = lastAtScheme ?? findLastEntry(logs, entry.exerciseId)
   const lastSummary = last ? formatSetsSummary(last.entry.sets, unit) : null
   const lastLabel = lastAtScheme ? 'Last time' : 'Last time (different rep range)'
