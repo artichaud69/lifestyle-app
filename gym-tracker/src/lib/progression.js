@@ -18,7 +18,15 @@
 // a recommendation: state is folded out of the sets actually logged, and the
 // fold takes the slot-wise maximum, so what the athlete demonstrated always
 // wins and a lighter back-off set can never erase a heavier one.
+//
+// After a training break (breaks.js) a track enters a short REBUILD: the
+// pre-break state is kept untouched as the level to return to, and the next
+// few sessions are prescribed at reduced loads stepping back up to it. The
+// rebuild is judged on its own lighter targets, so the expected dip after a
+// holiday never reads as lost progress — and lifting the pre-break weights
+// early ends it on the spot.
 import { workingSets } from './workout.js'
+import { rebuildPlan } from './breaks.js'
 
 // Consecutive no-progress sessions before the existing deload fires.
 export const NO_PROGRESS_LIMIT = 3
@@ -34,6 +42,8 @@ export const OUTCOME = {
   // Fewer working sets than prescribed. Missing data is not evidence of
   // regression, so this never counts toward the deload streak.
   incomplete: 'incomplete',
+  // A rebuild step cleared after a break — back on the way to pre-break form.
+  rebuilding: 'rebuilding',
 }
 
 // Weights are compared in hundredths to keep 2.5 + 2.5 + 2.5 out of trouble.
@@ -41,6 +51,10 @@ const cents = (weight) => Math.round((Number(weight) || 0) * 100)
 
 function roundToStep(value, step) {
   return Math.round(value / step) * step
+}
+
+function floorToStep(value, step) {
+  return Math.floor(value / step + 1e-9) * step
 }
 
 const sortDesc = (reps) => [...reps].sort((a, b) => b - a)
@@ -54,7 +68,7 @@ function fitVector(reps, slots) {
 }
 
 export function emptyState() {
-  return { load: null, reps: [], attemptedLoad: null, noProgressStreak: 0 }
+  return { load: null, reps: [], attemptedLoad: null, noProgressStreak: 0, rebuild: null }
 }
 
 // What one logged entry demonstrates, on its own terms.
@@ -71,21 +85,21 @@ export function sessionAchievement(sets, config) {
     reps: Number(set.reps) || 0,
   }))
   const complete = working.length >= targetSets
-  if (working.length === 0) return { load: null, reps: [], attemptedLoad: null, complete: false }
+  if (working.length === 0) return { load: null, reps: [], attemptedLoad: null, complete: false, sets: [] }
 
   // Tracked separately from `load` so a track whose sets have never reached
   // the rep floor still knows what weight was on the bar.
   const attemptedLoad = Math.max(...working.map((set) => set.weight))
 
   const successful = working.filter((set) => set.reps >= repsMin)
-  if (successful.length === 0) return { load: null, reps: [], attemptedLoad, complete }
+  if (successful.length === 0) return { load: null, reps: [], attemptedLoad, complete, sets: working }
 
   const load = Math.max(...successful.map((set) => set.weight))
   const reps = successful
     .filter((set) => cents(set.weight) >= cents(load))
     .map((set) => Math.min(set.reps, repsMax))
 
-  return { load, reps: fitVector(reps, targetSets), attemptedLoad, complete }
+  return { load, reps: fitVector(reps, targetSets), attemptedLoad, complete, sets: working }
 }
 
 function levelCompleted(reps, config) {
@@ -93,8 +107,97 @@ function levelCompleted(reps, config) {
   return slots.length > 0 && slots.every((value) => value >= config.repsMax)
 }
 
+// Starts a rebuild after a break of `breakDays`. The demonstrated state is
+// left exactly as it was — it is the level being returned to — and the
+// rebuild holds the lighter loads that lead back up to it, one per session,
+// each asking for the reps already shown before the break.
+export function startRebuild(state, breakDays, config) {
+  const plan = rebuildPlan(breakDays)
+  if (!plan || !(state.load > 0)) return state
+
+  const { targetSets, repsMin, repsMax, increment, step } = config
+  const fromLoad = state.load
+  const loads = []
+  for (let i = 0; i < plan.sessions; i++) {
+    const fraction = 1 - plan.reduction * (1 - i / plan.sessions)
+    // Rounded down onto the exercise's loading grid, like any first session
+    // at an unfamiliar weight: easing back in should err light.
+    const load = roundToStep(Math.max(floorToStep(fromLoad * fraction, increment), increment), step)
+    if (cents(load) < cents(fromLoad) && cents(load) !== cents(loads[loads.length - 1] ?? -1)) loads.push(load)
+  }
+  if (loads.length === 0) return state
+
+  const reps = fitVector(state.reps, targetSets).map((value) => Math.min(Math.max(value, repsMin), repsMax))
+  return { ...state, noProgressStreak: 0, rebuild: { breakDays, fromLoad, loads, reps, step: 0 } }
+}
+
+// The heaviest weight at which a session took every prescribed set to its rep
+// target — "at least the requested reps, at no less than the requested
+// weight" — or null if no weight did. A set heavier than the threshold counts
+// toward it; a lighter one never does.
+function clearedLoad(sets, targetReps) {
+  const loads = [...new Set(sets.map((set) => cents(set.weight)))].sort((a, b) => b - a)
+  for (const threshold of loads) {
+    const reps = sortDesc(sets.filter((set) => cents(set.weight) >= threshold).map((set) => set.reps))
+    if (targetReps.every((target, i) => (reps[i] ?? 0) >= target)) return threshold / 100
+  }
+  return null
+}
+
+function applyRebuildSession(state, achievement, config) {
+  const { rebuild } = state
+
+  // Improving on the pre-break state by the ordinary rules is being back to
+  // form, whatever step the rebuild had reached: the rebuild is over.
+  const ordinary = applySession({ ...state, rebuild: null }, achievement, config)
+  if (ordinary.outcome === OUTCOME.progress || ordinary.outcome === OUTCOME.levelCompleted) {
+    return { ...ordinary, rebuildEnded: true }
+  }
+
+  const carried = { ...state, attemptedLoad: ordinary.state.attemptedLoad }
+  const stepLoad = rebuild.loads[rebuild.step]
+  const cleared = clearedLoad(achievement.sets, rebuild.reps)
+
+  if (cleared !== null && cents(cleared) >= cents(stepLoad)) {
+    // Skip every step the session already lifted past — actual performance
+    // overrides the plan here too. Clearing the pre-break load itself (equal,
+    // not better) finishes the rebuild.
+    const nextStep = rebuild.loads.findIndex((load) => cents(load) > cents(cleared))
+    const done = nextStep === -1
+    return {
+      state: { ...carried, noProgressStreak: 0, rebuild: done ? null : { ...rebuild, step: nextStep } },
+      outcome: OUTCOME.rebuilding,
+      rebuildCleared: cleared,
+      rebuildEnded: done,
+    }
+  }
+
+  if (!achievement.complete) return { state: carried, outcome: OUTCOME.incomplete }
+
+  // Missing even the eased-in target is genuine no-progress, and three in a
+  // row means more was lost than the break suggested: unload from the rebuild
+  // weight, not the pre-break one, and let the ordinary ladder take over.
+  const noProgressStreak = carried.noProgressStreak + 1
+  if (noProgressStreak >= NO_PROGRESS_LIMIT) {
+    return {
+      state: {
+        ...carried,
+        load: roundToStep(stepLoad * DELOAD_FACTOR, config.step),
+        reps: [],
+        noProgressStreak: 0,
+        rebuild: null,
+      },
+      outcome: OUTCOME.noProgress,
+      deloadedFrom: stepLoad,
+    }
+  }
+  return { state: { ...carried, noProgressStreak }, outcome: OUTCOME.noProgress }
+}
+
 // Folds one session into the track state and says what it was worth.
 export function applySession(state, achievement, config) {
+  if (state.rebuild) return applyRebuildSession(state, achievement, config)
+
   const slots = config.targetSets
   const attemptedLoad =
     achievement.attemptedLoad === null
@@ -146,17 +249,26 @@ export function applySession(state, achievement, config) {
 // Replays a track's sessions oldest-first into a current state. Derived, not
 // stored: editing or deleting a past workout simply re-derives, and there is
 // nothing to migrate.
-export function trackState(history, config) {
+//
+// History items may carry `breakDays`: the longest stretch without any
+// training before that session. `pendingBreakDays` is the same for the
+// stretch between the last session and now, so a break that hasn't been
+// trained through yet still shapes the next prescription.
+export function trackState(history, config, { pendingBreakDays = 0 } = {}) {
   let state = emptyState()
   let last = null
-  for (const { entry } of history) {
+  for (const { entry, breakDays = 0 } of history) {
+    state = startRebuild(state, breakDays, config)
     last = applySession(state, sessionAchievement(entry.sets, config), config)
     state = last.state
   }
+  const pending = startRebuild(state, pendingBreakDays, config)
+  const breakPending = pending !== state
   return {
-    ...state,
+    ...pending,
     lastOutcome: last?.outcome ?? null,
-    deloadedFrom: last?.deloadedFrom ?? null,
+    // A break after the last session supersedes whatever it concluded.
+    deloadedFrom: breakPending ? null : last?.deloadedFrom ?? null,
   }
 }
 
@@ -164,6 +276,17 @@ export function trackState(history, config) {
 // Returns null when the track has no history to build on at all.
 export function nextPrescription(state, config) {
   const { targetSets: slots, repsMin, repsMax, increment, step } = config
+
+  if (state.rebuild) {
+    const { loads, reps, step: index, fromLoad, breakDays } = state.rebuild
+    return {
+      load: loads[index],
+      repsPerSet: reps,
+      levelCompleted: false,
+      rebuilding: { step: index + 1, of: loads.length, fromLoad, breakDays },
+    }
+  }
+
   const load = state.load ?? state.attemptedLoad
   if (load === null || load === undefined) return null
 

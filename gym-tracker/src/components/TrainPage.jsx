@@ -4,6 +4,8 @@ import PageHeader from './PageHeader.jsx'
 import Sheet from './Sheet.jsx'
 import { DumbbellIcon, PlayIcon, ChevronRightIcon } from '../lib/icons.jsx'
 import { suggestSessionTargets } from '../lib/coach.js'
+import { BREAK_MIN_DAYS, daysSinceLastWorkout } from '../lib/breaks.js'
+import { todayISO } from '../lib/dates.js'
 import { findExercise } from '../lib/exercises.js'
 
 function SessionPickerSheet({ program, upNext, onPick, onClose }) {
@@ -61,6 +63,8 @@ function TrainPage({
   }
 
   const suggested = upNext ? suggestSessionTargets(upNext, logs, settings.unit) : null
+  const daysAway = daysSinceLastWorkout(logs, todayISO())
+  const backFromBreak = daysAway !== null && daysAway >= BREAK_MIN_DAYS
   const hasLongOnly = suggested ? suggested.exercises.some((ex) => ex.longOnly) : false
 
   return (
@@ -73,6 +77,13 @@ function TrainPage({
             <h2>Up Next: {suggested.name}</h2>
             <span className="badge">{program.name.split(' — ')[1] ?? program.name}</span>
           </div>
+          {backFromBreak && (
+            <div className="comeback-note">
+              Welcome back — {daysAway} days since your last workout. Weights are eased in for the next few
+              sessions and step back up to where you left off. If something moves easily, lift heavier: the coach
+              follows what you actually do.
+            </div>
+          )}
           {suggested.exercises.map((ex) => {
             const info = findExercise(ex.exerciseId, customExercises)
             const perSet = ex.targetRepsPerSet
