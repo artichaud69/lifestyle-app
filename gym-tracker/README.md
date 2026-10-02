@@ -104,6 +104,29 @@ the existing 10% unload, and any genuine progression resets the counter.
 State is folded out of the logs on read, not stored, so editing or deleting a
 past workout simply re-derives it and there is nothing to migrate.
 
+### Coming back from a break
+
+A **break** is 10+ days with no workout of any kind logged — read off the log
+dates (`src/lib/breaks.js`), nothing to declare. It's global on purpose: a lift
+you skipped for a fortnight while training everything else isn't detraining.
+
+After a break each lift enters a short **rebuild**. Your pre-break level is
+kept untouched as the target, and the next sessions are prescribed lighter,
+stepping back up to it with the reps you'd already shown:
+
+| Break | First session back | Steps back to pre-break load |
+|---|---|---|
+| 10-20 days | −10% | 2 sessions (90%, 95%) |
+| 21-34 days | −15% | 3 sessions |
+| 35+ days | −20% | 4 sessions |
+
+Loads round *down* to the exercise's increment. Rebuild sessions are judged on
+their own lighter targets, so the expected post-holiday dip never counts as no
+progress. Actual performance still wins: lifting a heavier step skips ahead,
+and lifting your pre-break weight ends the rebuild at once. Missing even the
+eased target three times in a row unloads from the rebuild weight, like any
+other stall. Bodyweight work has no load to ease and is left alone.
+
 Because it's just arithmetic over your own logged data, there's nothing to
 sign up for and nothing that can rate-limit or charge you.
 

@@ -235,3 +235,110 @@ describe('edge cases', () => {
     expect(next.load).toBe(105)
   })
 })
+
+describe('rebuilding after a break', () => {
+  // 100kg at 7/6/6 before a two-week holiday.
+  const before = at(100, 7, 6, 6)
+  const afterBreak = (sessions, breakDays = 15) => [
+    { entry: { sets: before } },
+    ...sessions.map((sets, i) => ({ entry: { sets }, breakDays: i === 0 ? breakDays : 0 })),
+  ]
+  const rebuildFrom = (sessions, { pending = 0, breakDays } = {}) => {
+    const state = trackState(afterBreak(sessions, breakDays), CONFIG, { pendingBreakDays: pending })
+    return { state, next: nextPrescription(state, CONFIG) }
+  }
+
+  it('eases back in at a lighter load with the reps shown before the break', () => {
+    const { state, next } = rebuildFrom([], { pending: 15 })
+    expect(next.load).toBe(90)
+    expect(next.repsPerSet).toEqual([7, 6, 6])
+    expect(next.rebuilding).toMatchObject({ step: 1, of: 2, fromLoad: 100, breakDays: 15 })
+    // The pre-break level is kept as the target, not overwritten.
+    expect(state.load).toBe(100)
+    expect(state.reps).toEqual([7, 6, 6])
+  })
+
+  it('leaves a short gap alone', () => {
+    const { next } = rebuildFrom([], { pending: 8 })
+    expect(next.rebuilding).toBeUndefined()
+    expect(next.load).toBe(100)
+  })
+
+  it('steps back up to the pre-break load, then resumes the ladder', () => {
+    expect(rebuildFrom([at(90, 7, 6, 6)]).next).toMatchObject({ load: 95, rebuilding: { step: 2 } })
+    const { state, next } = rebuildFrom([at(90, 7, 6, 6), at(95, 7, 6, 6)])
+    expect(state.rebuild).toBeNull()
+    expect(next.load).toBe(100)
+    expect(next.repsPerSet).toEqual([7, 7, 6])
+  })
+
+  it('reports a cleared step as rebuilding, not as falling short of pre-break form', () => {
+    const prior = trackState(afterBreak([]), CONFIG, { pendingBreakDays: 15 })
+    const result = applySession(prior, sessionAchievement(at(90, 7, 6, 6), CONFIG), CONFIG)
+    expect(result.outcome).toBe(OUTCOME.rebuilding)
+    expect(result.rebuildCleared).toBe(90)
+  })
+
+  it('ends the rebuild at once when the pre-break weight is lifted', () => {
+    const prior = trackState(afterBreak([]), CONFIG, { pendingBreakDays: 15 })
+    const result = applySession(prior, sessionAchievement(at(100, 7, 6, 6), CONFIG), CONFIG)
+    expect(result.rebuildEnded).toBe(true)
+    expect(result.state.rebuild).toBeNull()
+  })
+
+  it('treats beating pre-break form during the rebuild as ordinary progress', () => {
+    const prior = trackState(afterBreak([]), CONFIG, { pendingBreakDays: 15 })
+    const result = applySession(prior, sessionAchievement(at(100, 8, 6, 6), CONFIG), CONFIG)
+    expect(result.outcome).toBe(OUTCOME.progress)
+    expect(result.rebuildEnded).toBe(true)
+    expect(result.state.reps).toEqual([8, 6, 6])
+  })
+
+  it('skips steps the session already lifted past', () => {
+    const { next } = rebuildFrom([at(95, 7, 6, 6)])
+    expect(next.rebuilding).toBeUndefined()
+    expect(next.load).toBe(100)
+  })
+
+  it('holds the step after missing it, without unloading on one bad day', () => {
+    const { state, next } = rebuildFrom([at(90, 6, 6, 5)])
+    expect(state.noProgressStreak).toBe(1)
+    expect(next.load).toBe(90)
+  })
+
+  it('unloads from the rebuild weight after three misses in a row', () => {
+    const miss = at(90, 6, 6, 5)
+    const { state, next } = rebuildFrom([miss, miss, miss])
+    expect(state.deloadedFrom).toBe(90)
+    expect(state.rebuild).toBeNull()
+    expect(next.load).toBe(81)
+  })
+
+  it('does not count a session cut short during the rebuild', () => {
+    const { state, next } = rebuildFrom([at(90, 7, 6)])
+    expect(state.noProgressStreak).toBe(0)
+    expect(next.load).toBe(90)
+  })
+
+  it('clears a pre-break no-progress streak', () => {
+    const flat = at(100, 7, 6, 6)
+    const state = trackState(
+      [{ entry: { sets: flat } }, { entry: { sets: flat } }, { entry: { sets: flat } }],
+      CONFIG,
+      { pendingBreakDays: 15 },
+    )
+    expect(state.noProgressStreak).toBe(0)
+    expect(nextPrescription(state, CONFIG).load).toBe(90)
+  })
+
+  it('eases in harder after a longer break', () => {
+    const { next } = rebuildFrom([], { pending: 40 })
+    expect(next.load).toBe(80)
+    expect(next.rebuilding.of).toBe(4)
+  })
+
+  it('has no load to ease for bodyweight work', () => {
+    const state = trackState([{ entry: { sets: at(0, 8, 7, 7) } }], CONFIG, { pendingBreakDays: 15 })
+    expect(state.rebuild).toBeNull()
+  })
+})

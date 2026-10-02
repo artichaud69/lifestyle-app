@@ -21,6 +21,8 @@ import {
   findEntryHistory,
 } from './workout.js'
 import { planScheme, entryScheme, sameTrack, describeScheme } from './trainingIntent.js'
+import { trainingDays, longestGapBetween, dayNumber } from './breaks.js'
+import { todayISO } from './dates.js'
 import {
   OUTCOME,
   NO_PROGRESS_LIMIT,
@@ -236,10 +238,29 @@ export function trackHistory(planExercise, logs) {
   )
 }
 
+// Marks each session in a track's history with the longest stretch of no
+// training at all since the track's previous session, and measures the same
+// for the stretch from its last session up to `untilIso`. Breaks are read
+// across every workout logged, not just this track's.
+export function withBreaks(history, logs, untilIso) {
+  const days = trainingDays(logs)
+  const annotated = history.map((item, i) => ({
+    ...item,
+    breakDays: i === 0 ? 0 : longestGapBetween(days, dayNumber(history[i - 1].date), dayNumber(item.date)),
+  }))
+  const last = history[history.length - 1]
+  const pendingBreakDays = last ? longestGapBetween(days, dayNumber(last.date), dayNumber(untilIso)) : 0
+  return { history: annotated, pendingBreakDays }
+}
+
 function rationaleFor(next, state, config, unit) {
   const target = formatRepsPerSet(next.repsPerSet)
   const range = `${config.repsMin}-${config.repsMax}`
 
+  if (next.rebuilding) {
+    const { step, of, fromLoad, breakDays } = next.rebuilding
+    return `Back from a ${breakDays}-day break — easing in at ${next.load}${unit} (${step} of ${of}) on your way back to ${fromLoad}${unit}. If it moves easily, go heavier: the coach follows what you lift.`
+  }
   if (state.deloadedFrom) {
     return `${NO_PROGRESS_LIMIT} sessions without progress at ${state.deloadedFrom}${unit} — drop to ${next.load}${unit} and build back up to ${target}.`
   }
@@ -263,10 +284,10 @@ function rationaleFor(next, state, config, unit) {
 // Suggests the next weight/rep target for one planned exercise, given all
 // prior logs for that exercise. Returns the same shape as a session-template
 // exercise, plus a one-line `rationale` explaining the call.
-export function suggestNextTarget(planExercise, logs, unit = 'kg') {
+export function suggestNextTarget(planExercise, logs, unit = 'kg', today = todayISO()) {
   const config = trackConfig(planExercise, unit)
   const { increment, step } = config
-  const history = trackHistory(planExercise, logs)
+  const { history, pendingBreakDays } = withBreaks(trackHistory(planExercise, logs), logs, today)
 
   const withoutHistory = () =>
     crossSchemeTarget(planExercise, logs, { increment, step, unit }) ?? {
@@ -277,7 +298,7 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg') {
 
   if (history.length === 0) return withoutHistory()
 
-  const state = trackState(history, config)
+  const state = trackState(history, config, { pendingBreakDays })
   const next = nextPrescription(state, config)
   // Aligned history exists but nothing usable in it (every set unweighted and
   // short of the floor) — fall back to the cross-range estimate.
@@ -295,10 +316,10 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg') {
   }
 }
 
-export function suggestSessionTargets(sessionTemplate, logs, unit = 'kg') {
+export function suggestSessionTargets(sessionTemplate, logs, unit = 'kg', today = todayISO()) {
   return {
     ...sessionTemplate,
-    exercises: sessionTemplate.exercises.map((planExercise) => suggestNextTarget(planExercise, logs, unit)),
+    exercises: sessionTemplate.exercises.map((planExercise) => suggestNextTarget(planExercise, logs, unit, today)),
   }
 }
 
@@ -318,6 +339,7 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, uni
   const cards = []
   let prCount = 0
   let levelCount = 0
+  let rebuildCount = 0
 
   for (const entry of log.entries) {
     const working = workingSets(entry.sets)
@@ -347,11 +369,32 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, uni
     let outcome = null
     if (planExercise) {
       const config = trackConfig(planExercise, unit)
-      const before = trackState(trackHistory(planExercise, priorLogs), config)
+      // Breaks are measured up to this session's date, so the first session
+      // back is judged as a rebuild, not against pre-holiday form.
+      const { history: prior, pendingBreakDays } = withBreaks(trackHistory(planExercise, priorLogs), allLogs, log.date)
+      const before = trackState(prior, config, { pendingBreakDays })
       const result = applySession(before, sessionAchievement(entry.sets, config), config)
       outcome = result.outcome
 
-      if (outcome === OUTCOME.levelCompleted) {
+      if (outcome === OUTCOME.rebuilding) {
+        const nextRebuild = result.state.rebuild
+        cards.push({
+          type: 'progress',
+          exerciseId: entry.exerciseId,
+          exerciseName: entry.exerciseName,
+          message: result.rebuildEnded
+            ? `${entry.exerciseName} is back to its pre-break ${before.rebuild.fromLoad}${unit} — normal progression resumes next session.`
+            : `${entry.exerciseName}: ${result.rebuildCleared}${unit} cleared on the way back from your break — ${nextRebuild.loads[nextRebuild.step]}${unit} next.`,
+        })
+        rebuildCount++
+      } else if (outcome === OUTCOME.noProgress && before.rebuild && !result.deloadedFrom) {
+        cards.push({
+          type: 'info',
+          exerciseId: entry.exerciseId,
+          exerciseName: entry.exerciseName,
+          message: `${entry.exerciseName} isn't back yet — that's normal after a break. Same weight next time.`,
+        })
+      } else if (outcome === OUTCOME.levelCompleted) {
         cards.push({
           type: 'progress',
           exerciseId: entry.exerciseId,
@@ -364,7 +407,9 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, uni
           type: 'progress',
           exerciseId: entry.exerciseId,
           exerciseName: entry.exerciseName,
-          message: `${entry.exerciseName} moved forward: ${formatRepsPerSet(result.state.reps)} at ${result.state.load}${unit} is the best you've shown at this weight.`,
+          message: result.rebuildEnded
+            ? `${entry.exerciseName} is past its pre-break level already: ${formatRepsPerSet(result.state.reps)} at ${result.state.load}${unit}. Normal progression resumes.`
+            : `${entry.exerciseName} moved forward: ${formatRepsPerSet(result.state.reps)} at ${result.state.load}${unit} is the best you've shown at this weight.`,
         })
       } else if (outcome === OUTCOME.noProgress) {
         const deloaded = result.deloadedFrom
@@ -413,6 +458,8 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, uni
   } else if (levelCount > 0) {
     overallMessage =
       levelCount === 1 ? 'One lift finished its current weight — it goes up next time.' : `${levelCount} lifts finished their current weight.`
+  } else if (rebuildCount > 0) {
+    overallMessage = 'Good session back — your lifts are on their way to pre-break form.'
   } else if (cards.some((c) => c.type === 'stall')) {
     overallMessage = 'Session logged — a lift is being unloaded, see below.'
   } else if (cards.some((c) => c.type === 'progress')) {
@@ -421,5 +468,5 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, uni
     overallMessage = 'Session logged — keep it up.'
   }
 
-  return { cards, overallMessage, prCount, levelCount }
+  return { cards, overallMessage, prCount, levelCount, rebuildCount }
 }
