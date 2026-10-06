@@ -109,10 +109,13 @@ function App() {
       const plannedExercises = variant === 'quick' ? suggested.exercises.filter((ex) => !ex.longOnly) : suggested.exercises
       entries = plannedExercises.map((planExercise) => {
         const info = findExercise(planExercise.exerciseId, customExercises)
-        const startingReps = planExercise.targetReps ?? planExercise.repsMin
-        const sets = Array.from({ length: planExercise.targetSets }, () => ({
+        // The ladder is climbed one set at a time, so each set can carry its
+        // own rep target (6/6/5, not 6/6/6). Older suggestions only had a
+        // single number; fall back to it so nothing breaks.
+        const repsPerSet = planExercise.targetRepsPerSet
+        const sets = Array.from({ length: planExercise.targetSets }, (_, i) => ({
           weight: planExercise.targetWeight ?? '',
-          reps: startingReps ?? '',
+          reps: repsPerSet?.[i] ?? planExercise.targetReps ?? planExercise.repsMin ?? '',
           rpe: '',
           completed: false,
           isWarmup: false,
@@ -147,6 +150,17 @@ function App() {
       .map((entry) => ({
         exerciseId: entry.exerciseId,
         exerciseName: entry.exerciseName,
+        // What the session asked for, kept with the log so the coach can
+        // tell a strength session from a hypertrophy one on the same lift
+        // later, instead of guessing from the reps that came out.
+        scheme: entry.planExercise
+          ? {
+              repsMin: entry.planExercise.repsMin ?? null,
+              repsMax: entry.planExercise.repsMax ?? null,
+              progression: entry.planExercise.progression ?? null,
+              targetSets: entry.planExercise.targetSets ?? null,
+            }
+          : null,
         sets: entry.sets
           .filter((set) => set.completed)
           .map((set) => ({
@@ -189,7 +203,7 @@ function App() {
     }
 
     const allLogs = [...logs, log]
-    const result = analyzeWorkout(log, allLogs, planExercisesByExerciseId)
+    const result = analyzeWorkout(log, allLogs, planExercisesByExerciseId, settings.unit)
     setLogs(allLogs)
     setDraft(null)
     setSummary({ log, result })

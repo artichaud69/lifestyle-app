@@ -236,10 +236,10 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
       longOnly: false,
     }
     const suggested = suggestNextTarget({ ...basePlanExercise, exerciseId: newExercise.id }, logs, settings.unit)
-    const startingReps = suggested.targetReps ?? suggested.repsMin
-    const sets = Array.from({ length: suggested.targetSets }, () => ({
+    const repsPerSet = suggested.targetRepsPerSet
+    const sets = Array.from({ length: suggested.targetSets }, (_, i) => ({
       weight: suggested.targetWeight ?? '',
-      reps: startingReps ?? '',
+      reps: repsPerSet?.[i] ?? suggested.targetReps ?? suggested.repsMin ?? '',
       rpe: '',
       completed: false,
       isWarmup: false,

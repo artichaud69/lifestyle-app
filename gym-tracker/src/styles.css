@@ -464,6 +464,15 @@ p {
   margin-bottom: var(--space-3);
 }
 
+.comeback-note {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: var(--space-3);
+}
+
 .exercise-card .rationale {
   font-size: 0.82rem;
   color: var(--color-primary);
