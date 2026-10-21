@@ -246,6 +246,28 @@ export const BUILT_IN_EXERCISES = [
   E('Swimming', 'cardio', 'other', false, 0, 'Focus on a long, efficient stroke rather than just speed.'),
 ]
 
+// Lifts where the whole body is the load: the bar or the dip handles stay put
+// and you move yourself. On these the weight logged is what's *added* to
+// bodyweight — or, on an assisted machine, what's taken off it — so any
+// strength estimate has to be made on the total. Classified by name so that
+// custom exercises ("Weighted Dip", "Ring Muscle-Up") are covered too.
+//
+// Push-ups, bench dips and inverted rows are left out on purpose: the feet
+// carry part of the body, so the load is only a fraction of bodyweight and
+// full-bodyweight arithmetic would overstate it. They keep the ordinary
+// formula, as does everything else.
+const MOVES_BODYWEIGHT = /\b(pull[- ]?ups?|chin[- ]?ups?|dips?|muscle[- ]?ups?)\b/i
+const PARTIAL_BODYWEIGHT = /\bbench[- ]dips?\b/i
+const ASSISTED = /\bassisted\b/i
+
+// 'added' (weight logged is extra load), 'assisted' (weight logged is help),
+// or null for a conventional lift.
+export function bodyweightLoad(exerciseName) {
+  const name = String(exerciseName ?? '')
+  if (!MOVES_BODYWEIGHT.test(name) || PARTIAL_BODYWEIGHT.test(name)) return null
+  return ASSISTED.test(name) ? 'assisted' : 'added'
+}
+
 export function getAllExercises(customExercises = []) {
   return [...BUILT_IN_EXERCISES, ...customExercises]
 }

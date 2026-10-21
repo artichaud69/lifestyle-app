@@ -1,4 +1,6 @@
 import { formatDate } from './dates.js'
+import { bodyweightLoad } from './exercises.js'
+import { bodyweightOn } from './bodyweight.js'
 
 // Epley formula: a widely used estimate for how much you could lift for one
 // rep, based on a set done for more than one. Good enough to trend progress;
@@ -7,6 +9,37 @@ export function estimateOneRepMax(weight, reps) {
   if (!weight || !reps) return 0
   if (reps === 1) return weight
   return weight * (1 + reps / 30)
+}
+
+// What an e1RM for one exercise on one date needs to know: whether the lift
+// moves the body (see bodyweightLoad in exercises.js), and if so, the
+// bodyweight on record for that date. Conventional lifts need neither.
+export function oneRepMaxContext(exerciseName, date, bodyweightLogs) {
+  const load = bodyweightLoad(exerciseName)
+  return { bodyweightLoad: load, bodyweight: load ? bodyweightOn(bodyweightLogs, date) : null }
+}
+
+// The e1RM of one set.
+//
+// Conventional lifts: Epley on the weight logged, exactly as before.
+//
+// Lifts that move the body: the body is part of what's lifted, so Epley runs
+// on the total load (bodyweight plus what's added, or minus the assistance),
+// then bodyweight is taken back off. The result is the most that could be
+// *added* for a single — +15kg × 11 at 87kg bodyweight is 139.4kg total, so
+// +52.4kg — and it comes out negative when a single would still need
+// assistance, which keeps assisted and unassisted work on one scale.
+//
+// Null when it can't be known: a bodyweight lift with no bodyweight on
+// record, or assistance that takes the whole body's weight.
+export function setOneRepMax(set, { bodyweightLoad: load = null, bodyweight = null } = {}) {
+  const weight = Number(set?.weight) || 0
+  const reps = Number(set?.reps) || 0
+  if (!load) return estimateOneRepMax(weight, reps)
+  if (!(bodyweight > 0) || !(reps > 0)) return null
+  const total = load === 'assisted' ? bodyweight - weight : bodyweight + weight
+  if (!(total > 0)) return null
+  return estimateOneRepMax(total, reps) - bodyweight
 }
 
 // Inverse of the Epley estimate above: the weight you would expect to move
@@ -38,14 +71,22 @@ export function topWorkingSets(sets) {
   return working.filter((set) => Math.round(set.weight * 100) === Math.round(maxWeight * 100))
 }
 
-export function bestSet(sets) {
-  const working = workingSets(sets)
-  if (working.length === 0) return null
-  return working.reduce((best, set) => {
-    const est = estimateOneRepMax(set.weight, set.reps)
-    const bestEst = best ? estimateOneRepMax(best.weight, best.reps) : -1
-    return est > bestEst ? set : best
-  }, null)
+// The working set with the highest e1RM. `context` comes from
+// oneRepMaxContext(): ranking a bodyweight lift's sets needs the bodyweight
+// too, since 12 bodyweight reps can outrank +10kg × 5. Without it this is the
+// conventional ranking, unchanged. Sets whose e1RM can't be known are
+// skipped, so this is null when none can.
+export function bestSet(sets, context) {
+  let best = null
+  let bestEst = -Infinity
+  for (const set of workingSets(sets)) {
+    const est = setOneRepMax(set, context)
+    if (est !== null && est > bestEst) {
+      best = set
+      bestEst = est
+    }
+  }
+  return best
 }
 
 export function totalVolume(sets) {
@@ -80,7 +121,7 @@ export function formatSetsSummary(sets, unit = 'kg') {
 // chatbot for feedback — readable prose, not a data dump. Includes every
 // completed set (warm-ups labeled separately), a best-set/est. 1RM line per
 // exercise, and session totals.
-export function formatWorkoutAsText(log, unit = 'kg') {
+export function formatWorkoutAsText(log, unit = 'kg', bodyweightLogs = []) {
   const lines = [log.sessionName, formatDate(log.date)]
 
   if (log.startedAt && log.finishedAt) {
@@ -100,8 +141,14 @@ export function formatWorkoutAsText(log, unit = 'kg') {
       const rpe = typeof set.rpe === 'number' ? ` @ RPE ${set.rpe}` : ''
       lines.push(`${label}: ${set.weight}${unit} × ${set.reps}${rpe}`)
     }
-    const best = bestSet(entry.sets)
-    if (best) {
+    const context = oneRepMaxContext(entry.exerciseName, log.date, bodyweightLogs)
+    const best = bestSet(entry.sets, context)
+    if (best && context.bodyweightLoad) {
+      const added = Math.round(setOneRepMax(best, context))
+      lines.push(
+        `  Best set est. 1RM: ${added >= 0 ? '+' : ''}${added}${unit} added (at ${context.bodyweight}${unit} bodyweight)`,
+      )
+    } else if (best) {
       lines.push(`  Best set est. 1RM: ${Math.round(estimateOneRepMax(best.weight, best.reps))}${unit}`)
     }
     lines.push('')

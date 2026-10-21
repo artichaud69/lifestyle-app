@@ -340,6 +340,84 @@ describe('coming back from a holiday', () => {
   })
 })
 
+describe('bodyweight lifts', () => {
+  const BODYWEIGHT = [{ date: '2026-10-01', weight: 87 }]
+  const pullUps = (id, date, weight, reps) =>
+    makeLog(id, date, 's1', 'weighted-pull-up', setsOf(weight, reps, 3), 'Weighted Pull-Up')
+
+  it('measures a personal best on the total load and reports the added weight', () => {
+    const prior = pullUps('l1', '2026-10-05', 15, 10)
+    const current = pullUps('l2', '2026-10-12', 15, 11)
+    const result = analyzeWorkout(current, [prior, current], {}, 'kg', BODYWEIGHT)
+    const card = result.cards.find((c) => c.type === 'pr')
+    expect(card.message).toBe('New best on Weighted Pull-Up: +15kg×11 at 87kg bodyweight (est. 1RM +52kg added).')
+  })
+
+  it('does not call an equal assisted session a new best', () => {
+    const assisted = (id, date) =>
+      makeLog(id, date, 's1', 'assisted-pull-up', setsOf(30, 8, 3), 'Assisted Pull-Up')
+    const logs = [assisted('l1', '2026-10-05'), assisted('l2', '2026-10-12')]
+    const result = analyzeWorkout(logs[1], logs, {}, 'kg', BODYWEIGHT)
+    expect(result.prCount).toBe(0)
+  })
+
+  it('celebrates using less assistance, not more', () => {
+    const prior = makeLog('l1', '2026-10-05', 's1', 'assisted-pull-up', setsOf(30, 8, 3), 'Assisted Pull-Up')
+    const moreHelp = makeLog('l2', '2026-10-12', 's1', 'assisted-pull-up', setsOf(40, 8, 3), 'Assisted Pull-Up')
+    const lessHelp = makeLog('l3', '2026-10-12', 's1', 'assisted-pull-up', setsOf(20, 8, 3), 'Assisted Pull-Up')
+    expect(analyzeWorkout(moreHelp, [prior, moreHelp], {}, 'kg', BODYWEIGHT).prCount).toBe(0)
+    expect(analyzeWorkout(lessHelp, [prior, lessHelp], {}, 'kg', BODYWEIGHT).prCount).toBe(1)
+  })
+
+  it('asks for a bodyweight instead of guessing one', () => {
+    const prior = pullUps('l1', '2026-10-05', 15, 10)
+    const current = pullUps('l2', '2026-10-12', 15, 11)
+    const result = analyzeWorkout(current, [prior, current], {}, 'kg', [])
+    expect(result.prCount).toBe(0)
+    expect(result.cards.some((c) => /Log your bodyweight.*Weighted Pull-Up/.test(c.message))).toBe(true)
+  })
+
+  it('keeps conventional personal bests exactly as they were', () => {
+    const prior = makeLog('l1', '2026-10-05', 's1', 'back-squat', setsOf(100, 5, 3), 'Back Squat')
+    const current = makeLog('l2', '2026-10-12', 's1', 'back-squat', setsOf(105, 5, 3), 'Back Squat')
+    const result = analyzeWorkout(current, [prior, current], {}, 'kg', BODYWEIGHT)
+    expect(result.cards[0].message).toBe('New best on Back Squat: 105×5 (est. 1RM 123).')
+    expect(result.cards.some((c) => /Log your bodyweight/.test(c.message))).toBe(false)
+  })
+
+  describe('carrying a weight to a new rep range', () => {
+    const lowReps = { exerciseId: 'weighted-pull-up', targetSets: 3, repsMin: 12, repsMax: 15, progression: 'double', targetWeight: null }
+    const scheme5 = { repsMin: 5, repsMax: 5 }
+    const heavy = makeLog('l1', '2026-10-12', 's1', 'weighted-pull-up', setsOf(30, 5, 3), 'Weighted Pull-Up', scheme5)
+
+    it('converts through the total load, not the added weight alone', () => {
+      // +30 × 5 at 87kg: 117 × 1.1667 = 136.5kg total. For 12 reps that's
+      // 97.5kg, held back 10% to 87.75 — essentially bodyweight. The added
+      // weight alone would have converted to about +22.5kg.
+      const result = suggestNextTarget(lowReps, [heavy], 'kg', '2026-10-13', { bodyweightLogs: BODYWEIGHT })
+      expect(result.targetWeight).toBe(0)
+      expect(result.rationale).toMatch(/\+30kg×5 at 87kg bodyweight, which works out to bodyweight only for sets of 12/)
+    })
+
+    it('can convert from bodyweight-only sets', () => {
+      const fives = { ...lowReps, repsMin: 5, repsMax: 5 }
+      const twelves = makeLog('l1', '2026-10-12', 's1', 'weighted-pull-up', setsOf(0, 12, 3), 'Weighted Pull-Up', {
+        repsMin: 12,
+        repsMax: 15,
+      })
+      // 87 × 1.4 = 121.8 → 104.4 for 5 reps → 94 after the reserve → +7, on the 1.25kg grid → +6.25.
+      const result = suggestNextTarget(fives, [twelves], 'kg', '2026-10-13', { bodyweightLogs: BODYWEIGHT })
+      expect(result.targetWeight).toBe(6.25)
+    })
+
+    it('falls back to first-time advice without a bodyweight on record', () => {
+      const result = suggestNextTarget(lowReps, [heavy], 'kg', '2026-10-13', { bodyweightLogs: [] })
+      expect(result.targetWeight).toBeNull()
+      expect(result.rationale).toMatch(/first time/i)
+    })
+  })
+})
+
 describe('analyzeWorkout', () => {
   it('flags a personal record when the estimated 1RM improves', () => {
     const priorLogs = [makeLog('l1', '2026-01-01', 's1', 'back-squat', setsOf(100, 5, 3), 'Back Squat')]

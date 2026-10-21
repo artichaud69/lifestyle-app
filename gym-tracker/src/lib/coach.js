@@ -15,6 +15,8 @@ import { findExercise } from './exercises.js'
 import {
   estimateOneRepMax,
   estimateWeightForReps,
+  setOneRepMax,
+  oneRepMaxContext,
   workingSets,
   bestSet,
   totalVolume,
@@ -183,21 +185,64 @@ function floorToStep(value, step) {
   return Math.floor(value / step + 1e-9) * step
 }
 
+const repsPerSetOf = (planExercise, reps) =>
+  Array.from({ length: Math.max(1, Number(planExercise.targetSets) || 1) }, () => reps)
+
+// The same conversion for a lift that moves the body. It has to run on the
+// total load and take bodyweight back off afterwards: converting the added
+// weight alone would scale +30kg × 5 to about +22kg for sets of 12, when at
+// 87kg bodyweight a dozen strict reps barely need anything added at all.
+// Assisted work isn't converted, and nothing is without a bodyweight on
+// record — those keep the first-time advice.
+function bodyweightCrossSchemeTarget(planExercise, entry, context, targetReps, { increment, step, unit }) {
+  const { bodyweight } = context
+  if (context.bodyweightLoad !== 'added' || !(bodyweight > 0)) return null
+  const reference = bestSet(entry.sets, context)
+  if (!reference) return null
+
+  const totalMax = setOneRepMax(reference, context) + bodyweight
+  const added = estimateWeightForReps(totalMax, targetReps) * CROSS_SCHEME_RESERVE - bodyweight
+  // Plain pull-ups and dips have no loading increment of their own (they're
+  // logged at 0), so fall back to the rounding step for the added weight.
+  // Rounded down onto that grid and left there: re-rounding 6.25 onto a 0.5
+  // step would push it up to 6.5, past the estimate.
+  const grid = increment > 0 ? increment : step
+  const targetWeight = added > 0 ? Math.round(floorToStep(added, grid) * 100) / 100 : 0
+
+  const from =
+    reference.weight > 0
+      ? `+${reference.weight}${unit}×${reference.reps} at ${bodyweight}${unit} bodyweight`
+      : `${reference.reps} reps at bodyweight (${bodyweight}${unit})`
+  const to = targetWeight > 0 ? `about +${targetWeight}${unit}` : 'bodyweight only'
+  return {
+    ...planExercise,
+    targetWeight,
+    targetReps,
+    targetRepsPerSet: repsPerSetOf(planExercise, targetReps),
+    rationale: `No history yet at ${describeScheme(planScheme(planExercise))} reps — your last session was ${from}, which works out to ${to} for sets of ${targetReps}. Adjust on the first set if it reads wrong.`,
+  }
+}
+
 // Last resort when a lift is planned at a rep range it has no history at:
 // read the most recent session of any rep range, turn its best set into a
 // 1RM estimate, and solve that back down to the reps now being asked for.
 // Returns null when there is nothing to convert from (no history at all, or
 // unweighted work like bodyweight sets), leaving the first-time advice.
-function crossSchemeTarget(planExercise, logs, { increment, step, unit }) {
+function crossSchemeTarget(planExercise, logs, { increment, step, unit, bodyweightLogs }) {
   const recent = findEntryHistory(logs, planExercise.exerciseId, 1)
   if (recent.length === 0) return null
 
-  const entry = recent[0].entry
-  const reference = bestSet(entry.sets)
-  if (!reference || !(reference.weight > 0) || !(reference.reps > 0)) return null
-
+  const { date, entry } = recent[0]
   const targetReps = planExercise.repsMin
   if (!(targetReps > 0)) return null
+
+  const context = oneRepMaxContext(entry.exerciseName, date, bodyweightLogs)
+  if (context.bodyweightLoad) {
+    return bodyweightCrossSchemeTarget(planExercise, entry, context, targetReps, { increment, step, unit })
+  }
+
+  const reference = bestSet(entry.sets)
+  if (!reference || !(reference.weight > 0) || !(reference.reps > 0)) return null
 
   const oneRepMax = estimateOneRepMax(reference.weight, reference.reps)
   const converted = estimateWeightForReps(oneRepMax, targetReps) * CROSS_SCHEME_RESERVE
@@ -209,7 +254,7 @@ function crossSchemeTarget(planExercise, logs, { increment, step, unit }) {
     ...planExercise,
     targetWeight,
     targetReps,
-    targetRepsPerSet: Array.from({ length: Math.max(1, Number(planExercise.targetSets) || 1) }, () => targetReps),
+    targetRepsPerSet: repsPerSetOf(planExercise, targetReps),
     rationale: `No history yet at ${describeScheme(planScheme(planExercise))} reps — your last session was ${reference.weight}${unit}×${reference.reps}, which works out to about ${targetWeight}${unit} for sets of ${targetReps}. Adjust on the first set if it reads wrong.`,
   }
 }
@@ -284,13 +329,13 @@ function rationaleFor(next, state, config, unit) {
 // Suggests the next weight/rep target for one planned exercise, given all
 // prior logs for that exercise. Returns the same shape as a session-template
 // exercise, plus a one-line `rationale` explaining the call.
-export function suggestNextTarget(planExercise, logs, unit = 'kg', today = todayISO()) {
+export function suggestNextTarget(planExercise, logs, unit = 'kg', today = todayISO(), { bodyweightLogs = [] } = {}) {
   const config = trackConfig(planExercise, unit)
   const { increment, step } = config
   const { history, pendingBreakDays } = withBreaks(trackHistory(planExercise, logs), logs, today)
 
   const withoutHistory = () =>
-    crossSchemeTarget(planExercise, logs, { increment, step, unit }) ?? {
+    crossSchemeTarget(planExercise, logs, { increment, step, unit, bodyweightLogs }) ?? {
       ...planExercise,
       targetRepsPerSet: null,
       rationale: 'First time logging this one — pick a weight that leaves 2-3 reps in reserve on your last set.',
@@ -316,27 +361,51 @@ export function suggestNextTarget(planExercise, logs, unit = 'kg', today = today
   }
 }
 
-export function suggestSessionTargets(sessionTemplate, logs, unit = 'kg', today = todayISO()) {
+export function suggestSessionTargets(sessionTemplate, logs, unit = 'kg', today = todayISO(), options = {}) {
   return {
     ...sessionTemplate,
-    exercises: sessionTemplate.exercises.map((planExercise) => suggestNextTarget(planExercise, logs, unit, today)),
+    exercises: sessionTemplate.exercises.map((planExercise) => suggestNextTarget(planExercise, logs, unit, today, options)),
   }
 }
 
-function allTimeBestOneRM(history) {
-  let best = 0
-  for (const { entry } of history) {
-    const set = bestSet(entry.sets)
-    if (set) best = Math.max(best, estimateOneRepMax(set.weight, set.reps))
+// The best e1RM across a history, each session measured with the bodyweight
+// on record for its own date. Null when none can be estimated.
+function allTimeBestOneRM(history, exerciseName, bodyweightLogs) {
+  let best = null
+  for (const { date, entry } of history) {
+    const context = oneRepMaxContext(exerciseName, date, bodyweightLogs)
+    const set = bestSet(entry.sets, context)
+    const estimate = set ? setOneRepMax(set, context) : null
+    if (estimate !== null && (best === null || estimate > best)) best = estimate
   }
   return best
 }
 
+// How a best set reads in a card: "100×5" for a conventional lift, and the
+// added (or assisting) weight plus the bodyweight it was done at otherwise.
+function describeBestSet(set, context, unit) {
+  if (!context.bodyweightLoad) return `${set.weight}×${set.reps}`
+  const load =
+    context.bodyweightLoad === 'assisted'
+      ? `${set.weight}${unit} assistance`
+      : set.weight > 0
+        ? `+${set.weight}${unit}`
+        : 'bodyweight'
+  return `${load}×${set.reps} at ${context.bodyweight}${unit} bodyweight`
+}
+
+function describeOneRepMax(estimate, context, unit) {
+  const rounded = Math.round(estimate)
+  if (!context.bodyweightLoad) return `${rounded}`
+  return `${rounded >= 0 ? '+' : '−'}${Math.abs(rounded)}${unit} added`
+}
+
 // Produces the post-workout feedback cards: PRs, volume trend, missed
 // targets, and plateau alerts. Pure function of the logs already saved.
-export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, unit = 'kg') {
+export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, unit = 'kg', bodyweightLogs = []) {
   const priorLogs = allLogs.filter((l) => l.id !== log.id)
   const cards = []
+  const missingBodyweight = []
   let prCount = 0
   let levelCount = 0
   let rebuildCount = 0
@@ -347,17 +416,31 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, uni
 
     // Personal bests are measured off the 1RM estimate, which is comparable
     // across rep ranges, so they read all of the exercise's history.
+    // Lifts that move the body are measured with the bodyweight on record for
+    // each session's date, and can't be measured at all without one.
     const history = findEntryHistory(priorLogs, entry.exerciseId, 6)
-    const currentBestSet = bestSet(entry.sets)
-    const currentBest1RM = currentBestSet ? estimateOneRepMax(currentBestSet.weight, currentBestSet.reps) : 0
-    const priorBest1RM = allTimeBestOneRM(history)
+    const context = oneRepMaxContext(entry.exerciseName, log.date, bodyweightLogs)
+    if (context.bodyweightLoad && context.bodyweight === null) missingBodyweight.push(entry.exerciseName)
+    const currentBestSet = bestSet(entry.sets, context)
+    const currentBest1RM = currentBestSet ? setOneRepMax(currentBestSet, context) : null
+    const priorBest1RM = allTimeBestOneRM(history, entry.exerciseName, bodyweightLogs)
 
-    if (history.length > 0 && currentBest1RM > priorBest1RM * 1.001) {
+    // A 0.1% margin, taken on the total load lifted. For a conventional lift
+    // that is the lift's own e1RM — the same test as ever — but a bodyweight
+    // lift's estimate is of the weight *added*, which can sit at or below
+    // zero, where a ratio would hand out a "best" for an equal session.
+    const margin = ((priorBest1RM ?? 0) + (context.bodyweight ?? 0)) * 0.001
+    if (
+      history.length > 0 &&
+      currentBest1RM !== null &&
+      priorBest1RM !== null &&
+      currentBest1RM - priorBest1RM > margin
+    ) {
       cards.push({
         type: 'pr',
         exerciseId: entry.exerciseId,
         exerciseName: entry.exerciseName,
-        message: `New best on ${entry.exerciseName}: ${currentBestSet.weight}×${currentBestSet.reps} (est. 1RM ${Math.round(currentBest1RM)}).`,
+        message: `New best on ${entry.exerciseName}: ${describeBestSet(currentBestSet, context, unit)} (est. 1RM ${describeOneRepMax(currentBest1RM, context, unit)}).`,
       })
       prCount++
     }
@@ -447,6 +530,13 @@ export function analyzeWorkout(log, allLogs, planExercisesByExerciseId = {}, uni
         }
       }
     }
+  }
+
+  if (missingBodyweight.length > 0) {
+    cards.push({
+      type: 'info',
+      message: `Log your bodyweight on the Progress tab to track estimated maxes and bests for ${missingBodyweight.join(', ')} — you lift your bodyweight on ${missingBodyweight.length === 1 ? 'it' : 'them'}, so the estimate needs it.`,
+    })
   }
 
   const priority = { pr: 0, stall: 1, warning: 2, progress: 3, info: 4 }

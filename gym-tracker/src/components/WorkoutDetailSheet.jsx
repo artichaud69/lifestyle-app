@@ -9,7 +9,7 @@ function slugify(text) {
 }
 
 function downloadWorkout(log, unit) {
-  const text = formatWorkoutAsText(log, unit)
+  const text = formatWorkoutAsText(log, unit, bodyweightLogs)
   const blob = new Blob([text], { type: 'text/plain' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -19,13 +19,13 @@ function downloadWorkout(log, unit) {
   URL.revokeObjectURL(url)
 }
 
-function WorkoutDetailSheet({ log, unit, onClose, onDelete }) {
+function WorkoutDetailSheet({ log, unit, bodyweightLogs, onClose, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(formatWorkoutAsText(log, unit))
+      await navigator.clipboard.writeText(formatWorkoutAsText(log, unit, bodyweightLogs))
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {

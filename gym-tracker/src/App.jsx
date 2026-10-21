@@ -105,7 +105,7 @@ function App() {
   function startWorkout(sessionTemplate, variant = 'full') {
     let entries = []
     if (sessionTemplate) {
-      const suggested = suggestSessionTargets(sessionTemplate, logs, settings.unit)
+      const suggested = suggestSessionTargets(sessionTemplate, logs, settings.unit, todayISO(), { bodyweightLogs })
       const plannedExercises = variant === 'quick' ? suggested.exercises.filter((ex) => !ex.longOnly) : suggested.exercises
       entries = plannedExercises.map((planExercise) => {
         const info = findExercise(planExercise.exerciseId, customExercises)
@@ -203,7 +203,7 @@ function App() {
     }
 
     const allLogs = [...logs, log]
-    const result = analyzeWorkout(log, allLogs, planExercisesByExerciseId, settings.unit)
+    const result = analyzeWorkout(log, allLogs, planExercisesByExerciseId, settings.unit, bodyweightLogs)
     setLogs(allLogs)
     setDraft(null)
     setSummary({ log, result })
@@ -237,6 +237,7 @@ function App() {
     if (view === 'train') {
       return (
         <TrainPage
+          bodyweightLogs={bodyweightLogs}
           program={program}
           upNext={upNext}
           logs={logs}
@@ -254,7 +255,7 @@ function App() {
       )
     }
     if (view === 'history') {
-      return <HistoryPage logs={logs} settings={settings} onDeleteLog={deleteLog} />
+      return <HistoryPage logs={logs} settings={settings} bodyweightLogs={bodyweightLogs} onDeleteLog={deleteLog} />
     }
     if (view === 'progress') {
       return (

@@ -34,6 +34,7 @@ function TrainPage({
   program,
   upNext,
   logs,
+  bodyweightLogs,
   draft,
   settings,
   customExercises,
@@ -55,6 +56,7 @@ function TrainPage({
         onFinish={onFinishWorkout}
         onCancel={onCancelWorkout}
         logs={logs}
+        bodyweightLogs={bodyweightLogs}
         settings={settings}
         customExercises={customExercises}
         onAddCustomExercise={onAddCustomExercise}
@@ -62,7 +64,7 @@ function TrainPage({
     )
   }
 
-  const suggested = upNext ? suggestSessionTargets(upNext, logs, settings.unit) : null
+  const suggested = upNext ? suggestSessionTargets(upNext, logs, settings.unit, todayISO(), { bodyweightLogs }) : null
   const daysAway = daysSinceLastWorkout(logs, todayISO())
   const backFromBreak = daysAway !== null && daysAway >= BREAK_MIN_DAYS
   const hasLongOnly = suggested ? suggested.exercises.some((ex) => ex.longOnly) : false

@@ -8,6 +8,7 @@ import { groupLabels, isLastInGroup } from '../lib/superset.js'
 import { suggestWarmupSets } from '../lib/warmup.js'
 import { moveItemById } from '../lib/reorder.js'
 import { suggestNextTarget } from '../lib/coach.js'
+import { todayISO } from '../lib/dates.js'
 
 // Real rest happens only after the last exercise in a superset round; the
 // handoff between paired exercises just needs enough time to walk to the
@@ -86,7 +87,7 @@ function renderEntryBlocks(entries, handlers) {
   })
 }
 
-function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, settings, customExercises, onAddCustomExercise }) {
+function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, bodyweightLogs, settings, customExercises, onAddCustomExercise }) {
   const [tick, setTick] = useState(0)
   const [showPicker, setShowPicker] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
@@ -235,7 +236,9 @@ function ActiveWorkout({ draft, onChangeDraft, onFinish, onCancel, logs, setting
       supersetGroup: null,
       longOnly: false,
     }
-    const suggested = suggestNextTarget({ ...basePlanExercise, exerciseId: newExercise.id }, logs, settings.unit)
+    const suggested = suggestNextTarget({ ...basePlanExercise, exerciseId: newExercise.id }, logs, settings.unit, todayISO(), {
+      bodyweightLogs,
+    })
     const repsPerSet = suggested.targetRepsPerSet
     const sets = Array.from({ length: suggested.targetSets }, (_, i) => ({
       weight: suggested.targetWeight ?? '',

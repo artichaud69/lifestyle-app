@@ -5,8 +5,8 @@ import BodyweightSection from './BodyweightSection.jsx'
 import MeasurementsSection from './MeasurementsSection.jsx'
 import ProgressPhotosSection from './ProgressPhotosSection.jsx'
 import { ChartIcon, AlertIcon, AwardIcon } from '../lib/icons.jsx'
-import { findEntryHistory, bestSet, estimateOneRepMax } from '../lib/workout.js'
-import { findExercise } from '../lib/exercises.js'
+import { findEntryHistory, bestSet, setOneRepMax, oneRepMaxContext } from '../lib/workout.js'
+import { findExercise, bodyweightLoad } from '../lib/exercises.js'
 import { formatDateShort } from '../lib/dates.js'
 
 function loggedExerciseIds(logs) {
@@ -20,7 +20,9 @@ function loggedExerciseIds(logs) {
   return [...seen.entries()].map(([id, name]) => ({ id, name }))
 }
 
-function ExerciseProgress({ logs, customExercises, settings }) {
+const signed = (value) => `${value >= 0 ? '+' : '−'}${Math.abs(value)}`
+
+function ExerciseProgress({ logs, customExercises, settings, bodyweightLogs }) {
   const options = useMemo(() => loggedExerciseIds(logs), [logs])
   const [selectedId, setSelectedId] = useState(options[0]?.id ?? null)
   const activeId = options.some((o) => o.id === selectedId) ? selectedId : options[0]?.id ?? null
@@ -36,17 +38,30 @@ function ExerciseProgress({ logs, customExercises, settings }) {
   }
 
   const history = findEntryHistory(logs, activeId, 20)
-  const points = history.map((h) => {
-    const set = bestSet(h.entry.sets)
-    return { label: formatDateShort(h.date), value: set ? estimateOneRepMax(set.weight, set.reps) : 0 }
-  })
+  const exerciseInfo = findExercise(activeId, customExercises)
+  const exerciseName = exerciseInfo?.name ?? history[history.length - 1]?.entry.exerciseName
+  // A lift that moves the body is charted as the most that could be *added*
+  // for a single, each session measured at the bodyweight on record for its
+  // date. Sessions with no estimate (no bodyweight logged) are left out.
+  const isBodyweightLift = bodyweightLoad(exerciseName) !== null
+  const points = []
+  for (const h of history) {
+    const context = oneRepMaxContext(exerciseName, h.date, bodyweightLogs)
+    const set = bestSet(h.entry.sets, context)
+    const value = set ? setOneRepMax(set, context) : null
+    if (value !== null) {
+      points.push({ label: formatDateShort(h.date), value, total: value + (context.bodyweight ?? 0) })
+    }
+  }
   const values = points.map((p) => p.value)
   const best = Math.max(...values)
   const lastPoint = points[points.length - 1]
   const isCurrentBest = lastPoint && lastPoint.value >= best - 0.001
-  const recent = values.slice(-3)
+  // "Flat" is judged on the total load lifted: for a conventional lift that
+  // is the e1RM itself, but a bodyweight lift's added weight can sit near
+  // zero, where a 2% band would be meaninglessly narrow.
+  const recent = points.slice(-3).map((p) => p.total)
   const isStalling = recent.length === 3 && Math.max(...recent) - Math.min(...recent) <= Math.max(...recent) * 0.02
-  const exerciseInfo = findExercise(activeId, customExercises)
 
   return (
     <>
@@ -63,39 +78,59 @@ function ExerciseProgress({ logs, customExercises, settings }) {
         ))}
       </div>
 
-      <div className="card">
-        <h2>{exerciseInfo?.name ?? 'Exercise'}</h2>
-        <p className="muted" style={{ marginTop: -8 }}>Estimated 1-rep max over time</p>
-        <LineChart points={points} unit={settings.unit} />
-      </div>
-
-      <div className="stat-row">
-        <div className="stat-tile">
-          <div className="value">{Math.round(best)}{settings.unit}</div>
-          <div className="label">Best Est. 1RM</div>
+      {points.length === 0 ? (
+        <div className="card">
+          <h2>{exerciseInfo?.name ?? 'Exercise'}</h2>
+          <p style={{ marginBottom: 0 }}>
+            {(bodyweightLogs ?? []).length === 0
+              ? 'This lift moves your bodyweight, so its estimated max needs it. Log your bodyweight under Body and the chart will appear.'
+              : 'No estimate yet — the assistance on these sessions took your whole bodyweight.'}
+          </p>
         </div>
-        <div className="stat-tile">
-          <div className="value">{points.length}</div>
-          <div className="label">Sessions</div>
-        </div>
-      </div>
-
-      {isCurrentBest && points.length > 1 && (
-        <div className="feedback-card pr">
-          <div className="icon-wrap">
-            <AwardIcon size={16} />
+      ) : (
+        <>
+          <div className="card">
+            <h2>{exerciseInfo?.name ?? 'Exercise'}</h2>
+            <p className="muted" style={{ marginTop: -8 }}>
+              {isBodyweightLift
+                ? 'Estimated weight you could add for 1 rep, over time (bodyweight included)'
+                : 'Estimated 1-rep max over time'}
+            </p>
+            <LineChart points={points} unit={settings.unit} />
           </div>
-          <p>Your last session was an all-time best on this lift.</p>
-        </div>
-      )}
 
-      {isStalling && (
-        <div className="feedback-card stall">
-          <div className="icon-wrap">
-            <AlertIcon size={16} />
+          <div className="stat-row">
+            <div className="stat-tile">
+              <div className="value">
+                {isBodyweightLift ? signed(Math.round(best)) : Math.round(best)}
+                {settings.unit}
+              </div>
+              <div className="label">{isBodyweightLift ? 'Best Est. 1RM (added)' : 'Best Est. 1RM'}</div>
+            </div>
+            <div className="stat-tile">
+              <div className="value">{points.length}</div>
+              <div className="label">Sessions</div>
+            </div>
           </div>
-          <p>This lift has been flat for your last 3 sessions. The coach will suggest a deload or a lighter jump next time.</p>
-        </div>
+
+          {isCurrentBest && points.length > 1 && (
+            <div className="feedback-card pr">
+              <div className="icon-wrap">
+                <AwardIcon size={16} />
+              </div>
+              <p>Your last session was an all-time best on this lift.</p>
+            </div>
+          )}
+
+          {isStalling && (
+            <div className="feedback-card stall">
+              <div className="icon-wrap">
+                <AlertIcon size={16} />
+              </div>
+              <p>This lift has been flat for your last 3 sessions. The coach will suggest a deload or a lighter jump next time.</p>
+            </div>
+          )}
+        </>
       )}
     </>
   )
@@ -138,7 +173,7 @@ function ProgressPage({
           <ProgressPhotosSection />
         </>
       ) : (
-        <ExerciseProgress logs={logs} customExercises={customExercises} settings={settings} />
+        <ExerciseProgress logs={logs} customExercises={customExercises} settings={settings} bodyweightLogs={bodyweightLogs} />
       )}
     </div>
   )

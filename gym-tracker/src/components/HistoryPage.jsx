@@ -5,7 +5,7 @@ import { HistoryIcon } from '../lib/icons.jsx'
 import { formatDateShort } from '../lib/dates.js'
 import { totalVolume } from '../lib/workout.js'
 
-function HistoryPage({ logs, settings, onDeleteLog }) {
+function HistoryPage({ logs, settings, bodyweightLogs, onDeleteLog }) {
   const [openLogId, setOpenLogId] = useState(null)
   const sorted = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date))
   const openLog = sorted.find((l) => l.id === openLogId)
@@ -46,6 +46,7 @@ function HistoryPage({ logs, settings, onDeleteLog }) {
         <WorkoutDetailSheet
           log={openLog}
           unit={settings.unit}
+          bodyweightLogs={bodyweightLogs}
           onClose={() => setOpenLogId(null)}
           onDelete={(id) => {
             onDeleteLog(id)

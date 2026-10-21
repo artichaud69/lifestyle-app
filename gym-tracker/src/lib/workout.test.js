@@ -9,6 +9,8 @@ import {
   findEntryHistory,
   formatWorkoutAsText,
   mergeEntriesByExercise,
+  setOneRepMax,
+  oneRepMaxContext,
 } from './workout.js'
 
 describe('estimateOneRepMax', () => {
@@ -182,5 +184,137 @@ describe('mergeEntriesByExercise', () => {
     expect(merged[0].sets).toHaveLength(2)
     expect(merged[0].sets.map((s) => s.weight)).toEqual([10, 12])
     expect(merged[1].exerciseId).toBe('b')
+  })
+})
+
+describe('setOneRepMax', () => {
+  const BODYWEIGHT = [{ date: '2026-10-01', weight: 87 }]
+  const set = (weight, reps) => ({ weight, reps, completed: true, isWarmup: false })
+  const ctx = (name, logs = BODYWEIGHT, date = '2026-10-20') => oneRepMaxContext(name, date, logs)
+
+  describe('conventional lifts', () => {
+    it('keeps the plain Epley formula on the weight logged', () => {
+      expect(setOneRepMax(set(100, 5), ctx('Back Squat'))).toBeCloseTo(100 * (1 + 5 / 30))
+    })
+
+    it('ignores bodyweight entirely, even when one is on record', () => {
+      expect(setOneRepMax(set(100, 5), ctx('Back Squat'))).toBe(setOneRepMax(set(100, 5)))
+    })
+
+    it('stays conventional for lifts that only move part of the body', () => {
+      expect(setOneRepMax(set(10, 10), ctx('Push-Up'))).toBeCloseTo(10 * (1 + 10 / 30))
+      expect(setOneRepMax(set(10, 10), ctx('Bench Dip'))).toBeCloseTo(10 * (1 + 10 / 30))
+    })
+  })
+
+  describe('weighted pull-ups', () => {
+    it('estimates on bodyweight plus the added load, then reports the added part', () => {
+      // 87 + 15 = 102kg × 11 → 139.4kg total → +52.4kg added.
+      const estimate = setOneRepMax(set(15, 11), ctx('Weighted Pull-Up'))
+      expect(estimate + 87).toBeCloseTo(139.4, 5)
+      expect(estimate).toBeCloseTo(52.4, 5)
+    })
+
+    it('no longer reports the external weight alone', () => {
+      expect(setOneRepMax(set(15, 11), ctx('Weighted Pull-Up'))).not.toBeCloseTo(15 * (1 + 11 / 30))
+    })
+
+    it('returns the added weight itself for a single', () => {
+      expect(setOneRepMax(set(40, 1), ctx('Weighted Pull-Up'))).toBeCloseTo(40)
+    })
+
+    it('treats dips and chin-ups the same way', () => {
+      expect(setOneRepMax(set(15, 11), ctx('Dip'))).toBeCloseTo(52.4, 5)
+      expect(setOneRepMax(set(15, 11), ctx('Chin-Up'))).toBeCloseTo(52.4, 5)
+    })
+  })
+
+  describe('bodyweight pull-ups', () => {
+    it('gives a bodyweight-only set a real estimate instead of zero', () => {
+      // 87 × (1 + 10/30) − 87 = 29kg that could be added for a single.
+      expect(setOneRepMax(set(0, 10), ctx('Pull-Up'))).toBeCloseTo(29, 5)
+    })
+  })
+
+  describe('assisted pull-ups', () => {
+    it('subtracts the assistance, and goes negative while a single still needs help', () => {
+      // (87 − 30) × (1 + 8/30) − 87 ≈ −14.8: a single would need ~15kg of help.
+      expect(setOneRepMax(set(30, 8), ctx('Assisted Pull-Up'))).toBeCloseTo(57 * (1 + 8 / 30) - 87, 5)
+    })
+
+    it('scores less assistance as stronger, not weaker', () => {
+      const lighterHelp = setOneRepMax(set(20, 8), ctx('Assisted Pull-Up'))
+      const heavierHelp = setOneRepMax(set(30, 8), ctx('Assisted Pull-Up'))
+      expect(lighterHelp).toBeGreaterThan(heavierHelp)
+    })
+
+    it('has no estimate when the assistance takes the whole bodyweight', () => {
+      expect(setOneRepMax(set(87, 8), ctx('Assisted Pull-Up'))).toBeNull()
+    })
+  })
+
+  describe('missing bodyweight', () => {
+    it('has no estimate for a bodyweight lift rather than assuming a bodyweight', () => {
+      expect(setOneRepMax(set(15, 11), ctx('Weighted Pull-Up', []))).toBeNull()
+      expect(setOneRepMax(set(0, 10), ctx('Pull-Up', []))).toBeNull()
+    })
+
+    it('leaves conventional lifts unaffected', () => {
+      expect(setOneRepMax(set(100, 5), ctx('Back Squat', []))).toBeCloseTo(100 * (1 + 5 / 30))
+    })
+  })
+
+  it('uses the bodyweight on record for the workout date', () => {
+    const logs = [
+      { date: '2026-01-10', weight: 80 },
+      { date: '2026-06-10', weight: 87 },
+    ]
+    expect(oneRepMaxContext('Pull-Up', '2026-03-01', logs).bodyweight).toBe(80)
+    expect(oneRepMaxContext('Pull-Up', '2026-07-01', logs).bodyweight).toBe(87)
+  })
+})
+
+describe('bestSet with bodyweight', () => {
+  const sets = [
+    { weight: 10, reps: 5, completed: true, isWarmup: false },
+    { weight: 0, reps: 12, completed: true, isWarmup: false },
+  ]
+
+  it('ranks by the total load when bodyweight is known', () => {
+    // 87 × 1.4 = 121.8 beats 97 × 1.167 = 113.2: the bodyweight set is better.
+    const context = oneRepMaxContext('Pull-Up', '2026-10-20', [{ date: '2026-10-01', weight: 87 }])
+    expect(bestSet(sets, context)).toBe(sets[1])
+  })
+
+  it('keeps the conventional ranking without a context', () => {
+    expect(bestSet(sets)).toBe(sets[0])
+  })
+
+  it('has no best set for a bodyweight lift with no bodyweight on record', () => {
+    expect(bestSet(sets, oneRepMaxContext('Pull-Up', '2026-10-20', []))).toBeNull()
+  })
+})
+
+describe('formatWorkoutAsText with bodyweight lifts', () => {
+  const log = {
+    date: '2026-10-20',
+    sessionName: 'Pull',
+    entries: [
+      { exerciseId: 'weighted-pull-up', exerciseName: 'Weighted Pull-Up', sets: [{ weight: 15, reps: 11, completed: true, isWarmup: false }] },
+      { exerciseId: 'back-squat', exerciseName: 'Back Squat', sets: [{ weight: 100, reps: 5, completed: true, isWarmup: false }] },
+    ],
+  }
+
+  it('reports the added-weight estimate and the bodyweight it was made at', () => {
+    const text = formatWorkoutAsText(log, 'kg', [{ date: '2026-10-01', weight: 87 }])
+    expect(text).toContain('Best set est. 1RM: +52kg added (at 87kg bodyweight)')
+    expect(text).toContain('Best set est. 1RM: 117kg')
+  })
+
+  it('omits the estimate for a bodyweight lift with no bodyweight logged', () => {
+    const text = formatWorkoutAsText(log, 'kg', [])
+    expect(text).not.toMatch(/Best set est\. 1RM: \+?\d+kg added/)
+    expect(text).not.toContain('Best set est. 1RM: 21kg')
+    expect(text).toContain('Best set est. 1RM: 117kg')
   })
 })
