@@ -1,0 +1,47 @@
+name: LIFE OS CI
+
+on:
+  push:
+    paths: ["life-os/**", ".github/workflows/life-os.yml"]
+  pull_request:
+    paths: ["life-os/**", ".github/workflows/life-os.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: life-os
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: lifeos
+          POSTGRES_PASSWORD: lifeos
+          POSTGRES_DB: lifeos_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lifeos" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://lifeos:lifeos@localhost:5432/lifeos_test
+      TEST_DATABASE_URL: postgresql://lifeos:lifeos@localhost:5432/lifeos_test
+      E2E_DATABASE_URL: postgresql://lifeos:lifeos@localhost:5432/lifeos_e2e
+      AI_PROVIDER: none
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: life-os/package-lock.json
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: PGPASSWORD=lifeos psql -h localhost -U lifeos -d lifeos_test -c "CREATE DATABASE lifeos_e2e"
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
