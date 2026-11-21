@@ -50,7 +50,7 @@ export const settingsUpdate = z.object({
   proactiveInsights: z.boolean().optional(),
   advisorMode: z.enum(ADVISOR_MODES).optional(),
   externalAiConsent: z.boolean().optional(),
-  aiScopes: z.record(aiScope, z.boolean()).optional(),
+  aiScopes: z.partialRecord(aiScope, z.boolean()).optional(),
 });
 
 export const deleteAccountInput = z.object({ password: z.string().min(1).max(200), confirm: z.literal("DELETE") });

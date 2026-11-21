@@ -26,6 +26,8 @@ const securityHeaders = [
 
 const config: NextConfig = {
   poweredByHeader: false,
+  // life-os/ is its own app inside a larger repo.
+  outputFileTracingRoot: import.meta.dirname,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
