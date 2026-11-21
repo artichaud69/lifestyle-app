@@ -21,7 +21,9 @@ test("quick capture → confirm → dashboard → inline edit → advisor retrie
   // 3. Inline edit persists across a reload.
   await today.getByRole("button", { name: "Edit task title" }).click();
   await today.getByLabel("task title").fill("Call the dentist about the crown");
+  const renamed = page.waitForResponse((r) => r.url().includes("/api/v1/tasks/") && r.request().method() === "PATCH" && r.ok());
   await today.getByLabel("task title").press("Enter");
+  await renamed;
   await page.reload();
   await expect(page.getByRole("region", { name: "Today" }).getByRole("button", { name: "Edit task title" })).toHaveText("Call the dentist about the crown");
 
@@ -35,7 +37,10 @@ test("quick capture → confirm → dashboard → inline edit → advisor retrie
 
   // 5. Completing it removes it from today's list.
   await page.goto("/");
+  // Wait for the save itself: reloading too early would cancel the request.
+  const saved = page.waitForResponse((r) => r.url().includes("/api/v1/tasks/") && r.request().method() === "PATCH" && r.ok());
   await page.getByRole("checkbox", { name: /Mark “Call the dentist about the crown” done/ }).check();
+  await saved;
   await page.reload();
   await expect(page.getByRole("region", { name: "Today" }).getByText("Nothing due.")).toBeVisible();
 });
