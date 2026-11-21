@@ -1,0 +1,579 @@
+// LIFE OS — Phase 1 (MVP) schema.
+//
+// Conventions
+// - Every user-owned row carries `userId` and is only ever read through
+//   services that filter on it (see src/server/modules/*). There is no
+//   "global" read path for personal data.
+// - Provenance: rows created from a Quick Capture keep `captureId`, and AI
+//   memories keep MemorySource rows pointing at the records they came from.
+// - Epistemic status (user-stated / imported / AI inference / confirmed /
+//   speculative) is an explicit column on Memory and is never merged silently.
+// - Full-text search indexes (GIN on to_tsvector) are created in raw SQL in the
+//   initial migration, because Prisma cannot express expression indexes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── Identity & account ─────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  onboardedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  settings        UserSettings?
+  sessions        Session[]
+  consents        UserConsent[]
+  aiPermissions   AiDomainPermission[]
+  domains         LifeDomain[]
+  values          PersonalValue[]
+  goals           Goal[]
+  projects        Project[]
+  tasks           Task[]
+  dailyPlans      DailyPlan[]
+  journalEntries  JournalEntry[]
+  curiosityItems  CuriosityItem[]
+  captures        Capture[]
+  memories        Memory[]
+  conversations   AIConversation[]
+  auditLogs       AuditLog[]
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  // SHA-256 of the random token held in the cookie; the raw token is never stored.
+  tokenHash  String    @unique
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  @@index([userId])
+}
+
+enum InterfaceMode {
+  MINIMAL
+  STANDARD
+  ANALYTICAL
+}
+
+enum ThemePreference {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+model UserSettings {
+  userId            String          @id
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interfaceMode     InterfaceMode   @default(STANDARD)
+  theme             ThemePreference @default(SYSTEM)
+  timezone          String          @default("Europe/Amsterdam")
+  weekStartsOn      Int             @default(1) // 0 = Sunday, 1 = Monday
+  // Reduced-capacity mode: hides achievement metrics and optional prompts.
+  recoveryMode      Boolean         @default(false)
+  recoveryModeSince DateTime?
+  // Complete quiet mode: no proactive messages of any kind.
+  quietMode         Boolean         @default(false)
+  // Proactive AI observations are opt-in.
+  proactiveInsights Boolean         @default(false)
+  advisorMode       AdvisorMode     @default(STRATEGIST)
+  usageReasons      String[]        @default([])
+  updatedAt         DateTime        @updatedAt
+}
+
+enum ConsentKind {
+  // Sending personal records to an external LLM provider for processing.
+  EXTERNAL_AI_PROCESSING
+}
+
+model UserConsent {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      ConsentKind
+  granted   Boolean
+  version   String      @default("2026-11")
+  createdAt DateTime    @default(now())
+
+  // Append-only: the latest row per kind is the current state, history is kept.
+  @@index([userId, kind, createdAt])
+}
+
+// Which kinds of personal data the AI layer may read. Private by default for
+// the sensitive scopes (journal); see src/server/modules/settings/defaults.ts.
+enum AiScope {
+  PROFILE   // values, identity memories
+  GOALS     // goals, projects
+  PLANNING  // tasks, daily plans
+  JOURNAL   // journal entries (sensitive)
+  MEMORY    // reflective / episodic memories
+}
+
+model AiDomainPermission {
+  userId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope   AiScope
+  allowed Boolean
+
+  @@id([userId, scope])
+}
+
+// ───────────────────────────── Self-knowledge ─────────────────────────────
+
+model LifeDomain {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key         String   // stable slug, e.g. "health"
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  // Qualitative, user-set status — never an auto-computed score.
+  status      DomainStatus @default(UNSET)
+  statusNote  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  goals    Goal[]
+  projects Project[]
+
+  @@unique([userId, key])
+}
+
+enum DomainStatus {
+  UNSET
+  THRIVING
+  STEADY
+  NEEDS_ATTENTION
+  RESTING // intentionally de-prioritised for now
+}
+
+model PersonalValue {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ───────────────────────────── Strategy ─────────────────────────────
+
+enum GoalHorizon {
+  TEN_YEARS
+  FIVE_YEARS
+  ONE_YEAR
+  QUARTER
+  MONTH
+  OPEN
+}
+
+enum GoalStatus {
+  ACTIVE
+  PAUSED
+  ACHIEVED
+  RELEASED // let go of, without judgement
+}
+
+model Goal {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domainId        String?
+  domain          LifeDomain? @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  parentId        String?
+  parent          Goal?       @relation("GoalTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children        Goal[]      @relation("GoalTree")
+  title           String
+  description     String?
+  motivation      String?
+  priority        Int         @default(2) // 1 high, 2 normal, 3 low
+  horizon         GoalHorizon @default(OPEN)
+  targetDate      DateTime?
+  progressMeasure String?     // optional, qualitative allowed
+  status          GoalStatus  @default(ACTIVE)
+  captureId       String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  archivedAt      DateTime?
+
+  milestones GoalMilestone[]
+  projects   Project[]
+  tasks      Task[]
+
+  @@index([userId, status])
+}
+
+model GoalMilestone {
+  id        String    @id @default(cuid())
+  goalId    String
+  goal      Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title     String
+  dueDate   DateTime?
+  doneAt    DateTime?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+}
+
+// ───────────────────────────── Projects & planning ─────────────────────────────
+
+enum ProjectStatus {
+  IDEA
+  ACTIVE
+  PAUSED
+  DONE
+  DROPPED
+}
+
+enum ProjectKind {
+  WORK
+  PERSONAL
+  LEARNING
+  CREATIVE
+  RECREATION
+  HOME
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId         String?
+  goal           Goal?         @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  domainId       String?
+  domain         LifeDomain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  title          String
+  purpose        String?
+  description    String?
+  kind           ProjectKind   @default(PERSONAL)
+  status         ProjectStatus @default(IDEA)
+  nextAction     String?
+  targetDate     DateTime?
+  captureId      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  archivedAt     DateTime?
+
+  tasks Task[]
+
+  @@index([userId, status])
+}
+
+enum TaskStatus {
+  TODO
+  DONE
+  CANCELLED
+}
+
+enum Effort {
+  LOW
+  MODERATE
+  HIGH
+}
+
+model Task {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String?
+  project         Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  goalId          String?
+  goal            Goal?      @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  title           String
+  notes           String?
+  status          TaskStatus @default(TODO)
+  priority        Int        @default(2)
+  dueDate         DateTime?  @db.Date
+  scheduledFor    DateTime?  @db.Date
+  estimateMinutes Int?
+  effort          Effort?
+  context         String?
+  postponedCount  Int        @default(0)
+  completedAt     DateTime?
+  captureId       String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  // Soft delete: lets the UI offer Undo, then a purge job may hard-delete.
+  archivedAt      DateTime?
+
+  planItems DailyPlanItem[]
+
+  @@index([userId, status, dueDate])
+}
+
+enum EnergyLevel {
+  LOW
+  MODERATE
+  HIGH
+}
+
+model DailyPlan {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime     @db.Date
+  intention String?
+  energy    EnergyLevel?
+  notes     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  items DailyPlanItem[]
+
+  @@unique([userId, date])
+}
+
+enum PlanItemKind {
+  MAIN        // the one main priority
+  OPTIONAL    // two or three optional priorities
+  COMMITMENT  // non-negotiable
+  LEISURE     // chosen leisure — a legitimate intention
+  RECOVERY
+}
+
+model DailyPlanItem {
+  id        String       @id @default(cuid())
+  planId    String
+  plan      DailyPlan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  kind      PlanItemKind
+  label     String
+  taskId    String?
+  task      Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  minutes   Int?
+  doneAt    DateTime?
+  // Optional after-the-fact reflection: "was this how you wanted to spend it?"
+  aligned   Boolean?
+  sortOrder Int          @default(0)
+  captureId String?
+  createdAt DateTime     @default(now())
+
+  @@index([planId])
+}
+
+// ───────────────────────────── Reflection & learning ─────────────────────────────
+
+enum Sensitivity {
+  NORMAL
+  PERSONAL
+  SENSITIVE        // mental health, relationships
+  HIGHLY_SENSITIVE // medical, financial
+}
+
+model JournalEntry {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occurredAt  DateTime     @default(now())
+  title       String?
+  body        String
+  mood        Int?         // optional 1..5, only when the user sets it
+  energy      EnergyLevel?
+  tags        String[]     @default([])
+  sensitivity Sensitivity  @default(SENSITIVE)
+  // Per-entry opt-out of AI processing, on top of the JOURNAL scope.
+  excludeFromAi Boolean    @default(false)
+  captureId   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([userId, occurredAt])
+}
+
+enum CuriosityStatus {
+  OPEN
+  EXPLORING
+  ANSWERED
+  PARKED
+}
+
+model CuriosityItem {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question  String
+  theme     String?
+  notes     String?
+  status    CuriosityStatus @default(OPEN)
+  captureId String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([userId, status])
+}
+
+// ───────────────────────────── Capture inbox ─────────────────────────────
+
+enum CaptureStatus {
+  PROPOSED   // classified, waiting for the user's confirmation
+  CONFIRMED  // stored as a structured record
+  DISCARDED
+}
+
+enum ClassifierKind {
+  RULES  // deterministic, local, always available
+  AI     // LLM structured output (requires consent)
+}
+
+model Capture {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rawText     String
+  status      CaptureStatus  @default(PROPOSED)
+  classifier  ClassifierKind
+  // Validated CaptureProposal (src/lib/schemas/capture.ts). JSON because the
+  // shape depends on the proposal type; it is re-validated on every read.
+  proposal    Json
+  confidence  Float
+  resultType  String?        // "task" | "journal" | ...
+  resultId    String?
+  createdAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+
+  @@index([userId, status, createdAt])
+}
+
+// ───────────────────────────── Memory ─────────────────────────────
+
+enum MemoryLayer {
+  PROFILE    // stable: values, preferences, enduring interests
+  EPISODIC   // events, experiences, decisions
+  WORKING    // current situations, immediate priorities
+  REFLECTIVE // tentative patterns and hypotheses
+}
+
+// Epistemic status. These categories must never be silently merged.
+enum MemoryStatus {
+  USER_STATED
+  IMPORTED
+  AI_INFERENCE
+  USER_CONFIRMED
+  SPECULATIVE
+  REJECTED // the user marked it inaccurate; kept so it is not re-inferred
+}
+
+model Memory {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  layer          MemoryLayer
+  status         MemoryStatus
+  content        String
+  domainKey      String?
+  confidence     Float        @default(1)
+  sensitivity    Sensitivity  @default(PERSONAL)
+  // User may keep a memory but forbid its use in AI context.
+  excludedFromAi Boolean      @default(false)
+  userEditable   Boolean      @default(true)
+  supersededById String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  lastVerifiedAt DateTime?
+
+  sources MemorySource[]
+
+  @@index([userId, layer, status])
+}
+
+enum SourceType {
+  CAPTURE
+  JOURNAL
+  TASK
+  GOAL
+  PROJECT
+  CONVERSATION
+  USER // typed directly into the memory screen
+}
+
+model MemorySource {
+  id         String     @id @default(cuid())
+  memoryId   String
+  memory     Memory     @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  sourceType SourceType
+  sourceId   String?
+  excerpt    String?
+  createdAt  DateTime   @default(now())
+
+  @@index([memoryId])
+  @@index([sourceType, sourceId])
+}
+
+// ───────────────────────────── AI advisor ─────────────────────────────
+
+enum AdvisorMode {
+  STRATEGIST
+  ANALYST
+  COACH
+  PLANNER
+  EXPLORER
+  REFLECTOR
+}
+
+model AIConversation {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  mode      AdvisorMode @default(STRATEGIST)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  messages AIMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model AIMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  // References to the records retrieved as context for this answer, so the
+  // user can inspect "what did you use to say this?".
+  contextRefs    Json?
+  // "anthropic:claude-opus-5-5" or "offline" when no model was called.
+  generator      String?
+  createdAt      DateTime       @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+// ───────────────────────────── Infrastructure ─────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String   // e.g. "auth.login", "capture.confirm", "export.download"
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
